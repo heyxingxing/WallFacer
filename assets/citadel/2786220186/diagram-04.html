@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>主子 Agent 设计：交付物接力</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --history: #E7E5E4;
+    --tools: #F5F5F4;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #334155;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --history: #334155; --tools: #1E293B;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #334155;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --history: #334155; --tools: #1E293B;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .tag-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .tag-row .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 500;
+    color: var(--accent); border: 1px solid var(--accent-faded);
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+  }
+  .label-line {
+    font-size: 0.85rem; color: var(--text-muted);
+    line-height: 1.7; margin-bottom: 8px;
+  }
+  .label-line.divider {
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .label-line strong {
+    color: var(--text); font-weight: 600;
+  }
+  .bar-group { margin-bottom: 12px; }
+  .bar-label {
+    font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .demo-note {
+    font-size: 0.75rem; color: var(--text-faint); line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .demo-note .mono { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+  .attn-legend {
+    display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+    margin: 2px 0 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    color: var(--text-faint);
+  }
+  .attn-legend .scale { display: flex; gap: 3px; }
+  .attn-legend .scale i { width: 16px; height: 12px; border-radius: 2px; display: block; }
+  .attn-legend .scale i.a1 { background: #EFF6FF; border: 1px solid var(--border); }
+  .attn-legend .scale i.a2 { background: #93C5FD; }
+  .attn-legend .scale i.a3 { background: #2563EB; }
+  .seg.attn-1 { background: #EFF6FF; color: #1E3A8A; }
+  .seg.attn-2 { background: #93C5FD; color: #1E3A8A; }
+  .seg.attn-3 { background: #2563EB; color: #fff; }
+  .bar {
+    display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bar.short { height: 24px; }
+  .seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 500; white-space: nowrap;
+    padding: 0 6px;
+  }
+  .litm span.marker::before, .litm span.noarrow::before { content: none; }
+  .litm span.marker { font-size: 0.7rem; color: var(--text-faint); }
+  .litm {
+    position: relative; height: 18px; margin-top: 5px;
+  }
+  .litm span {
+    position: absolute; left: 40%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 0.68rem; color: var(--text-faint);
+  }
+  .litm span::before {
+    content: "↑"; margin-right: 4px; color: var(--text-faint);
+  }
+  .litm span.end-arrow::before { content: none; }
+  .litm span.end-arrow {
+    transform: none; left: auto; right: 0;
+  }
+  .litm span.end-arrow::after {
+    content: "↑"; margin-left: 4px; color: var(--text-faint);
+  }
+  /* 并排迷你条：字段A/B 同行 */
+  .mini-row { display: flex; gap: 14px; }
+  .mini { flex: 1; min-width: 0; }
+  .mini .bar-label {
+    display: block; font-size: 0.72rem; margin-bottom: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .mini .bar { height: 26px; }
+  .mini .bar .seg { font-size: 0.62rem; padding: 0 4px; }
+  .mini .litm { margin-top: 3px; height: auto; }
+  .mini .litm span { position: static; transform: none; font-size: 0.64rem; white-space: normal; text-align: center; display: block; }
+  .mini .litm span::before { content: none; }
+  .hint-note {
+    display: flex; gap: 12px; align-items: stretch;
+    margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .hint-note .cell {
+    flex: 1; border-radius: 6px; padding: 8px 12px; border: 1px solid;
+  }
+  .hint-note .cell.is { border-color: var(--focus); background: rgba(217, 119, 6, 0.07); }
+  .hint-note .cell.not { border-color: var(--border); background: var(--surface-alt); }
+  .hint-note .kicker {
+    font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;
+  }
+  .hint-note .cell.is .kicker { color: var(--focus); }
+  .hint-note .cell.not .kicker { color: var(--text-muted); }
+  .hint-note .text { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+  .hint-note .cell.is .text { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; }
+  .hint-note .sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .hint-note .vs {
+    display: flex; align-items: center; color: var(--text-faint);
+    font-size: 0.7rem; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tag-row">
+    <span class="badge">上下文工程</span>
+    <span class="badge">主子 Agent 设计</span>
+    <span class="badge">交付物接力</span>
+  </div>
+  <p class="label-line"><strong>问题表现</strong> — 单 Agent 在同一会话中跑完五个研发环节，PRD 全文、技术方案、代码 diff、测试日志全部堆积在同一上下文中，早期环节的结论随执行推进滑向中段低权重区。</p>
+  <p class="label-line divider"><strong>解法</strong> — <strong>主子 Agent 设计</strong>：调度 Agent 只持有任务级全局状态（计划、进度、交付物路径），执行细节由子 Agent 各自独立上下文冷启动承接 —— 关键结论以落盘交付物显式传递，而非会话记忆。</p>
+
+  <p class="demo-note">下图对比三种上下文形态。条1：单 Agent 长会话跑全链路；条2：调度 Agent 视角——只见编排调用与交付物路径；条3：子 Agent 视角 —— 以代码开发 Agent 为例，独立短会话冷启动，环节间交付物接力。</p>
+
+  <div class="attn-legend">
+    <span>上下文利用度</span>
+    <span class="scale"><i class="a1"></i><i class="a2"></i><i class="a3"></i></span>
+    <span>弱 → 强</span>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>单 Agent 长会话跑全链路</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:20%">System Prompt + Tools</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">PRD 全文</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">技术方案</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">代码 diff</span>
+      <span class="seg attn-1" style="width:19%; border-left:1px solid var(--border)">测试日志</span>
+      <span class="seg attn-2" style="width:12%">近期对话</span>
+      <span class="seg attn-3" style="width:10%">消息</span>
+    </div>
+    <div class="litm">
+      <span class="marker" style="left:32%">↑</span>
+      <span class="noarrow end-arrow" style="left:auto; right:0">五个环节的过程产物全部堆积在同一上下文，早期结论滑向低权重区、约束力衰减</span>
+    </div>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>调度 Agent 视角：只管编排、不管执行</span></div>
+    <div class="bar short" style="width:64%">
+      <span class="seg attn-3" style="width:30%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">&lt;编排调用链&gt;</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">消息</span>
+    </div>
+    <div class="litm"><span class="end-arrow">调度 Agent 只持有任务级全局状态——计划、进度、交付物路径，执行细节不进入调度上下文</span></div>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>子 Agent 视角：独立上下文冷启动（以代码开发 Agent 为例，五个环节各如此）</span></div>
+    <div class="bar short" style="width:64%">
+      <span class="seg attn-3" style="width:30%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">交付物输入</span>
+      <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">复杂工具调用链</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">阶段产出</span>
+    </div>
+    <div class="litm"><span class="end-arrow">独立短会话冷启动：输入是上一环节的落盘交付物（需求分析报告 → 技术方案 → … → 测试报告接力），而非会话记忆延续</span></div>
+  </div>
+
+  <div class="hint-note">
+    <div class="cell is">
+      <div class="kicker">✓ 主 Agent 只做编排，不做执行</div>
+      <div class="text">调度 Agent：计划 + 进度 + 交付物路径</div>
+      <div class="sub">交付物以文件落盘跨 Agent 传递，天然免疫压缩与稀释——子 Agent 需要时随时重新读取</div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="cell not">
+      <div class="kicker">✗ 不是全量装填的长会话</div>
+      <div class="text">单 Agent 跑完五个环节</div>
+      <div class="sub">PRD、方案、diff、测试日志全部堆积，上下文随环节数线性膨胀，每个阶段都在为其他阶段的上下文买单</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

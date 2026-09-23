@@ -1,0 +1,149 @@
+{
+  "title": "DeepSeek Harness 实践分享",
+  "source_url": "https://km.sankuai.com/collabpage/2785506770",
+  "content_id": "2785506770",
+  "step_version": 4,
+  "archived_at": "2026-09-23T16:53:51+08:00",
+  "source_created_at": "2026-09-09T16:35:59+08:00",
+  "source_modified_at": "2026-09-23T16:47:29+08:00",
+  "export_tool": "oa-skills citadel",
+  "raw_exports": [
+    "source.md",
+    "source.xml"
+  ],
+  "reading_copy": "README.md",
+  "transformations": [
+    "Removed CLI notice and added provenance in reading copy",
+    "Localized all eight original images",
+    "Repaired inline footnote markers and Mermaid export syntax; trimmed trailing whitespace"
+  ],
+  "scope": "Current document and embedded assets; linked references not recursively archived; original claims not independently verified.",
+  "assets": [
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255175095576?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/01-image.png",
+      "bytes": 188043,
+      "width": 1600,
+      "height": 900,
+      "sha256": "86fef91f4af0a9db0ecec8a9f752e4b1611b5851e93d74150349362cd86aca38"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255171972458?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/02-image.png",
+      "bytes": 126002,
+      "width": 1600,
+      "height": 760,
+      "sha256": "016bc76fcebf946f7c0b5befa1e270f46fce7eeb4968dba33c3e7e5c636b9dbc"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255171972460?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/03-image.png",
+      "bytes": 583769,
+      "width": 2283,
+      "height": 841,
+      "sha256": "cc36a166d78297f7795c4b35ea82ca22213f160d2aadee3282fd75d8955fb277"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255179292486?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/04-image.png",
+      "bytes": 65080,
+      "width": 1280,
+      "height": 410,
+      "sha256": "d8592ae59d7862aa22ff4852b9cea9052e9cbcdd6c1f34bddfbbb2da022f691e"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255171051415?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/05-image.png",
+      "bytes": 88437,
+      "width": 1280,
+      "height": 550,
+      "sha256": "46abb0a45b5282a3bbfacc16461826b3399eff14f0f7c6786e9b4596bc4fb248"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255176371758?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/06-image.png",
+      "bytes": 179920,
+      "width": 1500,
+      "height": 855,
+      "sha256": "1d7d2ed7ec2e82fa27d112ac0a352bacd576cc41eac066d5618bf2dc7b70da86"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255168022795?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/07-image.png",
+      "bytes": 349170,
+      "width": 2228,
+      "height": 736,
+      "sha256": "e029e9aec94d96148d29f09728a05afdea06f3f78b83dd584f2c59a35792bc47"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255170214626?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785506770/08-image.png",
+      "bytes": 529494,
+      "width": 1920,
+      "height": 1646,
+      "sha256": "f1ed98dc79016e9cec894a65ec76b297383d3623ce6a68260516b81553c35f1d"
+    }
+  ],
+  "code_blocks": [],
+  "unarchived_media": [
+    {
+      "type": "video",
+      "name": "录屏2026-09-01 17.33.38.mov",
+      "file_id": "255179767374",
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785506770/255179767374?isNewContent=false&contentType=1",
+      "download_policy": "PASS; WENSHU required",
+      "status": "link_only",
+      "reason": "Required wenshu-tools / wenshu-catdesk-tools skill unavailable"
+    }
+  ],
+  "validation": {
+    "nontransformed_export_content_preserved": true,
+    "code_extracts_match_xml": true
+  },
+  "files": {
+    "documents/citadel/2785506770/source.md": {
+      "bytes": 38001,
+      "sha256": "e5bf9122213b3c3d819c311d6f5d406c25cffae5d2f7e29c1f39fda730331d2f"
+    },
+    "documents/citadel/2785506770/README.md": {
+      "bytes": 37694,
+      "sha256": "38c6388f04936108ff49afcada7735f8bbfbba2d802f43c6ddf51ab11978741a"
+    },
+    "documents/citadel/2785506770/source.xml": {
+      "bytes": 74738,
+      "sha256": "8ed6d922b2c118ac4924760fade9e62dba32d53d948e052330d93b8d4ee467c5"
+    },
+    "assets/citadel/2785506770/08-image.png": {
+      "bytes": 529494,
+      "sha256": "f1ed98dc79016e9cec894a65ec76b297383d3623ce6a68260516b81553c35f1d"
+    },
+    "assets/citadel/2785506770/05-image.png": {
+      "bytes": 88437,
+      "sha256": "46abb0a45b5282a3bbfacc16461826b3399eff14f0f7c6786e9b4596bc4fb248"
+    },
+    "assets/citadel/2785506770/03-image.png": {
+      "bytes": 583769,
+      "sha256": "cc36a166d78297f7795c4b35ea82ca22213f160d2aadee3282fd75d8955fb277"
+    },
+    "assets/citadel/2785506770/04-image.png": {
+      "bytes": 65080,
+      "sha256": "d8592ae59d7862aa22ff4852b9cea9052e9cbcdd6c1f34bddfbbb2da022f691e"
+    },
+    "assets/citadel/2785506770/02-image.png": {
+      "bytes": 126002,
+      "sha256": "016bc76fcebf946f7c0b5befa1e270f46fce7eeb4968dba33c3e7e5c636b9dbc"
+    },
+    "assets/citadel/2785506770/07-image.png": {
+      "bytes": 349170,
+      "sha256": "e029e9aec94d96148d29f09728a05afdea06f3f78b83dd584f2c59a35792bc47"
+    },
+    "assets/citadel/2785506770/01-image.png": {
+      "bytes": 188043,
+      "sha256": "86fef91f4af0a9db0ecec8a9f752e4b1611b5851e93d74150349362cd86aca38"
+    },
+    "assets/citadel/2785506770/06-image.png": {
+      "bytes": 179920,
+      "sha256": "1d7d2ed7ec2e82fa27d112ac0a352bacd576cc41eac066d5618bf2dc7b70da86"
+    }
+  }
+}

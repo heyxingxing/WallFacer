@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上下文稀释与 Anchor 唤起</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --history: #E7E5E4;
+    --tools: #F5F5F4;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #334155;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --history: #334155; --tools: #1E293B;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #334155;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --history: #334155; --tools: #1E293B;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .tag-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .tag-row .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 500;
+    color: var(--accent); border: 1px solid var(--accent-faded);
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+  }
+  .label-line {
+    font-size: 0.85rem; color: var(--text-muted);
+    line-height: 1.7; margin-bottom: 8px;
+  }
+  .label-line.divider {
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .label-line strong {
+    color: var(--text); font-weight: 600;
+  }
+  .bar-group { margin-bottom: 12px; }
+  .bar-label {
+    font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .demo-note {
+    font-size: 0.75rem; color: var(--text-faint); line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .demo-note .mono { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+  /* 注意力阶梯：sequential scale，由浅到深表示注意力强弱 */
+  .attn-legend {
+    display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+    margin: 2px 0 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    color: var(--text-faint);
+  }
+  .attn-legend .scale { display: flex; gap: 3px; }
+  .attn-legend .scale i { width: 16px; height: 12px; border-radius: 2px; display: block; }
+  .attn-legend .scale i.a1 { background: #EFF6FF; border: 1px solid var(--border); }
+  .attn-legend .scale i.a2 { background: #93C5FD; }
+  .attn-legend .scale i.a3 { background: #2563EB; }
+  .seg.attn-1 { background: #EFF6FF; color: #1E3A8A; }
+  .seg.attn-2 { background: #93C5FD; color: #1E3A8A; }
+  .seg.attn-3 { background: #2563EB; color: #fff; }
+  .bar {
+    display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 500; white-space: nowrap;
+    padding: 0 6px;
+  }
+  .seg.anchor { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .seg.anchor.idle {
+    background: transparent; color: #2563EB;
+    border: 1px dashed #2563EB;
+  }
+  .litm span.marker::before, .litm span.noarrow::before { content: none; }
+  .litm span.marker { font-size: 0.7rem; color: var(--text-faint); }
+  .litm {
+    position: relative; height: 18px; margin-top: 5px;
+  }
+  .litm span {
+    position: absolute; left: 40%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 0.68rem; color: var(--text-faint);
+  }
+  .litm span::before {
+    content: "↑"; margin-right: 4px; color: var(--text-faint);
+  }
+  .litm span.end-arrow::before { content: none; }
+  .litm span.end-arrow {
+    transform: none; left: auto; right: 0;
+  }
+  .litm span.end-arrow::after {
+    content: "↑"; margin-left: 4px; color: var(--text-faint);
+  }
+  .refocus {
+    position: relative; height: 24px; margin: 26px 4% 12px 28%;
+    border-top: 2px dashed var(--focus);
+    border-left: 2px dashed var(--focus);
+    border-right: 2px dashed var(--focus);
+    border-radius: 10px 10px 0 0;
+    opacity: 0.9;
+  }
+  .refocus .drop {
+    position: absolute; top: 0; bottom: -5px; width: 0;
+    border-left: 2px dashed var(--focus);
+    transform: translateX(-1px);
+  }
+  .refocus .drop::after {
+    content: ""; position: absolute; bottom: 0; left: -7px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 8px solid var(--focus);
+  }
+  .refocus::before {
+    content: ""; position: absolute; left: -7px; bottom: -5px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 8px solid var(--focus);
+  }
+  .refocus .tag {
+    position: absolute; top: -21px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 10px; white-space: nowrap;
+    font-size: 0.72rem; color: var(--focus); font-weight: 500;
+  }
+  .hint-note {
+    display: flex; gap: 12px; align-items: stretch;
+    margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .hint-note .cell {
+    flex: 1; border-radius: 6px; padding: 8px 12px; border: 1px solid;
+  }
+  .hint-note .cell.is { border-color: var(--focus); background: rgba(217, 119, 6, 0.07); }
+  .hint-note .cell.not { border-color: var(--border); background: var(--surface-alt); }
+  .hint-note .kicker {
+    font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;
+  }
+  .hint-note .cell.is .kicker { color: var(--focus); }
+  .hint-note .cell.not .kicker { color: var(--text-muted); }
+  .hint-note .text { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+  .hint-note .cell.is .text { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; }
+  .hint-note .sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .hint-note .vs {
+    display: flex; align-items: center; color: var(--text-faint);
+    font-size: 0.7rem; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tag-row">
+    <span class="badge">上下文工程</span>
+    <span class="badge">长程任务</span>
+    <span class="badge">对抗上下文稀释</span>
+  </div>
+  <p class="label-line"><strong>问题表现</strong> — 约束仍在上下文中，但 Agent 的注意力被累积的对话历史和工具输出稀释，重要信息文件逐渐淡出视野。又或是长程任务触发多轮 Compact，早期加载的全局文件 / skills 保留不完整，语义缺失。</p>
+  <p class="label-line divider"><strong>解法</strong> — 通过 webhook / hook / plugin 等方式在用户消息输入时，注入 HINT-NOTE，使得 Agent 持续关注关键信息。</p>
+
+  <p class="demo-note">下图示例中，假设我们希望 Agent 持续关注的信息是 <span class="mono">&lt;全局信息&gt;</span> 和 <span class="mono">&lt;Skills&gt;</span> 这两部分的内容。</p>
+
+  <div class="attn-legend">
+    <span>上下文利用度</span>
+    <span class="scale"><i class="a1"></i><i class="a2"></i><i class="a3"></i></span>
+    <span>弱 → 强</span>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>会话初期</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:34%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:12%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-3" style="width:12%; border-left:1px solid rgba(255,255,255,0.35)">Skills</span>
+      <span class="seg attn-2" style="width:18%">工具调用</span>
+      <span class="seg attn-3" style="width:12%">消息</span>
+      <span class="seg anchor idle" style="width:12%">&lt;ANCHOR&gt;</span>
+    </div>
+    <div class="litm"><span class="end-arrow" style="left:auto; right:0%">Anchor 注入但无需发挥作用 — 上下文较为简短干净</span></div>
+  </div>
+  <div class="bar-group">
+    <div class="bar-label"><span>多轮交互后</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:22%">System Prompt + Tools</span>
+      <span class="seg attn-1" style="width:12%">全局信息</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">早期对话</span>
+      <span class="seg attn-1 anchor" style="width:7%; border-left:1px solid var(--border)">&lt;ANCHOR&gt;</span>
+      <span class="seg attn-1" style="width:25%; border-left:1px solid var(--border)">工具输出</span>
+      <span class="seg attn-1" style="width:12%; border-left:1px solid var(--border)">Skills</span>
+      <span class="seg attn-2" style="width:9%">近期对话</span>
+    </div>
+    <div class="litm">
+      <span class="marker" style="left:28%">↑</span>
+      <span class="marker" style="left:85%">↑</span>
+      <span class="noarrow" style="left:56%">Lost in the Middle — 全局信息 / Skills 被淹没在冗长上下文中</span>
+    </div>
+  </div>
+  <div class="bar-group">
+    <div class="bar-label"><span>多轮交互后 + 消息输入</span></div>
+    <div class="refocus">
+      <span class="tag">HINT 提醒 → Agent 重新关注到关键信息</span>
+      <span class="drop" style="left:68%"></span>
+    </div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:20%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:11%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-1" style="width:13%">早期对话</span>
+      <span class="seg attn-1 anchor" style="width:7%; border-left:1px solid var(--border)">&lt;ANCHOR&gt;</span>
+      <span class="seg attn-1" style="width:16%; border-left:1px solid var(--border)">工具输出</span>
+      <span class="seg attn-3" style="width:11%">Skills</span>
+      <span class="seg attn-2" style="width:8%">近期对话</span>
+      <span class="seg attn-3" style="width:5%">消息</span>
+      <span class="seg attn-3 anchor" style="width:9%; border-left:1px solid rgba(255,255,255,0.35)">&lt;ANCHOR&gt;</span>
+    </div>
+    <div class="litm"><span class="end-arrow" style="left:auto; right:0%">Anchor 随消息注入 — Agent 找回关注力</span></div>
+  </div>
+
+  <div class="hint-note">
+    <div class="cell is">
+      <div class="kicker">✓ ANCHOR 是 HINT（引子）</div>
+      <div class="text">「执行过程中严格遵守 xxx skill」</div>
+      <div class="sub">只点名关键信息，不含具体规则与约束细节；Agent 借由它重新读取文件、或在上下文中找回完整内容</div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="cell not">
+      <div class="kicker">✗ 不是信息录入处</div>
+      <div class="text">不把 skill 的约束条款、执行规则誊写进 Anchor</div>
+      <div class="sub">堆入细节会让 Anchor 膨胀，重新稀释注意力，也违背极简引子的设计初衷</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

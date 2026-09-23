@@ -1,0 +1,17 @@
+skill-name/
+├── SKILL.md                    # 必需：YAML 元数据（name + description）+ 执行指令正文
+│                               #   正文控制 500 行以内，详细资料下沉到 references/
+│                               #   引用其他文件时用相对路径，引用层级保持一层
+├── scripts/                    # 可选：可执行代码（Agent 可直接调用的脚本）
+│   ├── extract.py              #   要求：自包含或声明依赖、错误信息友好、优雅处理边界情况
+│   └── validate.sh             #   语言不限（Python / Bash / JavaScript 等常见）
+├── references/                 # 可选：补充文档（只读查阅，Agent 按需加载）
+│   ├── REFERENCE.md            #   详细技术参考
+│   ├── FORMS.md                #   表单模板或结构化数据格式
+│   └── domain-specific.md      #   领域专属文件（如 finance.md、legal.md）
+│                               #   单个文件保持聚焦——按需加载时小文件消耗更少上下文
+├── assets/                     # 可选：静态资源
+│   ├── templates/              #   文档模板、配置模板
+│   ├── images/                 #   图表、示例图片
+│   └── data/                   #   查找表、schema 等数据文件
+└── ...                         # 其他任意文件或目录（标准允许自由扩展）

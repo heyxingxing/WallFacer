@@ -1,0 +1,15 @@
+## 功能路由
+
+根据用户意图，读取对应的 skill 文件后执行：
+
+> ⚠️ **强制约束**：路由到某个功能后，**必须先用 Read 工具读取对应的 skill 文件**，再开始执行。
+> 禁止凭记忆直接操作——即使上下文中已有相关信息，skill 文件包含协议约束（质量门控、状态机步骤等），不可跳过。
+
+| 用户意图 | 操作 |
+|----------|------|
+| 知识检索（用户提问 / Agent 执行任务中需要领域背景知识） | Read `skill-retrieval.md` |
+| 入库文档（单篇或多篇）/ mark-done | Read `skill-ingestion.md` |
+| 批量入库父目录 | Read `skill-batch-ingestion.md` |
+| 优化目录结构 | Read `skill-folder-opt.md` |
+
+...

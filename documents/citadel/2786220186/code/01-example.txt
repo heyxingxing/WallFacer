@@ -1,0 +1,7 @@
+## 前置检查：确保 CLI 最新
+
+每次执行命令前，先检查 `@it/oa-skills` 是否为最新版本：
+
+```bash
+npm list -g @it/oa-skills --depth=0 --registry=http://r.npm.sankuai.com 2>/dev/null | grep oa-skills
+```

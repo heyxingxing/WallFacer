@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上下文问题的解空间</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #1E293B;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #1E293B;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .fig-title {
+    font-size: 1rem; font-weight: 700; color: var(--text);
+    margin-bottom: 12px;
+  }
+  .legend-row {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+    font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;
+  }
+  .legend-row .item { display: flex; align-items: center; gap: 5px; }
+  .legend-row .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  /* ===== 解空间网格 ===== */
+  .space-grid {
+    display: grid;
+    grid-template-columns: 64px 1fr 1fr;
+    gap: 6px;
+  }
+  .col-head {
+    text-align: center; font-size: 0.74rem; font-weight: 600; color: var(--text);
+    padding: 8px 6px; background: var(--surface-alt); border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .col-head .sub { font-weight: 400; font-size: 0.66rem; color: var(--text-faint); display: block; margin-top: 1px; }
+  .row-head {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    background: var(--surface-alt); border-radius: 6px; border: 1px solid var(--border);
+    padding: 10px 4px; min-height: 100%;
+  }
+  .row-head .col-v {
+    writing-mode: vertical-rl; text-orientation: mixed;
+    display: flex; align-items: center;
+  }
+  .row-head .main { font-size: 0.72rem; font-weight: 600; color: var(--text); letter-spacing: 1px; word-spacing: 0; }
+  .row-head .sub { font-weight: 400; font-size: 0.64rem; color: var(--text-faint); }
+  .quad {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; background: var(--bg);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .quad-tag {
+    font-size: 0.64rem; color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .sol-card {
+    border-radius: 8px; padding: 10px 12px;
+    background: var(--surface-alt); border: 1px solid var(--border);
+  }
+  .sol-card .head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .sol-card .num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 700;
+    color: #fff; border-radius: 3px; padding: 0 6px; display: inline-block; min-width: 18px; text-align: center;
+  }
+  .sol-card .num.a { background: var(--accent); }
+  .sol-card .num.b { background: var(--focus); }
+  .sol-card .name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+  .sol-card .mech { font-size: 0.7rem; color: var(--text-muted); line-height: 1.55; margin-top: 4px; }
+  .sol-card .when { font-size: 0.68rem; color: var(--text-muted); line-height: 1.55; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border); }
+  .sol-card .when strong { color: var(--focus); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <p class="fig-title">上下文问题的解空间</p>
+  <div class="legend-row">
+    <span class="item"><span class="swatch" style="background:var(--accent)"></span>领域 Agent 实践</span>
+    <span class="item"><span class="swatch" style="background:var(--focus)"></span>业界方法论</span>
+  </div>
+
+  <div class="space-grid">
+    <div></div>
+    <div class="col-head">关键信息在上下文里<span class="sub">留在原位，对抗稀释</span></div>
+    <div class="col-head">关键信息搬到上下文外<span class="sub">外置状态，按需取回</span></div>
+
+    <div class="row-head"><span class="col-v main">强依赖 Agent 自主规划</span><span class="col-v sub">流程无法预先完备编排</span></div>
+    <div class="quad">
+      <span class="quad-tag">信息在场 + 对抗稀释</span>
+      <div class="sol-card">
+        <div class="head"><span class="num a">3</span><span class="name">关键信息持续注入</span></div>
+        <div class="mech">不动上下文结构，把关键约束随每条消息抬到权重高位</div>
+        <div class="when"><strong>适用</strong>：会话无法避免变长，且约束必须全程生效</div>
+      </div>
+    </div>
+    <div class="quad">
+      <span class="quad-tag">信息外置 + 动态分解</span>
+      <div class="sol-card">
+        <div class="head"><span class="num b">1</span><span class="name">上下文重置 + 结构化交接</span></div>
+        <div class="mech">定期清空换新会话，状态由进度文件等外部工件承载</div>
+        <div class="when"><strong>适用</strong>：跨天级的超长程任务，每个会话只攻克一个小目标，达成即新建，依靠交接文件进行衔接</div>
+      </div>
+    </div>
+
+    <div class="row-head"><span class="col-v main">弱依赖 Agent 自主规划</span><span class="col-v sub">流程可预先完备编排</span></div>
+    <div class="quad">
+      <span class="quad-tag">调度编排 + 独立短会话</span>
+      <div class="sol-card">
+        <div class="head"><span class="num a">4</span><span class="name">主子 Agent 流程编排</span></div>
+        <div class="mech">流程由调度层预先编排，子 Agent 各自独立会话，逐环节执行</div>
+        <div class="when"><strong>适用</strong>：流程可预先编排为多个环节，由调度层分派子 Agent 逐环节执行</div>
+      </div>
+    </div>
+    <div class="quad">
+      <span class="quad-tag">信息外置 + 流程外置</span>
+      <div class="sol-card">
+        <div class="head"><span class="num a">5</span><span class="name">固定任务剥离 + 微上下文流水线</span></div>
+        <div class="mech">将流程固定、边界清晰的批量任务从 Agent 剥离，交由脚本内置的 LLM API 调用完成</div>
+        <div class="when"><strong>适用</strong>：任务边界清晰、输入输出明确、可批量并行</div>
+      </div>
+      <div class="sol-card">
+        <div class="head"><span class="num b">2</span><span class="name">图状态持久化 + 节点局部上下文</span></div>
+        <div class="mech">状态全部外置（Checkpointer / Store），节点按需投喂最小切片</div>
+        <div class="when"><strong>适用</strong>：流程结构确定、环节多且长，中途失败或暂停后能从上次进度继续</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

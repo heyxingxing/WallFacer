@@ -1,0 +1,807 @@
+<km-doc>
+<km-title nodeId="0757dedf-a8b8-4beb-bb1f-4dc5791dca8a">DeepSeek Harness 实践分享</km-title>
+<h2 nodeId="6bf3d6d5-6e6f-46d3-b064-311ce5c9d918">一、背景</h2>
+<p nodeId="adbaa27d-e971-4196-9844-40bdd390a344">DeepSeek Harness（以下简称 DSH）是一套开源、可组合的 Agent Runtime。它以“Everything is a Plugin”为核心设计，将模型适配、Agent Loop、工具、Session、持久化、上下文管理和 Subagent 等能力都交给插件提供和组合。通过将 Runtime 的主要能力开放为插件，DSH 支持开发者根据场景自由选择、组合和替换各项运行能力。</p>
+<p nodeId="11de61a32b5c4ee7b431ec10dbd9f3e4">如果希望进一步了解 DSH，推荐阅读<a href="https://km.sankuai.com/collabpage/2781228283" title="《DeepSeek Harness：Everything is a plugin》" nodeId="c33aad8c-f5b9-49d1-a41f-20884853c77b">《DeepSeek Harness：Everything is a plugin》</a>、<a href="https://km.sankuai.com/collabpage/2780747319" title="《DeepSeek Harness 指南》" nodeId="5577f2d0-a1aa-40d3-8f2a-226808fe33ef">《DeepSeek Harness 指南》</a>和<a href="https://km.sankuai.com/collabpage/2782067563" title="《DeepSeek Harness 四种运行模式深度解读：插件组合如何重塑 Agent 的能力边界》" nodeId="9b7b1816-b377-48c7-8d9c-0ea999ea9910">《DeepSeek Harness 四种运行模式深度解读：插件组合如何重塑 Agent 的能力边界》</a>，本文不再赘述。</p>
+<p nodeId="c28e766b-0946-4603-b53b-be494a914b2f">本文按照“插件架构—核心机制—能力实践—平台接入”的顺序展开。第二章介绍 DSH 的插件装配方式，以及 Agent Harness 的扩展与替换机制；第三章重点说明 Agent Loop 与 Session 日志的工作原理；第四章集中介绍 Step 断点重跑、WeKnora 知识库接入、模型请求控制和 Claude Code Subagent 四项能力实践；第五章说明如何将本地 DSH 接入 Multica 作为 Agent Runtime；第六章总结 DSH 的实践价值与现阶段局限。</p>
+<h2 nodeId="66e584d0-9b84-4f16-920c-155b37a8590b">二、Everything is a Plugin：DSH 的插件化架构</h2>
+<h3 nodeId="9df4402f-1956-4e9e-a067-2e29eff9702a">2.1 架构概述</h3>
+<p nodeId="c510c66b-2c73-4750-bf4c-eccdd153cf63">DSH 不是在一个固定 Agent 产品之外增加插件系统，而是直接用插件组成 Agent Harness。底层只保留负责装配、依赖和生命周期管理的 Cordis；模型适配、Agent Loop、Tool、Session、执行环境、Host 和客户端等主要运行能力都由插件提供。开发者面对的不是一套只能外围扩展的应用，而是一个可以通过配置重新组合的 Runtime 插件树。</p>
+<p nodeId="747a8ba7-d6ed-46c8-921d-61e328bb4a66">从架构上看，DSH 可以分为三层：</p>
+<table nodeId="b71213bc-c2e1-4774-a94f-427dfcec8f87">
+<tr nodeId="f65ece90-c5fc-48ef-8453-f0d4538f64bb">
+<th colwidth="[68]" nodeId="a8eaa4de-087d-4fb3-8697-6deebd70408a">
+<p nodeId="9442d8a5-731d-4ffe-b390-1cbadfb36d5e">层级</p>
+</th>
+<th colwidth="[68]" nodeId="98657113-93c4-4b38-853c-ee7e17cdcf71">
+<p nodeId="5f4d087b-19da-4a07-b4fd-8c61bb758cc5">主要职责</p>
+</th>
+<th colwidth="[68]" nodeId="c4a97523-f782-4dd6-bb4b-9a19999fd611">
+<p nodeId="67f3b3d8-58d2-4792-b795-8f95d2505f78">稳定性与变化方式</p>
+</th>
+</tr>
+<tr nodeId="6d1c2260-5d10-4a5f-b498-cc19cc28f386">
+<td colwidth="[68]" nodeId="0709d035-a9dc-4f0b-ad0e-7a431a483d71">
+<p nodeId="ecfa3772-0699-4e42-9426-6b3f49240be9">Cordis 内核</p>
+</td>
+<td colwidth="[68]" nodeId="c4943e14-1e20-4377-91b3-9f0a1051a2b6">
+<p nodeId="5f5c696b-6cdd-4903-ab31-33debdbdb0ef">加载插件、解析依赖、划分作用域并管理插件生命周期</p>
+</td>
+<td colwidth="[68]" nodeId="f04ebaa7-c4e9-4718-a958-e7470838d742">
+<p nodeId="2be5a670-75c5-4c32-9c20-faf27d24505c">保持精简稳定，不承载具体 Agent 业务能力</p>
+</td>
+</tr>
+<tr nodeId="1b957a72-b7ea-4a0f-bc28-62bbe8c577ba">
+<td colwidth="[68]" nodeId="34f3b296-6e4d-4d41-a051-3fa1ed6afd45">
+<p nodeId="0bd4dee5-d3fc-472e-889c-4a6aaebea0cd">Harness 能力插件</p>
+</td>
+<td colwidth="[68]" nodeId="36a97a9b-2c63-42f7-beb3-051492246939">
+<p nodeId="b076c0ca-9212-42df-81db-3e30e9ba1159">提供模型、Agent Loop、Tool、Session、Sandbox、Subagent、权限和 UI 等运行能力</p>
+</td>
+<td colwidth="[68]" nodeId="c10c8473-09c8-4d00-9b1d-537f04d5d5a7">
+<p nodeId="4902ad49-a8e6-43ae-994b-f59e20ae88b7">可以增加新实现，也可以替换已有实现</p>
+</td>
+</tr>
+<tr nodeId="3ad66e58-7ad1-4c46-8231-6dd1f973afe0">
+<td colwidth="[68]" nodeId="59126900-a239-4a47-b835-a003a3a1c4e1">
+<p nodeId="ffc14c7e-d62f-4f20-b2a4-dab6cc184cf4">配置组合层</p>
+</td>
+<td colwidth="[68]" nodeId="b374149f-ac9b-45f9-8cc3-34aea25671cb">
+<p nodeId="8c0ccb67-83fc-4ea8-a008-034a255d2aab">使用 Bundle、Profile、Patch 和 Agent Preset 选择插件及其配置</p>
+</td>
+<td colwidth="[68]" nodeId="6009423a-b2a1-4673-934c-2ee4df08dd1d">
+<p nodeId="76d62d62-4122-4bc1-96cc-743dff1092f7">不修改内核代码即可形成不同 Agent 与产品形态</p>
+</td>
+</tr>
+</table>
+<km-collapse active="false" nodeId="1ad204fe0a054bc194da5834f40fe6a7">
+<km-title>Bundle、Profile、Patch 和 Preset概念</km-title>
+<km-content>
+<table nodeId="3390d37d-e26c-47c3-99a6-9acb708d7a5b">
+<tr nodeId="5427e7b4-85bc-419c-ac8c-105aed1dabca">
+<th colwidth="[68]" nodeId="56879bed-bf2e-4696-a103-477fcafd618c">
+<p nodeId="4d5540d2-baa6-42a9-b787-8c33335ba0f2">概念</p>
+</th>
+<th colwidth="[68]" nodeId="a444455d-4da7-4352-9877-6cecfebb9b5a">
+<p nodeId="d6b3a501-e797-42af-afd1-04bacd2e8630">一句话理解</p>
+</th>
+<th colwidth="[68]" nodeId="2b1dbe10-5e88-4561-b05b-b8e0f479d683">
+<p nodeId="462e712d-2ca6-40cc-8c6e-13bf4bdf713f">实际作用</p>
+</th>
+<th colwidth="[68]" nodeId="fbf5466b-ea7e-49ce-8574-2986c6816d61">
+<p nodeId="980303e3-cbfd-46c8-a8d7-16a6bf774c73">生效范围</p>
+</th>
+<th colwidth="[68]" nodeId="232ee3ba-76cd-4ee2-b6aa-f9d4e251be5d">
+<p nodeId="cb6324e4-43d0-47cb-bf30-b7368ee0c477">示例</p>
+</th>
+</tr>
+<tr nodeId="5d738fc3-eea3-4a42-91db-c4502f73b358">
+<td colwidth="[68]" nodeId="2b411422-aa5f-4a19-978c-65feb5abc667">
+<p nodeId="c7593e66-75eb-410c-b00e-feb235380501">Bundle</p>
+</td>
+<td colwidth="[68]" nodeId="570c757c-3380-4eb5-8650-54bfebffc260">
+<p nodeId="72ee00d4-7263-44af-a4ac-15d24868c030">一组可以安装和复用的“能力安装包”</p>
+</td>
+<td colwidth="[68]" nodeId="b78627dd-d92f-4d89-a8e1-1dc0ff2683f2">
+<p nodeId="8006873c-77f3-4ab6-ad13-232ecf7debf2">把一批相关插件及其默认配置放在一起交付。安装一个 Bundle，就能向 DSH 增加一组完整能力，不需要逐个配置其中的插件</p>
+</td>
+<td colwidth="[68]" nodeId="1beaa7b5-99ea-4871-bdc8-2a0bd356828d">
+<p nodeId="e93ac257-27f8-459a-88ee-9241cd49e785">整个 DSH 进程</p>
+</td>
+<td colwidth="[68]" nodeId="06ec46eb-e92f-4851-bbd5-3587f0f1613f">
+<p nodeId="864fb98b-d862-4a51-a3ab-c5d7d2d10090"><code>dsh-base</code> 提供模型、Tool、Session 等基础能力；<code>dsh-web-app</code> 增加 Web 界面与服务</p>
+</td>
+</tr>
+<tr nodeId="13076f10-839c-408d-bfb1-5ec93a7b80d4">
+<td colwidth="[68]" nodeId="a3eed3d0-e881-45c5-907e-c5ccccbd637a">
+<p nodeId="8d13bf52-34c6-4a13-8069-6f36f3870883">Profile</p>
+</td>
+<td colwidth="[68]" nodeId="db07ea7c-1d0e-454a-a629-a191202b5eae">
+<p nodeId="69409eeb-b5bc-41d3-97c3-b6fb13e7ef9d">DSH 启动时选择的“运行方案”</p>
+</td>
+<td colwidth="[68]" nodeId="91940659-d740-4690-9c2a-91f98f237194">
+<p nodeId="ad43cf7e-7549-47bb-a2a0-3332e546c451">决定本次启动要加载哪些 Bundle，以及使用哪些用户配置。不同 Profile 可以将同一套 DSH 启动成不同产品形态</p>
+</td>
+<td colwidth="[68]" nodeId="355f13a4-4341-4656-9a81-0c775971fad1">
+<p nodeId="f5857ab6-befb-4a12-a6ac-49706febc290">整个 DSH 进程</p>
+</td>
+<td colwidth="[68]" nodeId="cebd2a07-7913-4563-af0b-94d7eba1ce33">
+<p nodeId="1e562baa-c0c3-4e15-8db7-5a765920b3aa"><code>web</code> Profile 加载 <code>base + web-app</code>，<code>headless</code> Profile 加载 <code>base + headless</code>；通过 <code>dsh --profile &lt;name&gt;</code> 选择</p>
+</td>
+</tr>
+<tr nodeId="f51cd334-7be9-46cd-8d76-a2f3906554db">
+<td colwidth="[68]" nodeId="1abb8bbd-9803-4512-8d53-52a4eb78f97c">
+<p nodeId="59ca0fb3-5dfd-4671-bcf4-1ba44836f9b0">Patch</p>
+</td>
+<td colwidth="[68]" nodeId="5501c2b8-82ef-4823-99a7-91c5f3f20605">
+<p nodeId="ced78522-4915-4394-b4de-53ae38778e18">在现有运行方案上追加的“配置修改单”</p>
+</td>
+<td colwidth="[68]" nodeId="529c9a06-8606-490d-aa64-fb84cd8589c3">
+<p nodeId="043edfc9-746e-4074-a3b7-95944b2ec4f5">不重新制作 Bundle 或 Profile，直接覆盖某个插件的配置，或者插入新的插件配置。多个 Patch 按顺序应用，越靠后的修改优先级越高</p>
+</td>
+<td colwidth="[68]" nodeId="e59b3fdd-f0f5-40bb-b19e-ffd6ee4cc5b2">
+<p nodeId="13fe0cce-8230-412b-98ff-7f6c27e57fd1">整个 DSH 进程的配置</p>
+</td>
+<td colwidth="[68]" nodeId="f9f7deff-0999-43fa-a056-0ff901653d5d">
+<p nodeId="4d27b48a-1ec3-4c0c-b215-9f6c54483b2d">更换模型 Provider、启用额外 Tool、修改权限策略，或通过 <code>--patch</code> 临时加入实验配置</p>
+</td>
+</tr>
+<tr nodeId="98c36710-a61f-4164-951a-02b86bb43252">
+<td colwidth="[68]" nodeId="a0791590-dbb4-4342-b30d-34b356f3dc07">
+<p nodeId="a12ee309-622e-4fb3-81e4-5147e2a557b4">Preset</p>
+</td>
+<td colwidth="[68]" nodeId="e84ab7e4-667e-4485-99d0-cb7891f51e5b">
+<p nodeId="198c65a6-42d6-4db6-ad2d-c19d2e34d221">创建单个 Agent 时选择的“能力模板”</p>
+</td>
+<td colwidth="[68]" nodeId="e3204a4a-cc1f-4226-b4eb-7b0b62b16c72">
+<p nodeId="2a957ef3-7b02-4186-8650-341a2131222b">只为当前 Agent 选择 Prompt、Persona、Tool 和其他 Agent 级插件，不改变同一进程中已经运行的其他 Agent</p>
+</td>
+<td colwidth="[68]" nodeId="442fb86d-62aa-4f49-9392-95f864ee659d">
+<p nodeId="b9931bcd-d68c-4ed3-91e0-b51c53a2f2f6">单个 Agent／Session</p>
+</td>
+<td colwidth="[68]" nodeId="9eaa5ec2-498c-4f57-be9a-f5ff21202047">
+<p nodeId="12556fa2-a68a-4b99-a5d0-c6f67cdd99d6">同一个 Web Runtime 中可以同时创建“完整编码 Agent”和“极简 Agent”，二者共享存储与沙箱，但拥有不同的 Prompt 和 Tool</p>
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<p nodeId="30a44f1779b94ecda1ee9737992d4c1e"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255175095576?isNewContent=false&amp;contentType=1" name="" width="685" height="385" nodeId="ebb3d4766cc84373a0bad71d3acbc457" /></p>
+<h3 nodeId="d6e7f20d-63d4-440d-a228-4e1d01062d80">2.2 Agent Harness 的扩展与替换机制</h3>
+<p nodeId="b1101ede-2b5e-43e3-9b96-4919979d9245">DSH 将 Agent Harness 的主要组成部分都开放为插件，包括模型请求组装、Agent Loop、Tool、Session、执行环境、权限策略、Host 和客户端。开发者可以通过插件增加新能力，也可以直接修改或替换这些组件的实现，从而控制模型如何接收上下文、任务如何循环、状态如何持久化、代码在哪里执行，以及 Agent 通过什么产品入口运行。相比 CatDesk、Claude Code 等以闭源产品形态提供的 Agent，DSH 开放了 Harness 本身的实现与装配方式；开发者除了接入 Tool、MCP 或 Hook，还可以按业务需要定制 Agent 的核心运行链路。</p>
+<p nodeId="f40b9a09-20b0-432a-abe8-407eaf403863">关于插件组合、可替换能力和主要扩展点的完整说明，参见 <a href="https://deepseek-harness.github.io/deepseek-harness/reference/" title="DeepSeek Harness 架构" nodeId="3f7a974a5d644d4fb01e0a4c69bd2a4a">DeepSeek Harness 架构</a>。</p>
+<h2 nodeId="f99da424-d78f-4220-b373-ace4101852d1">三、核心运行机制</h2>
+<h3 nodeId="6cfa5e72-c5cd-4588-a67a-66b9579469ac">3.1 Agent Loop：模型与工具驱动的执行循环</h3>
+<p nodeId="2665f3cf-0011-4934-92c1-deadcbd88ce9">Agent Loop 是 DSH 中驱动一次 Agent 执行的核心插件。<code>dsh-agent</code> 定义统一的 Agent 接口，默认的 <code>dsh-agent-loop</code> 插件实现这个接口，并依赖 Session、LLM、System Prompt 和 Tool 等服务完成实际运行。Web、Headless、ACP 和其他调用方只面向 Agent 接口创建、恢复和控制任务，不需要依赖默认循环的具体实现；如果默认行为不适合某类 Agent，也可以注册另一套实现替换它。</p>
+<p nodeId="11322ea2-4e30-4edf-a8a2-8aa716ca7d49">每次用户输入通常开启一个 Turn，Turn 从领取输入开始，到当前任务不再需要继续调用模型时结束；一个 Turn 包含零个或多个 Step，每个 Step 对应一次模型请求以及该次响应触发的 Tool 调用。模型直接给出最终回复时，Turn 通常只包含一个 Step；模型返回 Tool Call 时，Tool Result 会触发下一个 Step，直到模型给出最终回复或执行被取消。</p>
+<p nodeId="12551cae2ea5447bab7fbb54a3692b3a"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255171972458?isNewContent=false&amp;contentType=1" name="" width="748" height="358" nodeId="4f08d4122c99460c8d43bf2be2b15a86" /></p>
+<p nodeId="fdb4ba68-b059-497b-b86f-7bf1d6b2e5b5">从执行流程看，DSH 的 Agent Loop 与 ReAct（Reason + Act）类似：模型先根据上下文决定直接回复还是调用 Tool；如果调用 Tool，执行结果会加入上下文，模型在下一个 Step 中继续判断，直到给出最终回复。但DSH 不要求模型输出固定格式的 Thought、Action 和 Observation，而是接收各 Provider 的原生结构化响应，再由 LLM Adapter 统一转换为 <code>reasoning</code>、<code>text</code> 和 <code>tool-call</code> 等内容块。例如，DeepSeek API 返回的 <code>reasoning_content</code>、<code>content</code> 和 <code>tool_calls</code> 会分别转换为推理内容、回复文本和工具调用。</p>
+<h3 nodeId="3305ce91-062b-416f-ad18-71f38b5e2b27">3.2 Session：用事件日志保存和重建会话</h3>
+<p nodeId="2ec95afa-b7c0-4036-9f37-3d6005966499">DSH 使用事件溯源<km-footnote id="a2de9f4d-3e34-47c4-86cf-d70aa1a221d6" annotate="" nodeId="f01e8228102741048c557121d2bd9bbd" />建模 Session。一个 Agent 的连续对话构成一个 Session，一份 Session 日志按照单调序号连续保存多个 Turn 产生的事件；日志只追加新记录，不会原地修改已经发生的事实。Session 因而既保存会话历史，也是恢复执行和派生模型上下文的状态来源。</p>
+<p nodeId="eb0def73-9b33-402d-83ce-381cee61701e">当输入被接受、模型产生回复、Tool 返回结果，或者 Turn／Step 状态发生变化时，Agent Loop 会将对应事实追加到 Session 日志。持久化插件保存这些事件，界面从中生成展示状态，恢复逻辑则根据日志重建执行上下文。</p>
+<p nodeId="735d8a4a5d2d4ae993d2b6134e702468">DSH 运行日志说明：</p>
+<p nodeId="edd685dfac954d859188acdef656165f"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255171972460?isNewContent=false&amp;contentType=1" name="image.png" width="1000" height="382" nodeId="4519713d02c9410b889e8de98647043d" /></p>
+<p nodeId="14a740c2820d4029a9836165462e715f">如果对模型输入如何从 Session 日志中产生感兴趣，可以阅读<a href="https://deepseek-harness.github.io/deepseek-harness/reference/subsystems/session" title="Session 参考文档" nodeId="cf92fd330cb94a9f8495a39f0af00b60">Session 参考文档</a>。</p>
+<p nodeId="546c3870460144e5976ab0fdae722704" />
+<p nodeId="75b39b25a3154a98b0e48ef819cec2fd">DSH Session 日志与美团AI Agent可观测平台<km-footnote id="f511e7b5-8d38-41ce-856f-3b6b5c894420" annotate="" nodeId="8a80accf92ec4771a3871e21ecdf2a62" />的对比结果：</p>
+<table responsive="false" nodeId="d90277266536438d81a5b7eb183045e4">
+<tr nodeId="fac7f14699c84d668c4f3dc146bd6693">
+<th colwidth="[68]" nodeId="d6e53a6771d24bf8b7a46a9bdc46aba7">
+<p nodeId="83d3e4420f0943509d68ff2880f43add">维度</p>
+</th>
+<th colwidth="[616]" nodeId="565e9682434a473d937229b4cda37534">
+<p nodeId="5695088b113948b1ac6e550c1b0a15ec">DSH Session Log</p>
+</th>
+<th colwidth="[568]" nodeId="99637c78cd344610b1083226052aab47">
+<p nodeId="62709d1e2f6f40aeb5091b05e84466b4">美团Agent 可观测平台</p>
+</th>
+<th colwidth="[299]" nodeId="5ec2d109f1b74790b4c36adb0757febb">
+<p nodeId="a4c4861b2dbe48fdac908bac2b6056dd">说明</p>
+</th>
+</tr>
+<tr nodeId="66d2e69ce7bb4089a09255ae09e45489">
+<td colwidth="[68]" nodeId="d9f23bbcf8014535b27c69ca925c0187">
+<p nodeId="406ef3cc322f46a1aa85a32b1e4bb2dd">定位</p>
+</td>
+<td colwidth="[616]" nodeId="7a830f2f41a6439a969e2beb3cd9b4cb">
+<p nodeId="a643a04004eb4d19811fbeb648fb470c">Agent 的运行事实与恢复依据，可用于重放、恢复和继续执行。</p>
+</td>
+<td colwidth="[568]" nodeId="55329004a19940ce9b56d3e40eae0026">
+<p nodeId="e66ce5067e0b4bb3a85a758c8608fe8a">Agent 的运行观测数据，用于调用链、性能、Token 和错误分析。</p>
+</td>
+<td colwidth="[299]" nodeId="597b1d27c8ec4e1a85fc5db508b57e41">
+<p nodeId="0e0395ee03da4654873d149672af9578">DSH 的日志是运行源数据；可观测平台的数据是分析视图。</p>
+</td>
+</tr>
+<tr nodeId="7d8a97bff8464f5f8376326cc989d5e3">
+<td colwidth="[68]" nodeId="a1ce444206b94657a1eafaef6af24455">
+<p nodeId="f101e09326b4415f829ebe293a6718a6">会话</p>
+</td>
+<td colwidth="[616]" nodeId="126d3d0bab5947c78a4c39d2b44850b9">
+<p nodeId="fe76fb9e01d043d9869c4510fd66113e">一份 Session Log 对应一个 DSH Session，持续记录同一对话窗口中的多轮交互。</p>
+</td>
+<td colwidth="[568]" nodeId="ec4f2ebf15614ba58dab7c123ee02303">
+<p nodeId="018dc440fd4544fd916b95cf0a4e3456">一个 Session 对应一个对话窗口，包含多次用户交互。</p>
+</td>
+<td colwidth="[299]" nodeId="84f403fdb0d74952bdb13e522231d9dd">
+<p nodeId="e9cca828519a4d11afc6f6d99de34187">两边的 Session 都是多轮交互的容器；会话可以仍在进行中。</p>
+</td>
+</tr>
+<tr nodeId="846e7bb820d74c4cba03c3990249a839">
+<td colwidth="[68]" nodeId="29c25ef6380b4baca89f341ad2fa4ec4">
+<p nodeId="64dd6d4ad4bf4632bd0d0f0083b26eb0">交互</p>
+</td>
+<td colwidth="[616]" nodeId="bc6334f1447b4ee69afba2a9b3f7c16e">
+<p nodeId="ed63e50399c347b4aba014ec5b505ed9">一次用户交互对应 Session 中的一段执行记录，通常是一轮 <code>turn/start → … → turn/end</code>。</p>
+</td>
+<td colwidth="[568]" nodeId="f6f7ce30c414429e80da2d988734c312">
+<p nodeId="179335cd9f384355977619a69f795bcc">一次用户交互对应 Session 中的一条 Trace / Round，即用户发起 Query 到 Agent 完成响应。</p>
+</td>
+<td colwidth="[299]" nodeId="1b9a545971c542b1a19c5ff0ee6b8458">
+<p nodeId="4c2f34f14b314529baf73f3f9076d7c0">DSH 的一段 turn 记录大致对应平台的一条 Trace。</p>
+</td>
+</tr>
+<tr nodeId="50694d9d7f5f4d22a2b7761d9dae4e43">
+<td colwidth="[68]" nodeId="178e920bc3e14e1e9081f458ba9bf8ca">
+<p nodeId="cef05fd111b141b78e55097899258afb">保留内容</p>
+</td>
+<td colwidth="[616]" nodeId="6326ed0ebc344e86b2099c43b6eb166e">
+<p nodeId="22ef47afa15e46268c7e24ab2b18e26a">用户输入、Agent 输出、LLM 调用、工具调用、工具结果、Token 用量、子 Agent、执行状态与错误等；此外还保留模型请求配置、流式输出、重试、压缩和恢复所需事件。</p>
+</td>
+<td colwidth="[568]" nodeId="ef7e6964af854828bde5513238aa6575">
+<p nodeId="053ff6a76e374227b7409c987490b02f">用户输入、Agent 输出、LLM 调用、工具调用、工具结果、Token 用量、子 Agent、执行状态与错误等；此外保留 Span 父子关系、耗时、资源信息和业务属性。</p>
+</td>
+<td colwidth="[299]" nodeId="24910a9a6f4f4912a871ea9ec00c515a">
+<p nodeId="8e7451c9583e4cf5842fe4bb5ec5c6d7">两者都覆盖核心执行内容；DSH 偏恢复语义，平台偏链路与性能语义。</p>
+</td>
+</tr>
+<tr nodeId="2cf2b2c3391c4c6d9de7273b72e1589c">
+<td colwidth="[68]" nodeId="115777c31891461ea2d6595613c517e5">
+<p nodeId="b8668f2de33942a08467d0f17bee1661">存储与使用</p>
+</td>
+<td colwidth="[616]" nodeId="7a12aecc2d0443c6b0b48a619559a058">
+<p nodeId="59224e21572b4b7ab533b355a8b5c5d6">可下载/导出；以结构化 JSON 事件记录持久化（逻辑上为 JSONL，可压缩），可据此恢复对话。</p>
+</td>
+<td colwidth="[568]" nodeId="25eb0fe2add64ff9ae78dee0407a5e77">
+<p nodeId="3876ff67f5064b9f8de87723314e64dd">可查看、筛选、聚合、导出 CSV/Excel 或通过 OpenAPI 获取数据，用于分析和告警。</p>
+</td>
+<td colwidth="[299]" nodeId="f0dcc4642bd04c21a5ed9d3aff36e913">
+<p nodeId="c68cf07d3043425a904f5b49a19c2179">即使都能导出，DSH 日志可作为恢复依据；平台 Trace 不承担恢复对话的职责。</p>
+</td>
+</tr>
+</table>
+<h2 nodeId="f7ae5d33-dc13-4189-85f9-d7846ebcb3e5">四、DeepSeek Harness 功能实践</h2>
+<p nodeId="ae4a6f21-7ac8-4741-99fb-6b9b3b7057d5">前三章说明了 DSH 能够修改什么，以及 Agent Loop 和 Session 如何工作。本章将这些扩展点落到四项具体实践中，分别介绍 Session 历史复用、统一知识检索、模型请求控制和 Subagent Provider 替换。</p>
+<h3 nodeId="c4a2a812-aa97-44d6-8382-62cea57ffd93">4.1 基于 Session 日志实现 Step 断点重跑</h3>
+<h4 nodeId="11e64512-bf15-4d66-84fc-79bbb781f55d"><strong>背景</strong></h4>
+<p nodeId="e65e0fdf-475a-4664-8daa-e8a66a194c89">采集执行 Agent 采用端到端回放评测。当前评测集包含 9 个 Task，每个 Task 的正式测评默认执行 3 次 Trial，因此一次全量评测需要完成 27 次完整需求任务。每次 Trial 还要依次完成 Agent 执行、历史输入回放、评分和环境清理；如果每次修改 Skill 后都从头开始测试，时间和模型调用成本较高。</p>
+<p nodeId="24a629c4-3737-49d2-a99a-f51b7ebe1160">许多修改只影响流程中的某个阶段。例如只修改阶段三的 Skill 时，只要阶段一和阶段二的输入与产物仍然有效，就不需要重新生成前两阶段结果。基于 DSH 的 Session 日志，可以复用阶段三之前的消息、模型回复和 Tool Result，从阶段三首次使用该 Skill 的 Step 创建新 Session 并继续执行，从而减少 27 次 Trial 中重复运行前置流程的成本。</p>
+<p nodeId="f4044e039f8849c2a0ba9dff14c6ef31"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255179292486?isNewContent=false&amp;contentType=1" name="image.png" width="810" height="262" nodeId="79c1d0c08c84437ca0c9ac127c885946" /></p>
+<h4 nodeId="002585fc-1073-40d2-9094-d3565bd9c7e8"><strong>插件实现</strong></h4>
+<p nodeId="d982e068-1be7-4e69-9877-29d1d1e2bad4">基于 DSH 的 Session 事件日志和 Session 派生能力，可以实现了 Step 重跑插件。插件读取来源 Session 的完整日志，定位一个已经结束的 Step，截取其 <code>step/start</code> 之前的事件，并补写 <code>turn/end(reason = interrupted)</code>，将事件前缀转换成完整、可恢复的历史。随后插件使用该前缀创建新的 Session，并通过当前 Preset 重新组装模型、System Prompt、Tool、Skill 和其他插件。</p>
+<p nodeId="5a6699d1-6cd0-46a6-adcb-2711526b45a7">来源 Session 和原始日志保持不变，新 Session 使用独立的 Session ID。它不是对原请求的确定性回放，而是让相同的持久化历史前缀在当前运行环境中重新执行。</p>
+<p nodeId="58e89abf-af5e-493e-a207-6f62a0769319">插件由 Host 和 Web 两部分组成：Host 负责读取日志、校验 Step 和创建新 Session，Web 插件负责展示重演视图并提供播放按钮。Web 包会同时安装和挂载两部分：</p>
+<pre language="Shell" title="安装命令" isExpand="false" nodeId="8e7b7a20-e03b-4a31-817f-872e18a168aa"><code>npx @deepseek-ai/dsh plugin --profile web add \
+  @liuyangdong/dsh-client-ui-session-rerun@0.1.1-rc.6 \
+  --registry=https://registry.npmjs.org/
+npx @deepseek-ai/dsh web</code></pre>
+<h4 nodeId="4b3b9039-d43f-44fe-8a2c-b4a50c65fe42"><strong>操作演示</strong></h4>
+<p nodeId="915f8b15-4159-455f-bc02-5a5727dc823d">进入已有 Session 的“重演”视图，展开 Turn，选择一个已完成的 Step，然后点击右侧的播放按钮。插件会保留该 Step 之前的历史记录，并以这段事件前缀派生新的 Session，从所选 Step 继续执行；原 Session 不会被修改。</p>
+<p nodeId="524d2cb0e3b947e485b611cf6c0901ab">采集执行流程由主 Agent 负责任务编排和分发，需求分析、函数配置、流程配置与测试验证则由对应的子 Agent 执行。下面以修改函数配置 Agent 中的 <code>verify_groovy_rule.py</code> 脚本为例：借助 DSH 的 Session 日志回放能力，可以从任务首次调用该脚本的 Step 直接重跑，并使用修改后的脚本继续执行，无需从头运行整个需求，从而减少等待时间和 Token 消耗。</p>
+<km-video src="https://km.sankuai.com/api/file/cdn/2785506770/255179767374?isNewContent=false&amp;contentType=1" name="录屏2026-09-01 17.33.38.mov" size="19.57MB" width="1232" height="514" nodeId="d778792635745fef38b6e9e1fc189f3e" />
+<p nodeId="a003ce76154c482ea65c2500bd5f1a10"><strong>预期收益</strong></p>
+<p nodeId="dd3d81aa7c2b42dfaa57994994e9db77">根据近一个月的14个 commit 的具体修改内容估算，如果采用 Session 断点重跑的方案预计可使全量测评的执行耗时减少约 <strong>19%</strong><km-footnote id="b1c7f2a1-412a-4ba2-ac1d-d7d4849c6f11" annotate="" nodeId="e752ce9a00134a838456572ee0ee39b2" />。需要说明的是，断点重跑虽然能够降低全量测评成本，但结合 5.3 节的测试结果和 6.2 节的风险分析，DSH 当前尚未达到生产级稳定性要求，暂不具备Agent运行时迁移的条件。</p>
+<p nodeId="e4091f38745d436c95198502d617fdc0">采集执行小队单需求平均耗时约40分31秒，其中解析LeaderAgent平均12分46秒、需求分析Agent平均9分28秒、函数配置Agent平均10分钟、流程配置Agent平均4分48秒、流程测试Agent平均3分29秒。按照各阶段的串行执行顺序，可以估算从不同节点断点重跑预期带来的收益：</p>
+<p nodeId="6d482155d1a8431ba2eef1ede380dac5"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255171051415?isNewContent=false&amp;contentType=1" name="" width="757" height="343" nodeId="6eda7b6479a8427d87496e69e1f95ed6" /></p>
+<h3 nodeId="64211cf9-ec9a-4660-aa41-1db65d9c19fd">4.2 使用 WeKnora<km-footnote id="53609513-a468-46b0-88de-2699ae595a72" annotate="" nodeId="49f964d67cd6487fa462f32c3287e951" /> 插件接入知识库</h3>
+<h4 nodeId="dee7eeca-c28d-4cb9-a732-8441e53e28c4"><strong>背景</strong></h4>
+<p nodeId="0807eee6-fdc2-4a23-8d15-9327a84ec45f">采集执行小队的每个 Agent 都绑定独立的 Skill，所需业务知识和配套脚本也分别维护在各自的 Skill 中。如图所示，不同 Skill 之间重复维护相同的业务知识，也各自保留功能相似的脚本，这样不仅维护成本高，而且对执行效率、可靠性与可维护性也会有一定影响。</p>
+<p nodeId="d0b52c3a08554fc688467a05f42c1b84"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255176371758?isNewContent=false&amp;contentType=1" name="" width="816" height="457" nodeId="6c4777c452e14072a54185cf036841cc" /></p>
+<h4 nodeId="048b8ba6-d39a-4201-9a54-0409227386b7"><strong>接入DSH</strong></h4>
+<p nodeId="3bd6f6bf-4491-44ac-aba4-bd3c0408a345">WeKnora 支持 FAQ、文档和 Wiki 三种知识库形态。知识内容可以通过本地文件或文件夹、URL、在线录入构建，也可以从外部数据源同步；导入内容经过解析、分块和索引后，形成可按问题检索的知识单元。</p>
+<table responsive="false" nodeId="19e0ac55f78c4b0b9ab1d2c6fb931910">
+<tr nodeId="45e67e470fff4eada5d97dfb6b2732f7">
+<th colwidth="[418]" nodeId="6bc0382f8c324d738c701a64ed33a669">
+<p nodeId="6f61c1389f7b4e1bb18e43e29a72d3b4">能力</p>
+</th>
+<th colwidth="[391]" nodeId="27db492d40de4cf8979195ff8bcaaa35">
+<p nodeId="0fb86ebcbd824a699aa494384af52dfd">现状问题</p>
+</th>
+<th colwidth="[499]" nodeId="27be324c54c4437b913058db22dafaa2">
+<p nodeId="a7c58c363d764ba8936cd1e92a55d1af">应用价值</p>
+</th>
+</tr>
+<tr nodeId="8c036a559fce40dba71e5be1ca4e8cab">
+<td colwidth="[418]" nodeId="f2aa8cf0270f4e1597c75c54029041ce">
+<p nodeId="2160683e83d04aefaf145ee4cef63fda">集中管理知识，支持文件、URL 和外部数据源</p>
+</td>
+<td colwidth="[391]" nodeId="bd0eeb5572744882914618b37ae7b457">
+<p nodeId="ea80ed95d87f44cc8894b0dfe8a0c5f5">同一业务知识分散或复制在多个 Skill、脚本和 Reference 中</p>
+</td>
+<td colwidth="[499]" nodeId="21f7005449c74d5da597df9fdd6a9fe8">
+<p nodeId="d4c63049624042b99f4e713474a903e1">多个 Agent 共享同一知识来源，规则只需统一更新，降低漏改和版本不一致的风险</p>
+</td>
+</tr>
+<tr nodeId="2a27190a43c14c4f96c420935ec167d9">
+<td colwidth="[418]" nodeId="55c361bdbeae4c968e37216d460fce3c">
+<p nodeId="649349db6c4d4ae29764492709b1548d">文档解析、分块、索引和混合检索</p>
+</td>
+<td colwidth="[391]" nodeId="3140231109e740efa37a04754a104120">
+<p nodeId="aa02fb7ee192463a98c3ff28282be68b">Agent 需要加载整篇文档，大量无关内容进入上下文</p>
+</td>
+<td colwidth="[499]" nodeId="17fbe67a312d4834a6bc1c1bbe483304">
+<p nodeId="002b9e5c556e4fb89386fe690a680c86">根据当前问题按需加载相关片段，减少重复读取和 Token 消耗</p>
+</td>
+</tr>
+<tr nodeId="3642b5293155459abcef2e0d5945189d">
+<td colwidth="[418]" nodeId="d0966ca0c06d4318b7a7950a9441935a">
+<p nodeId="bc6c62c6cb61419f8717ea40c723661f"><code>weknora_search</code> 返回检索范围、排序后的原文片段、文档与分块标识以及相关度</p>
+</td>
+<td colwidth="[391]" nodeId="dfcca0ebcc024af491cb8ff7782500ff">
+<p nodeId="3b483a26bba34ae7aff5fb3c89669e35">现有知识读取结果缺少统一结构，执行异常时难以定位原因</p>
+</td>
+<td colwidth="[499]" nodeId="0e116bda2b524ceb9da7b71f49ca20be">
+<p nodeId="a6da44277bed4f728e438b700147ed34">可以区分知识缺失、检索未命中和 Agent 理解偏差，使检索过程可复盘</p>
+</td>
+</tr>
+<tr nodeId="eb7f4829b3934b469a132b662e9b9311">
+<td colwidth="[418]" nodeId="7a9c0029a445451aa2be8514f1539871">
+<p nodeId="751bd16c469b43c882a0e10daae12bd6"><code>weknora_read_document</code> 按命中文档继续读取正文，<code>weknora_ask</code> 为综合回答提供引用</p>
+</td>
+<td colwidth="[391]" nodeId="19fb9d872f9c43b8aaf980adb12de466">
+<p nodeId="08a24c69b5784f56a2e22afb57e8997f">单个命中片段可能缺少上下文，跨文档问题需要多轮查找</p>
+</td>
+<td colwidth="[499]" nodeId="cacb03aef8194fa2857ce1a1956aef68">
+<p nodeId="d85ef1d3020640b6913f5fc1cc14d525">Agent 可以按需补充上下文，或获得带引用的跨文档答案，无需预先加载全部资料</p>
+</td>
+</tr>
+<tr nodeId="fa876afdaa7d438494d4cd9148a1b5e1">
+<td colwidth="[418]" nodeId="025ce3687a7c4b858509b7e974341c6d">
+<p nodeId="ec673b1efd33487d9325a77d33bd7e9d">通过 DSH 插件将 Tool Call 和 Tool Result 写入 Session 日志</p>
+</td>
+<td colwidth="[391]" nodeId="c3ee264e249844b4b4de3a3fee3320b2">
+<p nodeId="fcdd21384c0242faab33e82be7044909">不同 Agent 使用了哪些知识、获得了哪些证据难以追踪</p>
+</td>
+<td colwidth="[499]" nodeId="1d7a509326734cfdb4bc14c239fbe469">
+<p nodeId="b551358b71c74ce485391049b29ccda8">查询与证据随执行历史保存，便于复现结果和定位知识缺口</p>
+</td>
+</tr>
+</table>
+<p nodeId="3d95b838-1d32-4388-9555-f6b4693eeb6b">WeKnora 官方提供 <a href="https://github.com/Tencent/WeKnora/blob/main/packages/dsh-weknora/README_CN.md" title="dsh-weknora插件" nodeId="b5287ab7-d6cb-4f38-9294-e9cdb77879cb">dsh-weknora插件</a>，用于将 WeKnora 的知识检索和问答能力接入 DSH。插件通过 WeKnora API 访问已有知识库，不负责知识导入，也不会修改知识库内容。</p>
+<km-collapse active="false" nodeId="2a800291e1904520b872750417312c6e">
+<km-title>插件向 DSH 注册的四个知识访问工具</km-title>
+<km-content>
+<table nodeId="feab05dd-baed-41f3-8e7f-acf8f1153d86">
+<tr nodeId="aa1ca1e2-714a-41da-a015-3635507b0f7e">
+<th colwidth="[68]" nodeId="1cb1e753-29e7-4337-9fc6-bbaf581f63e9">
+<p nodeId="009d24a1-0f76-41b3-8ffd-bcbf8ff20e6d">工具</p>
+</th>
+<th colwidth="[68]" nodeId="62ce6f1d-bab1-49d6-8f2e-8525b8fb323b">
+<p nodeId="52477ba6-8ab6-48d6-a465-dc39c2ff0068">用途</p>
+</th>
+<th colwidth="[68]" nodeId="ebba2cbe-fdce-452e-b1e0-89d5e952eb11">
+<p nodeId="c80727c6-f238-4f8e-9747-af36ce5ef6bd">返回给 Agent 的主要证据</p>
+</th>
+</tr>
+<tr nodeId="70c46ac3-a045-4e70-8dd3-9fa00d64c100">
+<td colwidth="[68]" nodeId="5e91e0a5-26ff-47d9-a926-2cb07d2c4980">
+<p nodeId="47d35e34-b41e-4c1e-9d2a-5470a5307dea"><code>weknora_list_knowledge_bases</code></p>
+</td>
+<td colwidth="[68]" nodeId="d5802415-71f2-486f-8a8e-3d70d3d84899">
+<p nodeId="311e1659-eeed-4b25-846c-6a0e220818cf">查看当前凭证可访问的知识库</p>
+</td>
+<td colwidth="[68]" nodeId="b410d1fc-5af1-4eeb-9fe1-4a9a889aa3b3">
+<p nodeId="b01a1cf9-b6b0-4d9c-971a-9fc174f6ef01">知识库名称和 ID</p>
+</td>
+</tr>
+<tr nodeId="98b368ad-f46e-49f6-8288-8fe33e01e24c">
+<td colwidth="[68]" nodeId="aa664c0d-c15a-4a26-9e35-8f9acdb86778">
+<p nodeId="c3321e89-74d8-46a7-8844-82a492ba585c"><code>weknora_search</code></p>
+</td>
+<td colwidth="[68]" nodeId="b4b11bed-f917-40a0-a443-3e9c94316157">
+<p nodeId="9fd4bca4-e525-46c1-bd78-aef8a4819902">对指定或全部知识库执行混合检索</p>
+</td>
+<td colwidth="[68]" nodeId="1ad83675-c244-4274-8b4a-7328f9bcc8f7">
+<p nodeId="8e3b7ed6-1e94-41e8-8d50-84d18af107db">原始片段、相关度、文档 ID 和分块位置</p>
+</td>
+</tr>
+<tr nodeId="9372065b-fbd7-40d9-9025-ce0bb8420f9e">
+<td colwidth="[68]" nodeId="d9bfa9c6-3b47-42a5-8245-365af6878aff">
+<p nodeId="708edfa1-55ae-4092-be24-819d672219c6"><code>weknora_read_document</code></p>
+</td>
+<td colwidth="[68]" nodeId="80c16e1e-7e98-4c20-a551-2ec2a8a20e09">
+<p nodeId="e0b33085-8929-4f58-8e34-d3dfcc862724">在命中片段后继续读取完整文档</p>
+</td>
+<td colwidth="[68]" nodeId="8be1a65f-d1d5-45a2-81b9-4f57606f585a">
+<p nodeId="c1464f8f-aaf8-4207-8b9a-15e4bc369c17">按顺序重组的分块、标题和摘要</p>
+</td>
+</tr>
+<tr nodeId="0128f959-6a18-4663-935b-78c96e43ba6a">
+<td colwidth="[68]" nodeId="d5b8cf48-3314-4918-aa0d-f4192d83249f">
+<p nodeId="03611496-1f0b-42c6-aaf4-9355a72a68ab"><code>weknora_ask</code></p>
+</td>
+<td colwidth="[68]" nodeId="a7fd3dd7-24b5-479d-9e4c-394a3cca3a95">
+<p nodeId="9397cc31-d16a-447b-823e-cb441f646f73">将跨文档综合问题交给 WeKnora 回答</p>
+</td>
+<td colwidth="[68]" nodeId="6fb42219-2b15-4529-9e7d-771884f2142c">
+<p nodeId="37cef799-ddd7-4fb8-ace8-7e10b667baea">WeKnora 的结论、引用和可续接 Session ID</p>
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<h4 nodeId="3ce16021-4f9b-4abd-837c-8b001c294f61"><strong>演示</strong></h4>
+<p nodeId="c405c5ac45b24dcfad58d1e0b88c9018">1. 在 WeKnora 中准备知识库</p>
+<p nodeId="1267d9fdef3740e6b04d9a98ce588569">首先在 WeKnora 中创建或选择“采集执行 Agent”知识库，将全量 UDF 文档上传到 <code>UDF/functions</code> 目录。WeKnora 会对文档执行解析、分块、向量化和索引构建；所有文档状态变为“已完成”后，文档即可被稳定检索。</p>
+<p nodeId="e488d8ad9c6743fba8e4e24784ff2e10"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255168022795?isNewContent=false&amp;contentType=1" name="image.png" width="838" height="277" nodeId="f2e100f66a2241f3839db49be468004a" /></p>
+<p nodeId="02e060721a7845a69b4f232091756ddd">2. 在 DSH 中验证检索效果</p>
+<p nodeId="463b88d659294e25862e789a3b78b68f">完成知识库准备后，以查询某个UDF 的功能和输入参数为例，向 Agent 提问：</p>
+<blockquote nodeId="0b456caa-1d88-47f6-85aa-7146f926663f">
+<p nodeId="b9446219-bdcd-4188-bff4-6e6a7a0a11e2"><code>afterPromotionPriceRestoration</code> 这个 UDF 是做什么的？有哪些输入参数？</p>
+</blockquote>
+<p nodeId="a8c373c4-e62f-4797-9462-31e6c9718e77">DSH 调用 <code>weknora_search</code> 按函数名检索知识库，并通过 <code>weknora_list_knowledge_bases</code> 确认检索范围。命中文档后，Agent 使用 <code>weknora_read_document</code> 读取完整内容，最终返回函数用途、调用形式、Java 签名、输入参数、返回类型和源码位置。整个过程先检索定位，再按命中文档补充上下文，不需要预先将全部 UDF 文档加载进模型上下文。</p>
+<p nodeId="3bee1685092a47c1b202c4533e227705"><img src="https://km.sankuai.com/api/file/cdn/2785506770/255170214626?isNewContent=false&amp;contentType=1" name="" width="801" height="801" nodeId="cc742e217a07451f8f07fc17cebea536" /></p>
+<h3 nodeId="8415d76d-ef23-4301-adeb-06ad6eb39a4a">4.3 使用插件扩展模型 API 请求参数</h3>
+<h4 nodeId="c7126ad7-8cbb-4103-a52d-d1f55f96fca1"><strong>问题与目标</strong></h4>
+<p nodeId="54586ff8-532e-49e3-81c5-e055782c2010">在此前使用 CatDesk、Claude Code 等通用 Agent 产品建设采集执行 Agent 时，我们主要通过 Skill 描述业务规则和任务步骤。虽然这些产品也支持 Tool、MCP、Hook、Subagent 及部分模型和上下文设置，但 Agent Loop、上下文压缩和 Memory 注入主要由Agent运行时定义。我们通常只能在应用层增加 Skill 和 Tool，无法调整这些底层机制，也难以验证它们如何共同影响最终执行结果。</p>
+<p nodeId="bbecda69-ecfc-4351-bd72-d1d1b0a28337">DSH 将模型请求链路和 LLM Adapter 开放为插件扩展点。插件可以增加模型调用参数，按 Agent、任务或 Step 设置取值，并在 Adapter 中完成校验和请求序列化；实际生效的值还可以记录到 Session 日志，便于核对和复现模型请求。</p>
+<h4 nodeId="9b054fdf-ae28-4da6-921f-da0535be88b7"><strong>页面不开放的 API 参数</strong></h4>
+<p nodeId="ca37edc4-aefd-45a8-8b51-b80caa39993c">DSH的UI菜单一般只提供 Provider、Model、Reasoning Effort，并不将每个提供方的所有 API 字段都变成通用 UI 选项。以 <a href="https://developers.openai.com/api/reference/cli/resources/responses/methods/create" title="OpenAI Responses API" nodeId="0216cc56-fe34-4747-8a23-dd5f0e7a42af">OpenAI Responses API</a> 和 <a href="https://developers.openai.com/api/reference/cli/resources/chat/subresources/completions" title="Chat Completions API" nodeId="f3e8e679-4316-46ae-938b-30f1840ed5d5">Chat Completions API</a> 为例，下列参数均可通过插件进行修改。</p>
+<table nodeId="dae7d699-5f6f-484e-a6ff-cab34cade6e0">
+<tr nodeId="461bc0fd-d32d-4fd3-bd6f-b566f0879483">
+<th colwidth="[68]" nodeId="06801b5a-f37e-4657-9b2c-4a99bbe29b69">
+<p nodeId="3eb72460-33b2-4e57-b05a-4f2fff6d7812">OpenAI API 参数</p>
+</th>
+<th colwidth="[68]" nodeId="4f4aad74-dd79-41e4-8b30-fdf9eb3e53af">
+<p nodeId="fb62502a-3ade-4420-b531-51981483403b">功能</p>
+</th>
+<th colwidth="[68]" nodeId="bdb52f00-4ac5-4dd4-b679-b2b1e0800c07">
+<p nodeId="03e41810-e1d6-4cb8-b4f5-94bcdb83b9f3">插件接入方式</p>
+</th>
+</tr>
+<tr nodeId="21d3c672cc83404598250edb8a06904e">
+<td colwidth="[68]" nodeId="4d8bd4bc71114335a70f6c7885ae8443">
+<p nodeId="d23a0b0203b34d2ca70c9012a2ba87c6"><code>temperature</code></p>
+</td>
+<td colwidth="[68]" nodeId="4bd76e303b7f4f2bb451ae2d3b8bffe5">
+<p nodeId="c488bd87fd6246bfb77df2c7885086c4">控制采样随机性；值越低，输出越集中</p>
+</td>
+<td colwidth="[68]" nodeId="231c3b4ea1fa4c3f832d4e44f90fcfbf">
+<p nodeId="8d73ae22b7b5446f906a03ff2a8772bc">可由 <code>agent/request</code> 插件按 Agent、任务或 Step 自动设置，最后由 Adapter 写入请求</p>
+</td>
+</tr>
+<tr nodeId="a182de18-2e33-48e7-8cf9-57b4aa06da68">
+<td colwidth="[68]" nodeId="14e9faa8-9dcc-46be-ad3d-19a33c0512d9">
+<p nodeId="eb18168e-59fa-4a78-b16e-280a4a708757"><code>max_output_tokens</code> / <code>max_completion_tokens</code></p>
+</td>
+<td colwidth="[68]" nodeId="f91ba437-6a1c-44ac-9a5c-18c1a73ff534">
+<p nodeId="02841377-e7a2-4087-8ca7-8b3830396344">限制可见输出与推理使用的 Token 预算</p>
+</td>
+<td colwidth="[68]" nodeId="317940b8-100c-4bb4-b7de-080eaca4b53c">
+<p nodeId="60c2dbf3-5348-492f-979c-96271da80455">DSH 已用 <code>maxTokens</code> 建模；<code>agent/request</code> 插件可按 Agent、任务或 Step 设置，不需要增加前端控件</p>
+</td>
+</tr>
+<tr nodeId="9aa8b72f-0cb6-4f70-9080-d6b831f45745">
+<td colwidth="[68]" nodeId="a78d350a-a970-4978-8517-98c78a03bfec">
+<p nodeId="b8c1e900-f815-4981-b9b7-21730c811dc8"><code>stop</code></p>
+</td>
+<td colwidth="[68]" nodeId="7cc790c8-8ff1-4863-befd-b80eec8bb862">
+<p nodeId="77c3f543-176e-4175-8c29-20a67580f971">生成指定字符串时停止输出</p>
+</td>
+<td colwidth="[68]" nodeId="dc174bab-3033-4297-86f1-8b91b7b580d4">
+<p nodeId="3af5016d-6e9f-4437-a31b-704d300b5cc7">DSH 已用 <code>stop</code> 建模；插件可为固定格式、分段协议或生成任务注入停止序列</p>
+</td>
+</tr>
+<tr nodeId="b9b5c063-f5b9-4aad-bcc3-b25c97b87cea">
+<td colwidth="[68]" nodeId="dfafa0cd-9dad-4387-b9f0-bc29b3a24265">
+<p nodeId="ebc676b5-982c-4e84-977d-9656b22d053c"><code>top_p</code></p>
+</td>
+<td colwidth="[68]" nodeId="a46cdaab-f45f-4f2c-8acc-6d880f6eac55">
+<p nodeId="c39dd82b-69b3-48e6-9c56-c6355074085b">通过核采样限制候选 Token 的累积概率范围</p>
+</td>
+<td colwidth="[68]" nodeId="5935af38-2372-4caf-bae0-a2d670760abd">
+<p nodeId="65079661-f086-4d57-82ea-4b479bd866b5">可由 LLM Adapter 插件在序列化请求时注入；OpenAI 建议通常只调整 <code>top_p</code> 或 <code>temperature</code> 之一</p>
+</td>
+</tr>
+<tr nodeId="e71c9c1f-b3bf-48c2-a366-010fbf81a8fd">
+<td colwidth="[68]" nodeId="e383ac48-7a27-444a-89c3-94ff27d37187">
+<p nodeId="b92adc9a-dff7-4b38-9c97-6f5d33feb98a"><code>tool_choice</code></p>
+</td>
+<td colwidth="[68]" nodeId="23b987ea-9ad8-4613-ae31-9a32605a4abe">
+<p nodeId="108e3007-84af-4309-99b2-557403e211a8">允许自行选择、禁止或强制 Tool Call，也可指定工具</p>
+</td>
+<td colwidth="[68]" nodeId="ae63a95d-5af5-4687-8190-ac7e7fee834d">
+<p nodeId="254216fb-e996-461d-a963-f2812d5b1422">可由 Agent 策略插件决定，再由 LLM Adapter 转换为提供方字段</p>
+</td>
+</tr>
+<tr nodeId="fe4da9a8-d849-4d1a-b7fa-283410aac2e2">
+<td colwidth="[68]" nodeId="b16afb46-d36c-4c2f-8b86-781c64e4bf11">
+<p nodeId="fe1cd1b6-cf9a-4ba5-80d9-cdc0263f1317"><code>parallel_tool_calls</code></p>
+</td>
+<td colwidth="[68]" nodeId="6daba539-180f-4550-96b6-f9f2d96c037f">
+<p nodeId="05936e58-d53f-4413-8331-99ff7d5d3d3a">允许模型在一次响应中生成多个并行 Tool Call</p>
+</td>
+<td colwidth="[68]" nodeId="5064f905-090f-4ac1-a2f0-da0a3069150d">
+<p nodeId="3def85b4-c4c0-4b3d-be20-d9cc9c5fcaf6">可由插件按 Tool 的并发安全性和任务类型选择，并由 Adapter 写入请求</p>
+</td>
+</tr>
+<tr nodeId="ce5cd3a0-ba23-4a7b-816b-ee5a456a676d">
+<td colwidth="[68]" nodeId="ade136c2-d4a9-49be-8958-6332f5eff219">
+<p nodeId="15445e2c-a212-4bcd-b82c-6a3b468190fd"><code>text.format</code> / <code>response_format</code></p>
+</td>
+<td colwidth="[68]" nodeId="e6db926e-04a2-4ff2-b5a9-9ad7dcd7c85b">
+<p nodeId="6bf81303-a9e7-4ee4-bc49-7420eef1be90">要求普通文本、JSON 或符合 JSON Schema 的结构化输出</p>
+</td>
+<td colwidth="[68]" nodeId="25c2190b-6846-4122-829e-eb60ef112bfc">
+<p nodeId="2a6e3d0c-2053-4435-a4c1-397e7867a55a">可由领域插件同时提供输出 Schema、请求参数和结果校验，避免只依赖 Prompt 约束格式</p>
+</td>
+</tr>
+<tr nodeId="147db6ba-08ac-408c-ab55-0d9a6de074ed">
+<td colwidth="[68]" nodeId="ae79d044-2402-4d2a-aef1-73a7e9f899f6">
+<p nodeId="e997f6b6-f2a7-408f-9fd8-c1e24dec48df"><code>text.verbosity</code></p>
+</td>
+<td colwidth="[68]" nodeId="935929e5-696c-4c7a-b99d-283a4f11e3eb">
+<p nodeId="d61e5ae8-e676-4ce8-848f-a924e110699d">选择回复的简洁或详细程度</p>
+</td>
+<td colwidth="[68]" nodeId="834fce15-fe78-4b20-88a3-23c3f7f4c364">
+<p nodeId="4324b468-7e08-42d2-b325-d9852b89194b">可由插件按任务阶段设置，例如计划阶段使用详细输出、结果回传使用简洁输出</p>
+</td>
+</tr>
+<tr nodeId="02222130-471b-4131-b6aa-08b670b29670">
+<td colwidth="[68]" nodeId="1c682a26-7530-4f0c-8457-18f39df10091">
+<p nodeId="2532732b-2e56-4f69-965e-fd53ace95797"><code>service_tier</code></p>
+</td>
+<td colwidth="[68]" nodeId="5a0e5443-5a46-4537-bea1-6167a489558e">
+<p nodeId="1dd5ecc8-9cf4-40d1-915d-8f6a5947424f">选择提供方的延迟、成本和处理等级</p>
+</td>
+<td colwidth="[68]" nodeId="7371a2a5-2108-462f-8c14-f77429975e20">
+<p nodeId="df5ed2e4-e396-4927-8e7a-6a7d37ed8ff5">适合作为 Adapter 或部署策略插件的配置，由任务优先级决定，而不是交给每个用户手动选择</p>
+</td>
+</tr>
+<tr nodeId="e7657120-456c-46ac-9b7a-7880a3e93cdd">
+<td colwidth="[68]" nodeId="f2858926-8441-4aee-a9dc-8bcfda4f3668">
+<p nodeId="72b1b3d5-759f-4484-8aa0-83242a830560"><code>prompt_cache_key</code></p>
+</td>
+<td colwidth="[68]" nodeId="e9002bb3-1b7d-4846-b020-21d6d33b632f">
+<p nodeId="5c588c71-82f3-470c-ae39-a1f639f1aa5f">将相似请求归入稳定的 Prompt Cache 分组</p>
+</td>
+<td colwidth="[68]" nodeId="72a0ab9f-869a-4242-857e-31aee0af279b">
+<p nodeId="0de4229a-647b-4490-83df-1bb010180139">可由插件根据 Agent、Preset 或任务类型派生，无需进入模型前端</p>
+</td>
+</tr>
+<tr nodeId="0fa9df64-6d03-4500-9d72-9373a7279d10">
+<td colwidth="[68]" nodeId="eb762d60-d9cc-4e03-bffb-8160312d1157">
+<p nodeId="c00b3758-fb11-4ca0-bf46-1d177e41aa1d"><code>top_logprobs</code></p>
+</td>
+<td colwidth="[68]" nodeId="81d96a2b-b29c-4065-a956-79821d868f92">
+<p nodeId="c607e8a9-69cd-4dae-a862-ae4a692ea46b">返回每个位置的高概率候选 Token，用于评测与诊断</p>
+</td>
+<td colwidth="[68]" nodeId="a7940839-119f-403c-94f3-7949340f4922">
+<p nodeId="096cb523-2ecd-4d9b-bee5-346acedc1387">需要 Adapter 插件同时扩展响应解析和遥测记录，不只是向请求中增加一个字段</p>
+</td>
+</tr>
+</table>
+<h4 nodeId="c9fbdb46-34c1-4dbf-a58e-2ad41f93bc97"><strong>实验：不同 Temperature 执行相同需求分析任务</strong></h4>
+<p nodeId="458ff452-55b8-46ae-9256-80e3bccab29a">选择采集执行Agent接入工作流的阶段 1 需求分析任务，分别使用 Temperature 0、0.5 和 1，每个参数重复执行 3 次。9 次正式运行使用相同的 Prompt、PRD 和 Context，权限均为 Full access，每次运行使用独立目录，避免既有文件互相影响。</p>
+<table nodeId="af0ea368-928a-4fe1-92f2-6ed23f067a80">
+<tr nodeId="5275ab77-1aeb-404a-880f-10d97249fa09">
+<th colwidth="[68]" nodeId="f577b46a-8b7b-4b57-b60c-6f3fda9c001b">
+<p nodeId="07e1356b-4ac9-41cb-88f7-b2fd6ca7cde4">Temperature</p>
+</th>
+<th colwidth="[68]" nodeId="5a5d8ed1-e824-4bae-9ee9-4272eaaf2329">
+<p nodeId="a60db0c0-4abd-4ebd-aa4b-d2dd395c2d68">成功运行</p>
+</th>
+<th colwidth="[68]" nodeId="f35e39d3-3f37-4302-97b9-06069d5732b7">
+<p nodeId="60a2ee56-a014-40ae-b97a-3567f69308d8">本地校验通过</p>
+</th>
+<th colwidth="[68]" nodeId="f3be908f-8184-4ea3-80dc-3f46373d7c9b">
+<p nodeId="ea73115a-ac81-42f4-9813-65145cd4a68d">3 次运行中的不同语义输出数</p>
+</th>
+<th colwidth="[68]" nodeId="631d827e-905f-43f2-8826-4eb8bd6d509b">
+<p nodeId="f95d1b5f-fe75-4af3-8798-97f0fc207306">执行步数范围</p>
+</th>
+<th colwidth="[68]" nodeId="59ed0848-d2a8-4666-aaef-4ae75b5e6843">
+<p nodeId="a3d29f9d-dbb6-499e-9f77-58deb5e8e4a4">耗时范围</p>
+</th>
+</tr>
+<tr nodeId="f87da722-1fa5-4c21-940b-de44f7657387">
+<td colwidth="[68]" nodeId="1fc7f143-a586-4b49-8041-785a82b708a1">
+<p nodeId="40d88f04-8c3b-4ead-8851-67a5eae1cf27">0</p>
+</td>
+<td colwidth="[68]" nodeId="be8a0320-7f61-4141-ad95-e3b929121ae3">
+<p nodeId="88d95a93-c06e-4471-b425-569ff556b6fa">3/3</p>
+</td>
+<td colwidth="[68]" nodeId="10fe92fc-46cb-465e-9c9a-f6d5e3de3c6e">
+<p nodeId="5ab55616-a6e2-4297-af5a-a600de6484db">3/3</p>
+</td>
+<td colwidth="[68]" nodeId="635cfdee-f89f-46d0-8ae4-29bc1e8aebdf">
+<p nodeId="495f52b1-87da-4be2-b872-d73beb4a1073">3</p>
+</td>
+<td colwidth="[68]" nodeId="8050a727-093b-4747-92bd-b25e5b69be7a">
+<p nodeId="6e5cad8c-2466-45d6-848f-3ebf694d96f5">55–118</p>
+</td>
+<td colwidth="[68]" nodeId="e9b0d7c4-185d-451a-8fdc-be14c6b7d980">
+<p nodeId="ec4bc541-5bdd-482b-8aa0-9a8652ad57d1">9 分 12 秒–18 分 34 秒</p>
+</td>
+</tr>
+<tr nodeId="ff7af98c-462e-4a5c-a2e1-7fad64770934">
+<td colwidth="[68]" nodeId="8738dbc3-429c-41ad-bfe1-418d7a439448">
+<p nodeId="f9a4d4e2-5349-4954-ab0a-43d8c2eac572">0.5</p>
+</td>
+<td colwidth="[68]" nodeId="63be4182-7878-4d15-8561-7d89242996a2">
+<p nodeId="475924d2-c3e1-4636-9612-86b5ab395363">2/3</p>
+</td>
+<td colwidth="[68]" nodeId="9244ccc4-2691-4cc1-82c3-8f5ce46e9b2e">
+<p nodeId="f3035443-7fe6-41b3-8ba1-0176eec0a54a">2/3</p>
+</td>
+<td colwidth="[68]" nodeId="a1f1721b-2894-4676-b913-27321952ff78">
+<p nodeId="d8df25fb-fafb-40f2-9374-e49bd08afcb7">3</p>
+</td>
+<td colwidth="[68]" nodeId="07413b70-4d53-442a-aef1-be78d3deac1d">
+<p nodeId="882b138f-6354-4d37-ab38-bc8159879965">29–91</p>
+</td>
+<td colwidth="[68]" nodeId="08af7e16-f3f6-41f2-a2a6-f0b9e8abf80d">
+<p nodeId="d82e7ede-7556-457b-af04-1ef4a26dd8a6">5 分 49 秒–12 分 54 秒</p>
+</td>
+</tr>
+<tr nodeId="7d27e898-e472-4d56-9364-e4e081bf922f">
+<td colwidth="[68]" nodeId="e9e3b223-40cf-4c03-ac4f-814a519c668c">
+<p nodeId="88f8eb7f-4ff5-4d2d-8d73-c43cce6ec085">1</p>
+</td>
+<td colwidth="[68]" nodeId="b951f2af-da2e-4c55-b689-032005c98350">
+<p nodeId="a225e92c-1e60-4233-b545-8ca637c61c0e">3/3</p>
+</td>
+<td colwidth="[68]" nodeId="a0f53665-c561-4fbb-950f-9bd06217001b">
+<p nodeId="749b4721-7254-4e2f-981d-f86d6287a4ec">3/3</p>
+</td>
+<td colwidth="[68]" nodeId="0a18d7bd-b6ac-40a1-bdd7-208ff68a354f">
+<p nodeId="2366b682-b323-4ff2-b51c-7c3534e68187">3</p>
+</td>
+<td colwidth="[68]" nodeId="fffb1785-c357-4169-bd89-7ff8a22321ad">
+<p nodeId="f082df6f-d4aa-4c1b-a9b9-302fdca952ca">53–106</p>
+</td>
+<td colwidth="[68]" nodeId="c0bb5079-6eec-42cd-b3a0-0eb16ae487de">
+<p nodeId="7448637b-965e-4b68-8a2a-6c49b7ab56ab">7 分 19 秒–14 分 13 秒</p>
+</td>
+</tr>
+</table>
+<p nodeId="78359c6d-5501-49f7-9153-db41ad493806">三个参数下都没有出现两次完全一致的结果。每个参数的三次运行在原始文件、路径归一化结果和语义归一化结果上均形成 3 个不同输出。Temperature 0 的三组两两比较仍有 54、102 和 104 个语义叶子字段不同，执行步数为 55–118；渠道和规则标识、数据类型顺序、测试用例以及是否遵循强制流程均发生变化。</p>
+<h4 nodeId="af4d5838-a64d-4062-854f-894f974bd5e2"><strong>结论</strong></h4>
+<p nodeId="f7f26bbf-c9a7-447e-84a1-9b5b0992ba51">Temperature 是采样参数，不是 Agent Loop 的确定性开关。设置为 0 可以收窄当前一步的候选输出，但不能保证模型服务逐字返回相同内容，也不能固定 Tool 返回、外部服务状态、上下文装配和后续 Agent 决策。长程任务会将每一步的差异写回上下文，使后续模型请求不再相同，最终把局部偏差放大为执行路径和结果文件的差异。</p>
+<p nodeId="638fd679-c628-482d-8345-e52bd1747bb3">实验结果没有验证“关闭推理并将 Temperature 设置为 0 可以稳定复现长程任务”的最初猜想，但这次实践仍提供了一条新的优化思路：借助 DSH 的插件化架构，我们不必只在 Skill 中增加文本约束，还可以通过插件直接对 Agent 底层的大模型 API 调用进行调参，记录实际请求值，并通过重复实验验证不同参数对执行路径和结果的影响。</p>
+<h3 nodeId="08d228d5-c404-4355-85d1-b2449c8fc81b">4.4 使用 Claude Code 替换 Subagent Provider</h3>
+<h4 nodeId="bcc459a1-3df6-4d1c-809b-abf52a1eb611"><strong>背景</strong></h4>
+<p nodeId="61dcf47c-6b9c-47d8-b38c-36e86e5a088f">在 DSH 之前，开发者可以通过插件、CLI 或 SDK 让 CatDesk、Claude Code、Codex 等产品相互调用。例如<a href="https://zhuanlan.zhihu.com/p/2051577899338281083" title="《Claude Code 调用 Codex：一次性子进程与常驻 App Server》" nodeId="d2648911-635e-4fb7-8f6d-1175d364bac1">《Claude Code 调用 Codex：一次性子进程与常驻 App Server》</a>介绍了两条路径：通过 <code>codex exec</code> 启动一次性子进程，或者通过 Codex App Server 复用会话并支持恢复、中断等交互。这些方案可以实现 Agent 协作，但通常需要针对具体产品组合分别适配任务传递、进程生命周期和结果返回。</p>
+<p nodeId="87d9e7ab-fd61-4a73-9720-01f81343ad00">DSH 将 Subagent 的公共调用接口、具体执行后端和模型侧 Tool 拆成独立插件。上层 Agent 始终调用同一个 <code>subagent</code> Tool，只需替换 Provider，就能在进程内 DSH Agent、Claude Code、Codex 等实现之间切换，而不需要修改 Tool 和 Agent Loop：</p>
+<pre language="Plain Text" isExpand="false" nodeId="d1450c97-e4e0-4983-8255-40605eee5904"><code>点对点集成：采集执行 Agent → 专用插件／脚本 → Claude Code
+统一能力接口：采集执行 Agent → subagent Tool → Subagent Service → Claude Code Provider
+                                                               ├─ Codex Provider
+                                                               └─ DSH In-process Provider</code></pre>
+<h4 nodeId="40fb7e61-3682-4984-98d3-1a8b4a2c27e7"><strong>安装与使用</strong></h4>
+<p nodeId="481ab7f1-a928-416c-88e3-87d20529abef">首先使用 DSH CLI 从 npm 安装 Claude Code Provider：</p>
+<pre language="Shell" isExpand="false" nodeId="cadef65b-98dc-4e28-bedf-9124dc73afaa"><code>dsh plugin --profile web add \
+  @deepseek-ai/dsh-subagent-claude-code@0.1.1-rc.2</code></pre>
+<p nodeId="c5ee3ef7-9e32-42d5-bc46-24ab0b5f86e3">安装完成后重启 Web Profile：</p>
+<pre language="Shell" isExpand="false" nodeId="5a68fd6c-61af-4f82-baef-a06156b9479e"><code>dsh web</code></pre>
+<p nodeId="a460fc32-6281-40d1-985a-b7179427cfa3">然后在 Agent Preset 中启用 Subagent Tool，并将其绑定到 <code>claude-code</code> Provider：</p>
+<pre language="YAML" isExpand="false" nodeId="bee9249e-3843-4170-9d1b-3a21a9cd9a1c"><code>- id: tool-subagent-claude-code
+  name: '@deepseek-ai/dsh-tool-subagent'
+  config:
+    provider: claude-code
+    toolName: subagent
+    backgroundMode: one-shot
+    maxDepth: provider-managed</code></pre>
+<p nodeId="15666ace2feb463f832155b99ee83547">同一个 Agent Preset 可以注册多个 Subagent Tool 实例，为每个实例设置不同的 <code>toolName</code> 和 Provider。主 Agent 根据任务类型选择对应的 Tool，即可将编码、检索或其他任务派发给不同的 Subagent。</p>
+<h2 nodeId="c0b833fd-cc95-4130-bb4d-52d1cd0bc00c">五、将 DSH 接入 Multica 作为本地 Runtime</h2>
+<h3 nodeId="e93d258d-735f-457d-9a6f-b597dfcf4a96">5.1 接入方式</h3>
+<p nodeId="86a89f56-f228-448f-8f9a-ad1138708a27">Multica 可以继续负责 Issue、小队和任务调度，只把底层 Agent Runtime 替换为本机 DSH。接入时需要升级 Multica CLI、安装 DSH、为 <code>multica</code> Profile 安装 Runtime 插件并重启 daemon，具体命令和配置见<a href="https://km.sankuai.com/collabpage/2782280286" title="《本地 DeepSeek Harness 接入 Multica》" nodeId="ad09fd32-cb2d-4a9c-ba8d-8c7be07316e1">《本地 DeepSeek Harness 接入 Multica》</a>。</p>
+<p nodeId="a7cabfd5-8c5f-452e-b3e2-b988ec2b210e">接入完成后，Multica 负责选择任务、准备工作目录并注入项目上下文，daemon 通过标准输入输出协议启动 <code>dsh --profile multica --stdio</code>。模型配置、凭证、Agent Loop 和 Session 持久化由本地 DSH 管理。</p>
+<h3 nodeId="87bf80be-0b7e-47b7-a311-f290c86e1d62">5.2 Session 日志的区别</h3>
+<p nodeId="31bcc2f4-5235-4153-a722-31ea80e78927">Multica 与 DSH 记录的是不同层次的状态：Multica 日志以 Run 为单位，记录任务调度和执行状态；DSH Session 日志记录一次 Agent 会话中的用户消息、模型回复和 Tool 调用，是恢复上下文和继续执行的状态来源。</p>
+<p nodeId="b90ed1a8-f98b-4699-a4a6-8d0bd97793aa">每次 Multica Run 都会启动一个本地 DSH 进程，但不一定创建新的 Session。请求携带 <code>resume_session_id</code> 时，DSH 从已有 Session 日志恢复上下文并追加新的 Turn；未携带时则创建新 Session。因此，一个 DSH Session 可以跨多个续跑 Run，同一 Issue 的不同 Run 也可能对应多个独立 Session；子 Issue 会作为独立任务创建自己的 Session。</p>
+<h3 nodeId="4790e847c07e45c39f95ba7c7a66e6dc">5.3 测试结果</h3>
+<p nodeId="8b9da892255e45058ae63375c98810ef">选取采集执行领域 5 个任务进行测试，均在阶段一执行超时（超40min）后仍未完成，基本不可用；正常情况下类似任务的阶段一平均完成时间约为 9 分 37 秒。</p>
+<p nodeId="6a5d9b7f05774eaf84278c8e3fe31a0c">读取执行日志分析原因，可以分为以下几类：</p>
+<table responsive="false" nodeId="48928a827c144189b5201739af23e977">
+<tr nodeId="8c29dc12d2a540f3a479fa364c3c01a6">
+<th colwidth="[186.92709350585938]" nodeId="e21aed7d1fd24c85bd5e1d801607e1e3">
+<p nodeId="f9285750d82349bd8fdeab7f5f1ede54">分类</p>
+</th>
+<th colwidth="[777.9688110351562]" nodeId="22adc714dea6415082ce0c122257fd1c">
+<p nodeId="7eab6cd5aab14300a128ede1bf6ab99b">表现</p>
+</th>
+<th colwidth="[1230]" nodeId="73a9658aadd7416e93a1c760e98c86db">
+<p nodeId="e543fb3875c5438fa29e7b9f495a81dd">原因分析</p>
+</th>
+</tr>
+<tr nodeId="931b90ed6fc44ccfb4af090789e729a0">
+<td colwidth="[186.92709350585938]" nodeId="382eb7f3718c4b1d98092520f93adaaf">
+<p nodeId="1db768c1c9fa41828f1cc0300a29bf8f">父子任务工作目录隔离</p>
+</td>
+<td colwidth="[777.9688110351562]" nodeId="f423d35c6a9741679e993c8014a95d42">
+<p nodeId="387dd6f97e004f6c843788094bdec186">子任务需要把 <code>stage1_result.json</code> 写入父任务目录，但 5 个任务均返回 <code>Operation not permitted</code>，父任务最终没有收到阶段一结果</p>
+</td>
+<td colwidth="[1230]" nodeId="1e4ac2c2f59744fe9713f7dd0c09f2d9">
+<p nodeId="600c4abdfc344f42baebafa9f8515860">DSH 将 Session 的 cwd 固定为唯一主要可写根目录，目前不支持额外的目录级可写白名单；Multica 又为父子任务提供独立的 Session root，导致结果路径位于子任务沙箱之外。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/sandbox/sandbox-policy/README.md" title="DSH 官方沙箱说明" nodeId="7d4856b811aa41e488442820ebb9c4c1">DSH 官方沙箱说明</a>、<a href="https://github.com/multica-ai/dsh-multica-runtime" title="Multica DSH Runtime" nodeId="acfa84382a53461f9dcb7098577277e1">Multica DSH Runtime</a>，这即是 DSH 单根目录权限模型的限制，也是 Multica Bridge 未适配现有产物协议的问题。<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/4701" title="DSH 目录授权讨论 #4701" nodeId="2fd68460fa3a460b8521f64bea8cdd2a">DSH 目录授权讨论 #4701</a></p>
+</td>
+</tr>
+<tr nodeId="e2777c2f75cc47c8a4be70ee9a192e3d">
+<td colwidth="[186.92709350585938]" nodeId="a964bc108cff4ed0a877f3472f11fa92">
+<p nodeId="1c67326d1a9242c9bf2735484e2a538b">Agent Loop 缺少收敛约束</p>
+</td>
+<td colwidth="[777.9688110351562]" nodeId="0c177218bb9d4c269459d641bcd80ea3">
+<p nodeId="b5ad36a4f8644b2eac59daaa51d8ebe9">Agent 反复核对在线 v1、灰度 v2、L3/L4、<code>task_code</code> 和 <code>method_code</code>，并多次跨 workspace 搜索；已经获得相似结果后仍继续查询</p>
+</td>
+<td colwidth="[1230]" nodeId="01ea0bbf166a4c8789300b9a0ba8da97">
+<p nodeId="b357f318edb546d298688a21259bdca1">Prompt 没有限制检索范围、查询次数和业务冲突的终止条件；DSH Agent Loop 只要模型继续请求 Tool 就会继续执行，缺少内置的 maxSteps 或任务级资源预算等异常循环止损机制。<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/2821" title="无上限 Agent Loop 讨论 #2821" nodeId="b347ba1cbf4b4179880d71810ba30455">无上限 Agent Loop 讨论 #2821</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/3228" title="Harness 循环案例 #3228" nodeId="9026647c498e47c080a12d6d6e2b95f4">Harness 循环案例 #3228</a></p>
+</td>
+</tr>
+<tr nodeId="79128040d55745699705edbf125366e2">
+<td colwidth="[186.92709350585938]" nodeId="ce0e238929f242d98ab43ebae19eab78">
+<p nodeId="4dc90061c0934451a04fb792c5c08feb">Tool 输出持续积累</p>
+</td>
+<td colwidth="[777.9688110351562]" nodeId="3d7262538c1440599d0c53d5c076b2ef">
+<p nodeId="8b4d1070e9684a82b4e336d43c7a1c7c">执行约 34 次 <code>zbmanager</code> 查询、23 次跨 workspace 检索和 55 条 Python 命令，累计产生约 278 KB Tool 输出，后续请求逐渐变慢</p>
+</td>
+<td colwidth="[1230]" nodeId="894351a8727a4be0a3f83290223b219a">
+<p nodeId="0218e46a8bde45608087f9e8ddef7bf9">重复查询产生的 Tool 结果会保留在 DSH Session 中。DSH 默认在上下文达到 80% 后才触发 Compaction，Tool Result Pruning 也只有在该条件满足后才运行，低压力时不会独立裁剪大输出。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/compaction/compaction-basic/README.md" title="DSH Compaction 官方说明" nodeId="854627c1ffa24be1b0f5c7992260cff7">DSH Compaction 官方说明</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/5150" title="相同版本实测 #5150" nodeId="db58bbcff3984c37b099a58cf94fd122">相同版本实测 #5150</a><a href="https://github.com/deepseek-ai/deepseek-harness/discussions/5310" title="长程上下文讨论 #5310" nodeId="929db55fe83b47859d1f73d6eac8dc47">长程上下文讨论 #5310</a>  ps：Claude Code会在上下文管理时优先清理旧 Tool 输出、Codex经过性能和成本调优后<km-footnote id="b936039e-2c79-4350-bdd8-6cb8b2979872" annotate="" nodeId="25a04e3990d8427ba5630adb62de45db" />将GPT‑5.6 Sol的默认上下文窗口设置成272K。</p>
+</td>
+</tr>
+</table>
+<p nodeId="1e6c2aa71db2407197d2282a377966c1">作为 Multica Agent Runtime 使用时，默认配置下的 DSH 对长程、Headless 及多 Agent 协作场景的运行保障仍不充分，尚未达到生产级 Runtime 所要求的稳定性与可控性。正式应用前，需要在 Multica–DSH 接入层完善跨 Session 产物交付、异常循环熔断、查询与资源预算控制，以及上下文生命周期治理等机制。</p>
+<h2 nodeId="ef9c1cb5331a4578a268e4d24c836e8c">六、总结与展望</h2>
+<h3 nodeId="cefb475961bc415a8ad463ecba12d603">6.1 总结</h3>
+<p nodeId="f0123863645e4c5eb291eea145f3e4d4">Claude Code、Codex 和 CatDesk 都提供面向用户的 Agent 工作流，并通过 Skill、Tool、MCP、Hook 或 SDK 等机制开放扩展能力。DSH 同样采用插件化扩展，但可扩展对象进一步覆盖 Agent Runtime 本身，使开发者能够重新组合底层运行能力。</p>
+<p nodeId="a3ca3815c86842d78e03b13c4004ab2d">具体来看，DSH 将模型适配、Agent Loop、Session、上下文管理、Tool Pipeline、Subagent Provider 和客户端组装等运行能力开放为插件扩展点。本文通过 Session 断点重跑、WeKnora 知识库接入、模型请求参数扩展、Claude Code Subagent 和 Multica Runtime Bridge，验证了这些扩展点在执行历史复用、知识统一管理、模型调用控制、执行后端替换和外部平台集成中的可行性。对于领域 Agent，DSH 的价值在于提供更细粒度的 Runtime 控制，使团队能够复用底层运行机制，并围绕具体业务流程进行定制。</p>
+<h3 nodeId="2298f3c367de4d168f98b098fc3cac03">6.2 现阶段问题与迁移限制</h3>
+<p nodeId="5ea1292c3d484cb8b4629e45c3bb4f5c">DSH 当前仍处于开发者预览阶段，整体成熟度不足，在接口稳定性、插件恢复、长任务资源治理、执行止损和安全审计等方面尚未形成生产级保障。现阶段更适合用于扩展机制验证和领域 Agent 原型实践，<strong>尚不具备将既有 Agent Runtime 整体迁移到 DSH 的条件</strong>。</p>
+<table responsive="false" nodeId="44032c7523b244f3be1a9645c228769e">
+<tr nodeId="7c1f716e068041578708b4c1a6eec576">
+<th colwidth="[155.8854217529297]" nodeId="d9c7b1458da24ce091a861fe8498b0b6">
+<p nodeId="ab48a9f737694b88be8c7a8ad0ece08e">风险项</p>
+</th>
+<th colwidth="[788.3507080078125]" nodeId="55ad934d5fc24650a20a80f85809ce9c">
+<p nodeId="8bd931cbc3234434a7c3a11296875aee">现状与依据</p>
+</th>
+<th colwidth="[709]" nodeId="9ac372737b1b4fd5aeb510bcf499ba4c">
+<p nodeId="aef4748287a7487e83d88624700bcfed">影响</p>
+</th>
+</tr>
+<tr nodeId="be04eb806d9a43e6a07bacb0bbaba652">
+<td colwidth="[155.8854217529297]" nodeId="d4cb19b1ddc6448da32ed73a0ccd126e">
+<p nodeId="3d4a262cae664cffade326e39a4a08a8">插件兼容与故障恢复</p>
+</td>
+<td colwidth="[788.3507080078125]" nodeId="0e55ce45ba0a43158c9f6b7df0d2dd09">
+<p nodeId="173a29de8b73473b8f0ea162b9eed1e8"><a href="https://github.com/deepseek-ai/deepseek-harness#developer-preview" title="官方 README" nodeId="92f62ef1788443a0af7924ec3f640427">官方 README</a> 明确说明后续会出现兼容性破坏性变更。社区已有 Adapter 接口变化导致<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/4013" title="第三方插件失效" nodeId="64008fbcde7348e19971a80c9553895c">第三方插件失效</a>，以及导出移除、接口调整和客户端 Runtime 包删除等<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/5271" title="升级案例" nodeId="9117a10b270f4f8b8c4962b2df210c03">升级案例</a>。目前没有证据证明“大量插件已经失效”，但一个加载失败的条目可能触发<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/5106" title="整组插件配置回滚" nodeId="f75a274ab43b4c0e900243f3c35afc32">整组插件配置回滚</a>，客户端也<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/2229" title="缺少页面内恢复入口" nodeId="e852d020fa4d49d38470333fc91b5ac6">缺少页面内恢复入口</a>。</p>
+</td>
+<td colwidth="[709]" nodeId="127e777e057d49aba140e3bc66a6a080">
+<p nodeId="776e3bb778fe4003a809c396788ad082">实际使用时发现，更新 DSH 版本后，旧插件在新版本容易出现不兼容。</p>
+</td>
+</tr>
+<tr nodeId="08baa69268c9408aae3baf048f920ca4">
+<td colwidth="[155.8854217529297]" nodeId="f01a8f7dc4524869b584cf11d37b0d93">
+<p nodeId="be70114ebb8b4e18886c1c355a24f2f1">长 Session 资源上界</p>
+</td>
+<td colwidth="[788.3507080078125]" nodeId="f5b6be3bb3954fd8ab70d89da0c296fc">
+<p nodeId="b796819c683b4f388798d49ff794eb6f">Session 会在内存中保留完整事件序列，Compaction 只缩减模型输入，不裁剪原始日志；恢复时还需要读取并重放历史事件。社区已有长 Session 叠加大量并发 Subagent 后，进程内存增长至约 4 GB 并崩溃的<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/4722" title="报告" nodeId="427cb98ae14741cf95a890b1cd474548">报告</a>。持久化层虽然会批量、压缩写入，但并发任务仍会放大内存、日志压缩和磁盘读写压力。</p>
+</td>
+<td colwidth="[709]" nodeId="3f141622a357464d869fecf55ddc296c">
+<p nodeId="0fed10081d944e489a4ae8be99e35510">实际测试中发现，如果并发开启 5 个 Session跑采集执行需求，dsh web Node 进程的 CPU 占用升至约 59%，暂不具备稳定承载多个长程任务的条件。（<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/4530" title="讨论 #4530" nodeId="0f35be4a430348c5af8245a242aaac10">讨论 #4530</a> 报告dsh在多个并发任务持续产生事件时，主 Node 进程约 <strong>100% 单核</strong>，每秒执行约 400 次 <code>writev</code>，最终事件循环被占满，HTTP 请求全部超时。）</p>
+</td>
+</tr>
+<tr nodeId="a6465211282947a6955d2cac2c4e463c">
+<td colwidth="[155.8854217529297]" nodeId="16406c4b4a324b3ba45905af6cc9007c">
+<p nodeId="6f2aded482b849d6bf04107e7711e663">异常循环与成本控制</p>
+</td>
+<td colwidth="[788.3507080078125]" nodeId="28adfd9f145d478ea3c9a32f30b0f904">
+<p nodeId="ce03354ebf704fc8a38b56bd02c32ec3">Agent Loop 主要依赖模型主动结束执行，缺少统一的任务级 Step 上限、Token 或费用预算以及异常输出熔断。除 5.3 节中的重复查询外，社区还报告过模型重复输出约 10 分钟、只能依靠 Token 上限或人工终止的<a href="https://github.com/deepseek-ai/deepseek-harness/discussions/2848" title="案例" nodeId="e8efd8b15ebf488dabda0d819fa573e6">案例</a>。</p>
+</td>
+<td colwidth="[709]" nodeId="9d918b2fc31a4985ae676c500bdd590d">
+<p nodeId="ce1c3101d19142388fb220e7b92caa29">模型异常可能演变为长时间资源占用、额外费用和无人值守任务失控，不适合直接用于 Headless 和批量评测。</p>
+</td>
+</tr>
+<tr nodeId="a71df7443cc04bd3a002ee1a9f7cb404">
+<td colwidth="[155.8854217529297]" nodeId="41cecfaeb76a4bc086508d9d9fbd161d">
+<p nodeId="637f0178124449b3b5056f848a2fcd0c">安全与部署边界</p>
+</td>
+<td colwidth="[788.3507080078125]" nodeId="fe40e22974ba468a91c52df628bc1e41">
+<p nodeId="4926e5758d5c40a7889ac3109805ca00"><a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/SAFETY.zh.md" title="官方安全说明" nodeId="a2c39cba122b4510808eb87d9e8b5497">官方安全说明</a>指出项目尚未经过安全审计，不应被视为安全或可用于生产环境的软件；沙箱、审批和权限控制也不保证隔离。Web Server 本身<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/host/webserver/README.zh.md#%E5%B7%B2%E7%9F%A5%E9%99%90%E5%88%B6%E4%B8%8E%E5%BB%B6%E6%9C%9F%E5%B7%A5%E4%BD%9C" title="不提供服务器级 TLS、认证或来源策略" nodeId="f3df369298f449898769e22a4ee08db7">不提供服务器级 TLS、认证或来源策略</a>。</p>
+</td>
+<td colwidth="[709]" nodeId="eece7e37541246459c7be382f6a7610e">
+<p nodeId="fec5bd811a314e8f9ac7b6b9ba12882b">现阶段仅适合本地或隔离环境，不适合直接承载敏感数据、共享服务或不可信工作负载。</p>
+</td>
+</tr>
+</table>
+<h3 nodeId="63898185245b4e5e91f666aa759d2458">6.3 展望</h3>
+<p nodeId="8665e26a80474e62970de42095a6857e">DSH 的优势在于将 Agent Runtime 的关键环节开放为可组合的插件，使模型、Agent Loop、Session、知识检索、Tool、Subagent 和客户端都可以按场景扩展或替换。基于统一的 Session 日志，执行过程还可以被记录、检查、恢复和重放，为领域 Agent 的调试、评测和持续迭代提供基础。随着项目逐步成熟，DSH 有望成为连接不同模型、执行后端和业务平台的通用 Runtime，使团队能够复用底层运行机制，将更多精力投入领域知识和业务流程建设。</p>
+<km-footnote-list nodeId="8f5630278baf4e6eb7b8642e05aaad2c">
+<km-footnote-item footnoteNodeId="f01e8228102741048c557121d2bd9bbd" nodeId="8cf41befcb324011801c563e4fa9e94b"><p nodeId="ba387c948c0347d2bf40aec53f330fa7">事件溯源：事件溯源（Event Sourcing）是一种以事件记录状态的方法。系统不只保存当前状态，而是按照发生顺序记录用户输入、模型回复、Tool Result 和执行状态变化等事实；需要恢复当前状态时，再读取这些事件进行重建或投影。因为历史事件会被保留，系统也可以从某个节点恢复、分支或重新执行。</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="8a80accf92ec4771a3871e21ecdf2a62" nodeId="77747255b14d47dd86420c71e29674ad"><p nodeId="5dde1a5658f445cca99dec8fc72713d1">美团AI Agent可观测平台：用于追踪(Tracing)和分析 CatDesk、CatX、Claude Code 等 AI Agent 产品的运行全过程，并以统一格式展示这些Agent平台的Trace可视化及分析流程 <a href="https://km.sankuai.com/collabpage/2772835399" title="https://km.sankuai.com/collabpage/2772835399" autoUpdate="true" nodeId="9bc7d974e7f2405c9b8f8cdf46aeb569">https://km.sankuai.com/collabpage/2772835399</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="e752ce9a00134a838456572ee0ee39b2" nodeId="e975ef60673447b1962bf43890fd6a56"><p nodeId="6c82e96bf9fd4951a6dde09d943c4b0d">19%：统计范围为 2026 年 8 月 2 日至 9 月 2 日的 18 个 commit。其中，12 个 commit 涉及四阶段主链，3 个属于渠道复用，2 个只修改评测 Task，1 个只修改 Agent 组织配置。由于后 6 个 commit 不适用四阶段执行链路，本次仅统计其余 12 个 commit。</p>
+<p nodeId="3f1168618f1d4a1297adb6d63050f4d4">按照 commit 的主要修改内容分类，7 个集中在需求分析阶段，主要涉及 PRD/KM 提取、验证数据生成和阶段上下文；4 个集中在函数配置阶段，主要涉及 Groovy 生成、知识检索和 UDF 验证；1 个集中在流程测试阶段，主要涉及测试结果定位与比较。</p>
+<p nodeId="e3ec53c1d16845b0ac682277cf8586b7">需求分析阶段的修改仍需从头执行；函数配置阶段的修改可以复用需求分析及此前的解析 Leader 执行，单次约节省 14 分 34 秒；流程测试阶段的修改可以复用前三个阶段及其编排过程，单次约节省 34 分 29 秒。综合估算预计平均节约时间为19%。</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="49f964d67cd6487fa462f32c3287e951" nodeId="202c9c8f25e842a1bdccbae5700faf07"><p nodeId="461fe988535743f7a2bf3306aaa59cda">WeKnora：<a href="https://weknora.weixin.qq.com" title="WeKnora" nodeId="ad6b9538b1234b11b96f90180095da45">WeKnora</a> 是腾讯开源的、基于大语言模型的知识管理框架，面向企业文档理解、语义检索和智能推理场景。它提供 RAG 快速问答、ReAct Agent 多步推理和自动 Wiki 三项核心能力，并覆盖文档解析、分块、向量化、混合检索、引用回答和知识图谱等知识处理环节。项目源码与完整功能说明见 <a href="https://github.com/Tencent/WeKnora" title="WeKnora GitHub 仓库" nodeId="cd1bb2277b8d4939ba33fd5d86bb91bf">WeKnora GitHub 仓库</a>。</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="25a04e3990d8427ba5630adb62de45db" nodeId="4c76aab9b678431bb2cc98bb68b99738"><p nodeId="12cfa1b305c2484d8c537eaa711e25ae">性能和成本调优后：官方解释，超过约 272K 后，整体输出质量差别不大。更大的窗口主要优势是减少上下文压缩等待、能一次处理超大输入。但工具调用会反复读取、传递已有上下文；窗口越大，每次调用涉及的缓存读取量越大，使用额度和系统成本增长更快。</p>
+<p nodeId="4fff0d883f174dac919c4ef9cc17d31b" /></km-footnote-item>
+</km-footnote-list>
+</km-doc>

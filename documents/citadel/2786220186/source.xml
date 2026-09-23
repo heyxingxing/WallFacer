@@ -1,0 +1,2934 @@
+<km-doc>
+<km-title nodeId="2afd21ff03e143c4b4261a043d1580f0">Agent 上下文工程：构成、诊断与解法</km-title>
+<km-catalog style="none" nodeId="b1fefadeb5124a0685d78dbef1b3acf5" />
+<km-note type="tip" hiddenTitle="true" nodeId="68504190e5014df89fb584fc99fed069">
+<km-title></km-title>
+<km-content>
+<p nodeId="040808a777c343cfbe0c68e04147a43a">本文讨论 Agent 的上下文工程，首先以 CatPaw 和 ClaudeCode 为例，拆解一次 LLM API 请求的上下文中装了什么；再逐一讨论三类输入的设计 —— 全局信息文件、SKILL 和工具；接着给出判断一次任务执行失败是不是上下文问题的方法；最后给出上下文问题的解空间 —— 其中三种解法来自我们的领域 Agent 实践，另外两种来自业界方法论。</p>
+</km-content>
+</km-note>
+<h2 nodeId="346836bc4ce54626a4fc2a0b876137bd">一、上下文包含哪些内容</h2>
+<h3 nodeId="f47f73c43db541e08738f5f0ca422da3">1.1 以 CatPaw 为例分析</h3>
+<pre language="Mermaid" title="绿色=永不压缩+全局缓存，黄色=独立缓存+会话快照，红色=可压缩/每次变化" isPreviewMode="true" nodeId="8cf738a4-cc36-4d60-a85f-9b82831c2b97"><code>flowchart LR
+    A["Tools 工具定义&lt;br/&gt;全局共享缓存 1h"] --&gt; B["System Prompt 主体&lt;br/&gt;身份+行为规范 全局共享"]
+    B --&gt; C["Context Prompt&lt;br/&gt;MCP清单+用户信息+客户端能力"]
+    C --&gt; D["messages 区块注入&lt;br/&gt;workspace规则/AGENTS.md全文&lt;br/&gt;skills索引/sandbox/memory"]
+    D --&gt; E["对话历史&lt;br/&gt;summary+保留消息 可压缩"]
+    E --&gt; F["当前用户消息"]
+    style A fill:#e8f5e9
+    style B fill:#e8f5e9
+    style C fill:#fff8e1
+    style D fill:#fff8e1
+    style E fill:#ffebee
+    style F fill:#ffebee</code></pre>
+<p nodeId="21c1cb5834e74d3caf92e3b40d79ea82">根据当前 CatPaw 的使用，上下文的构造基本如上图所示</p>
+<table responsive="false" nodeId="cf6deecde5d14bea8253002fa5b112f2">
+<tr nodeId="ae7f585e2caa451e93d1e2033bfba05f">
+<th colwidth="[288]" nodeId="81731efe290d4a97b69e0b322bacf10f">
+<p nodeId="a31434004fe543df9ca453bfca55b000" />
+</th>
+<th colwidth="[907]" nodeId="05305aecdf9643e283bc89b601f0b543">
+<p nodeId="4dfec8c724984f73a5e8d053530d249f">详细描述</p>
+</th>
+</tr>
+<tr nodeId="ebc7085834bf4ed3a0aa0d47dadff72b">
+<td colwidth="[288]" nodeId="e0fffa7d5d9542f7bce2d910c39bd048">
+<p nodeId="a07ae63e2179427d9aeb05c74a4d43d9"><strong>Tools（工具定义）</strong></p>
+</td>
+<td colwidth="[907]" nodeId="d58f01abe6334c4c9c492e6d84f3ad3f">
+<p nodeId="c49a6c3579464658907282c4c3970941">全部工具的 JSON Schema（服务端工具如 fetch_rules/km_search + 沙箱工具如 read_file/grep + MCP 工具 + 业务自定义工具），这是最稳定的前缀，官方架构文档称其「永不被压缩」，配 1h TTL 缓存断点。 </p>
+</td>
+</tr>
+<tr nodeId="11c31e8b5a4f4612917d58aa478f1d8f">
+<td colwidth="[288]" nodeId="077c351a2c114e25904af2ea0cd9d85e">
+<p nodeId="2512e030c36a4353842f7c7891f603f7"><strong>System Prompt 主体</strong></p>
+</td>
+<td colwidth="[907]" nodeId="b854e30b75714d9186e408e00fbd646d">
+<p nodeId="24c91b59d4864109a9d76147e2c21cf3"> CatPaw 的身份定义、行为规范（中文回复、格式约束、拒答规则、心理健康关怀等）、工作区规则、工具使用规范（TodoWrite/子 Agent/web 限制）、Skill 保护条款、记忆系统路由规则。所有用户共享同一份，享受服务端共享前缀缓存。</p>
+</td>
+</tr>
+<tr nodeId="5f9917292e864dd4a4efba696d0ff166">
+<td colwidth="[288]" nodeId="3d5ba87ed8364c9e83e6710bb75e1f4a">
+<p nodeId="19833c0a71494ac3a87d5e60805c429a"><strong>Context Prompt（运行时状态）</strong></p>
+</td>
+<td colwidth="[907]" nodeId="cb7e82880c8e4080997a413e0d608b36">
+<p nodeId="97da2ed806614c49bdfb5b47ae769775">用户信息（MIS、OS、日期、workspace 路径）、CatDesk 客户端能力（图片渲染、automation directive 格式等）。</p>
+</td>
+</tr>
+<tr nodeId="c284e1c7e3ba4558a71d8caee063aef5">
+<td colwidth="[288]" nodeId="2018fce093cc4df390dc750bb739c342">
+<p nodeId="06e2a055eaff43e6bc4f23ada5ab4f4f"><strong>messages 尾部逐次注入的项目级区块</strong></p>
+</td>
+<td colwidth="[907]" nodeId="1d5cc5ce33994390a8b5ea6a12983d32">
+<ul nodeId="189f012be4d64261bbe093bdb1614843">
+<li nodeId="ba84d8a77f44477a94187947f5c0f461"><code>&lt;always_applied_workspace_rules&gt;</code>——AGENTS.md/CLAUDE.md 全文（实验确认两种文件名都识别，全文装载）</li>
+<li nodeId="8725965ab05f413e8f66e9e30d3d6afb"><code>&lt;agent_skills&gt;</code>——全部 skill 的名称+触发描述，正文按需 Read，两段式懒加载</li>
+<li nodeId="6c71909f5d6d438aad899e9e7827cd5b"><code>&lt;sandbox_context&gt;</code>——沙箱模式、浏览器工具替代规则、下载通道、危险命令禁令</li>
+<li nodeId="5dd4b61eda574d3bbbb054900203420c"><code>&lt;memory_context&gt;</code>——MEMORY.md 全文</li>
+</ul>
+</td>
+</tr>
+<tr nodeId="12a2814351ca42c39c7d76e37b2a8c5f">
+<td colwidth="[288]" nodeId="9581ae90e0f640cab8ffbecd86a7fde4">
+<p nodeId="1863e1cc73cf40feb587bea53f9f5884"><strong>对话历史</strong></p>
+</td>
+<td colwidth="[907]" nodeId="85b48337d73f4c119c941ad7538ece57">
+<p nodeId="bc5dda861a6a488dabbfed6599405b23">（user/assistant/tool 消息，含摘要），压缩时切成「summary + 保留消息」，切分点回溯保证 tool_use/tool_result 不拆开。</p>
+</td>
+</tr>
+<tr nodeId="437904a4afcd48cfbda7d6f32c4c2506">
+<td colwidth="[288]" nodeId="335c4f76d3aa49938e58a2eb825d5d49">
+<p nodeId="ef341d329a734611af7d7d7a34270b4f"><strong>当前用户消息</strong></p>
+</td>
+<td colwidth="[907]" nodeId="cf173782ab834472ae4f7fc944a033ea">
+<p nodeId="b2c0c5687fa94bb693d9249e552106c4">每次不同，永不缓存。</p>
+</td>
+</tr>
+</table>
+<km-collapse active="false" nodeId="ea8aabe3056f4e8ca6983b48014b00df">
+<km-title>Anthropic 在 effective-context-engineering-for-ai-agents 中的论述</km-title>
+<km-content>
+<table responsive="false" nodeId="5a3a72a87bf442bfaf13761a44cbdb50">
+<tr nodeId="c16a3bf34f2c41b8a6b070b49e4cec3d">
+<th colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="92e26151a5d7480491ffdd6a2e614000">
+<p nodeId="ba16e817bfa64e72b1ef44a8f9884d30"><strong>英文</strong></p>
+</th>
+<th colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="d140a09619374db3bde4077feef5aca7">
+<p nodeId="4484681f22524035800c691ff96723a1"><strong>中文</strong></p>
+</th>
+</tr>
+<tr nodeId="e90035ec4f0e49299585e9ebbcbec220">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="dbc839dc3cca4c80aefbe7a979325384">
+<p nodeId="6cac0f263fa14607bc222c9382aec791">System instructions / System prompts</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="c9c44480c77946a2ae4d73fefadc4f8e">
+<p nodeId="71196b1fa88548ddb344b80f2a4fca8a">系统指令 / 系统提示</p>
+</td>
+</tr>
+<tr nodeId="43f9d99f5a3c466499c5544c8b7aa820">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="92949bde66bf4d0fab5bcff8bcd43c22">
+<p nodeId="7d5083dec4ce4c31b1445ec3ff9d88d6">Tools</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="b95d20a0ab2c4834aeb34e93b8d55404">
+<p nodeId="12989c261b1b448f85e1b6a1a0f44947">工具</p>
+</td>
+</tr>
+<tr nodeId="5420773957974a92bec0005fc78d18bd">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="07766a1b0ceb46dda0479219b0217be8">
+<p nodeId="5d44a2be00b5472392f9df93af8dedff">Model Context Protocol (MCP)</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="e7536c666cf740488cee7b935503ada1">
+<p nodeId="f51fa337099f44e1809eed3a62acbcfe">模型上下文协议</p>
+</td>
+</tr>
+<tr nodeId="2c334820141c49c6a95aebab7687cb81">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="65d64391b6c744e58af6fb1307395f8a">
+<p nodeId="4b8ce1a09828475f8e58f20725623726">External data</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="2fc7fde5ed7445ad8ac62606c0870e37">
+<p nodeId="051b2ca6a08443b6af026d533fb69364">外部数据</p>
+</td>
+</tr>
+<tr nodeId="33b17ed3fa9e4efcab3856237a3474fc">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="6db86bda9ff74586afaa10ebf128a2ab">
+<p nodeId="b4aa346f65f545eead243dc0f93ae41a">Message history</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="e7ff746150384b1abc3b61d56e648051">
+<p nodeId="f9163cef4b5747bfb8e0c2d5252b2ede">消息历史</p>
+</td>
+</tr>
+<tr nodeId="f4adb680ab0243ca8db9a0a2d9a79bca">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="79cbac1d7305487790f6899bb84944f2">
+<p nodeId="2d3b05d3920e4d9ab4b568291b2d7b5c">Examples (Few-shot examples)</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="69ff2fa6bb2b4ce6b1cf4cfcae63acae">
+<p nodeId="0923364baf8a44e88501300213be3843">示例 / 少样本示例</p>
+</td>
+</tr>
+<tr nodeId="b5ba078389bd46f69fe8c2d0f09f78f8">
+<td colwidth="[359]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="a4cc7ecb351a48ad8a154264ee61b2ba">
+<p nodeId="40e85e66728548bcb4c1013551d6d052">Intermediate results / Agent-generated data</p>
+</td>
+<td colwidth="[269]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="7a8e1e50c9854f15be8787b1d128fa5f">
+<p nodeId="ac1baa47fdbd49049f6dff21b870eb8f">中间结果 / Agent 生成的数据</p>
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<km-collapse active="false" nodeId="fdec25dc2b084ef980924750ad6fd70e">
+<km-title>Philipp Schmid（前 Hugging Face、前 Amazon 资深 AI 工程师），上下文不只是你发给 LLM 的那条提示词，而是模型生成回复前看到的所有东西。具体包括：</km-title>
+<km-content>
+<p nodeId="f18e3691b7464d1a9f6384a28cb6a516"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254799107223?isNewContent=false&amp;contentType=1" name="" width="339" height="285" nodeId="4b4b37814c10443fbe69db988b5b8fa9" /></p>
+<p nodeId="8cf6f22af5e743d08922d3a6e4f32b7b" />
+<ol nodeId="10b036ac8b894fe5a55e5e2fbd3f03ed">
+<li nodeId="5d6fc4b2c5124531817432574ec8195b">Instructions / System Prompt（系统提示词）</li>
+<li nodeId="9fc7db7277b54d968227cc6e021dd4c4">User Prompt（用户提示词）</li>
+<li nodeId="ef2af2fc02414065814f66d83c9a7543">State / History, short-term Memory（状态/历史，短期记忆）</li>
+<li nodeId="83823d2e27724d5bb9018e11e4d5bd7b">Long-Term Memory（长期记忆）</li>
+<li nodeId="60b06b73ac564de09f9ed9e333434067">Retrieved Information, RAG（检索信息，RAG）</li>
+<li nodeId="8dc0a72c4a7d42b29b51802766a56b3a">Available Tools（可用工具）</li>
+<li nodeId="503a601cbea942dd8fb1c38aaed62afc">Structured Output（结构化输出定义）</li>
+</ol>
+</km-content>
+</km-collapse>
+<km-collapse active="false" nodeId="7e5ecbc5a6ef41cbb6c7402e52e509de">
+<km-title>Google 白皮书《Context Engineering: Sessions, Memory》</km-title>
+<km-content>
+<p nodeId="c2ac04956e2c43b099ce252f92a6ddad"><a href="https://blog.csdn.net/weixin_40877874/article/details/156618119" title="Google 白皮书《Context Engineering: Sessions, Memory》" nodeId="1c268c0ed5a3408ea830783be2280242">Google 白皮书《Context Engineering: Sessions, Memory》</a></p>
+<p nodeId="030aab75347e4b1e8dfef1ed93f53500">指导准绳的上下文：定义智能体的基本推理模式和行动方式，决定其行为：<br />　• 系统指令（System Instructions）：定义智能体角色、能力和具体的限制指令。<br />　• 工具定义（Tool Definitions）：解释每个外部执行交互的 API 或函数。<br />　• 少样本示例（Few-Shot Examples）：通过上下文学习指导模型理解过程的表达示例。</p>
+<p nodeId="5c8e0b2a7d7741adb1a3aea0614020a1">证据与事实数据：智能体理解任务的事实依据，包括相关知识和外部实时信息，是智能体响应的“证据”：<br />　• 长期记忆（Long-Term Memory）：跨多个会话收集的关于用户或任务的持久化知识。<br />　• 外部知识（External Knowledge）：从数据库或文档中检索的信息，通常通过检索增强生成（RAG）实现。<br />　• 工具输出（Tool Outputs）：工具调用数据或结果。<br />　• 子智能体输出（Sub-Agent Outputs）：被委托特定任务的专业智能体返回的结论或结果。<br />　• 工件（Artifacts）：与用户或智能体相关的文件或数据（如文件、图像）。</p>
+<p nodeId="3b7b5e15e4d946b686a560b54dd2c1a8">即时过程信息：让智能体知道当前交互、定义时序：<br />　• 对话历史（Conversation History）：当前交互的轮次记录。<br />　• 状态/草稿（State / Scratchpad）：智能体用于即时推理或任务状态跟踪的临时信息。<br />　• 用户提示（User’s Prompt）：需要处理的即时查询。</p>
+</km-content>
+</km-collapse>
+<p nodeId="5a17f19d695849d696e4d4d2e4d6b794">结合当前 CatPaw 和业界理解，上下文中内容包括：<strong>指导信息</strong>（系统提示、工具定义、少样本示例、skill名称和触发描述）、<strong>证据与事实数据</strong>（长期记忆、外部知识、工具输出、Agent输出的中间结果）、<strong>即时过程</strong>（对话历史、用户提示）。其中工具定义当前主要以CLI封装在skill里面为主，因此后续不单独针对这块做讨论，感兴趣可参考附录1。少样本示例在长上下文中占比较小，也暂不做讨论。长期记忆、外部知识的召回，由知识管理部分的知识召回来解决，Agent 输出的中间结果主要由平台运行时决定。用户输入的 Prompt 在长任务下占比较少，可以参考附录2。接下来重点对全局文件、Skill、工具、上下文工程实践做重点讨论。</p>
+<h3 nodeId="5f3dfc165a804ef8b6c7781ca3a3e2a3">1.2 以 ClaudeCode 为例分析</h3>
+<p nodeId="2d5de5a089184bb8be54abbba298dc48">用一次实际 Agent 调用查看这个构成。以“查一下这周的定向采集完成情况”这个问题为例。</p>
+<p nodeId="b49a453d08bf497ea5838f23fe6b3c15"> 单个 turn 共 31 次 LLM API 调用，第一次请求的上下文约 5.25 万 token，其中 System 数组 3k token、Tools 数组 3.1 万 token、messages 1.9 万 token。之后每轮请求新增 3 组消息（上一轮响应 + 工具执行结果 + 系统提醒），31 轮下来上下文涨到 8.85 万 token，增量的 90% 以上来自工具输出 —— 两次最大的单轮增量都是文件内容入场（skill 全文 7.7k token、知识文件 9k token）。</p>
+<km-collapse active="false" nodeId="add6affdeeee48c992284deded8cc7d1">
+<km-title>发送问题“查一下这周的定向采集完成情况”时的上下文信息构成</km-title>
+<km-content>
+<p nodeId="f673b2726d6440b78434f19427467a69"><strong>A. 请求元信息</strong></p>
+<table responsive="false" nodeId="2c3763eb6d1247488828c03de080252d">
+<tr nodeId="5771f5f3df8842fdb67470a23055367a">
+<th colwidth="[141]" nodeId="4c28a5fd64be469cb33e9814f8837117">
+<p nodeId="3a85cb29553a4d3bad42aafea8feb0cd"><span font-size="14">字段</span></p>
+</th>
+<th colwidth="[628]" nodeId="3377834a216843f2824db755f3901d8c">
+<p nodeId="a9d81e172b5e445cbc013e08ed88744e"><span font-size="14">值</span></p>
+</th>
+</tr>
+<tr nodeId="cf13195db2ce4bdbb41a60c5f0f9507a">
+<td colwidth="[141]" nodeId="f74347d5d4e048d788f7dcc907d93f28">
+<p nodeId="75c866e7a4374b7280143cddd62e383d"><span font-size="14">url</span></p>
+</td>
+<td colwidth="[628]" nodeId="f80ea3642f19407c9f23c89b04e0d150">
+<p nodeId="e288996a930946a8b9a7d02790091291"><a href="https://mcli.sankuai.com/v1/messages?beta=true" title="https://mcli.sankuai.com/v1/messages?beta=true" nodeId="1bb5b36f680d45da87a2c68b9b140ba8">https://mcli.sankuai.com/v1/messages?beta=true</a></p>
+</td>
+</tr>
+<tr nodeId="d2f18cd03baa4da7aa0ac8fdb515a308">
+<td colwidth="[141]" nodeId="f25c2929af99448ba2514a180d8b02ff">
+<p nodeId="85d9ed5e6b0346c58d7010f4f8ac83cf"><span font-size="14">model</span></p>
+</td>
+<td colwidth="[628]" nodeId="c45ebb2e826f46fc959bd9c18cc9efd0">
+<p nodeId="d2565ad0c4cc449ba5f52b187f7d4f66"><span font-size="14"><code>claude-opus-5</code></span></p>
+</td>
+</tr>
+<tr nodeId="6f77dd4188694abfaec00b71621c4a60">
+<td colwidth="[141]" nodeId="6edc29c373b949af82d53dbc8051e4e1">
+<p nodeId="4c87b21c0f644cf3a49d424bffdada1a"><span font-size="14">max_tokens / stream</span></p>
+</td>
+<td colwidth="[628]" nodeId="49c2e027953f4995974268bc06b50891">
+<p nodeId="1c7ffbf3135d4300bf89b9d44355fddb"><span font-size="14">64000 / true</span></p>
+</td>
+</tr>
+<tr nodeId="b6ab0347802643faab22decf17621ffd">
+<td colwidth="[141]" nodeId="0477f97ad763418a972b91eb1b96dc75">
+<p nodeId="d938f36cd083445084757c2f668aae72"><span font-size="14">thinking</span></p>
+</td>
+<td colwidth="[628]" nodeId="6e300319e4ad4343bc17679a04ef1975">
+<p nodeId="25dbc62652ba4ad9960087227efd33e5"><span font-size="14"><code>{"type": "adaptive"}</code></span></p>
+</td>
+</tr>
+<tr nodeId="03f1e670dff24bfd8c544a474f87663b">
+<td colwidth="[141]" nodeId="8a0a6c1f3bc34147870276dc2280cf98">
+<p nodeId="b64e3cb69d6b4c6f908e520388dd233d"><span font-size="14">headers</span></p>
+</td>
+<td colwidth="[628]" nodeId="68a062428e134fd8b9f666a15956932a">
+<p nodeId="fb89fad758ef48a2acb8da0e913717fe"><span font-size="14"><code>anthropic-beta: claude-code-20250219, context-1m, interleaved-thinking, prompt-caching...</code></span></p>
+</td>
+</tr>
+</table>
+<p nodeId="39316e91aaf44da0abcd711bd42d6d7c" />
+<p nodeId="1b1659b8573d455b8897cf951052846c"><strong>B. System 数组（3 个 block，共 13,325 字符）</strong></p>
+<table responsive="false" nodeId="270155d25eb248b2bce85c2bd169bcfa">
+<tr nodeId="fddfe782fac44d2f9bffc35e2a20365f">
+<th colwidth="[65]" nodeId="0ccdc565826b4224855ef298434375f9">
+<p nodeId="297e38c809934302a97664707d93e5ab"><span font-size="14">#</span></p>
+</th>
+<th colwidth="[112]" nodeId="909b19bcc5034a799b8109cca5ccc454">
+<p nodeId="97d7207d9218449c9e0ccd5d92e228c7"><span font-size="14">字符数</span></p>
+</th>
+<th colwidth="[162]" nodeId="61e57a7927e240b68103975aef516460">
+<p nodeId="8fc9c9e04b574bb080bed84074744b1b"><span font-size="14">cache_control</span></p>
+</th>
+<th colwidth="[548]" nodeId="9298b5d938d24e59b29204e687843059">
+<p nodeId="6602d63486d5403d8750a4aeabed29f4"><span font-size="14">内容</span></p>
+</th>
+</tr>
+<tr nodeId="d5bd5c244b8940f4986eefbbfb97c4bc">
+<td colwidth="[65]" nodeId="7456c28d3a404ce9b85c58ce70d122a3">
+<p nodeId="86a17a1163fb452b89abed7588f6f1dd"><span font-size="14">[0]</span></p>
+</td>
+<td colwidth="[112]" nodeId="d32abd8bba2b4d79a72704c1270408af">
+<p nodeId="2654d68b68de430e8a972e987bb463b1"><span font-size="14">70</span></p>
+</td>
+<td colwidth="[162]" nodeId="7995a96359ce4f72b63f5e8761977473">
+<p nodeId="63d981223d8c480dba87f4f127d467eb"><span font-size="14">无</span></p>
+</td>
+<td colwidth="[548]" nodeId="e145e3e29ee14a5faa2a92fae9abeb4b">
+<p nodeId="cb245211983f49c4964519ef7fa71c0e"><span font-size="14">计费头 </span><span font-size="14"><code>x-anthropic-billing-header: cc_version=2.1.247...</code></span></p>
+</td>
+</tr>
+<tr nodeId="89f68d53ec2b47c8b43e1c7ca50398dc">
+<td colwidth="[65]" nodeId="73f36a541c24451b80cac6b02eb58707">
+<p nodeId="f3ab3ab0c1de4437a2dc288f0e1fad91"><span font-size="14">[1]</span></p>
+</td>
+<td colwidth="[112]" nodeId="013b87622ed14e8d8cb78c1ec0e9c7d7">
+<p nodeId="bc5946e55b3c43648e9f141ab33401de"><span font-size="14">57</span></p>
+</td>
+<td colwidth="[162]" nodeId="7acb76cfa3cb413abe57a76deea350d8">
+<p nodeId="f354ddf0cdf54438914d0a528f4b28b6"><span font-size="14">ephemeral</span></p>
+</td>
+<td colwidth="[548]" nodeId="b2e4dbbe15944bffb2e426944ea21d9f">
+<p nodeId="cc1f511f72a34b87bc2e7230a09981d8"><span font-size="14">身份行 "You are Claude Code, Anthropic's official CLI for Claude."</span></p>
+</td>
+</tr>
+<tr nodeId="aebe2c6d630d4a1f8d5c94c2d90f600e">
+<td colwidth="[65]" nodeId="39d97497f81e4415b54b03f7e18b27fc">
+<p nodeId="eb01c55c25394909ba70660b3270182a"><span font-size="14">[2]</span></p>
+</td>
+<td colwidth="[112]" nodeId="2ec37d17895d417780961e52530b562b">
+<p nodeId="09e7c6a1ad794270a690dc908b27d7a8"><span font-size="14">13,198</span></p>
+</td>
+<td colwidth="[162]" nodeId="008e716fb00d4520b96391800075774d">
+<p nodeId="1979725051f44015b19cb30ee118a24c"><span font-size="14">ephemeral</span></p>
+</td>
+<td colwidth="[548]" nodeId="69cef2771bd049ea9d78956836186ae5">
+<p nodeId="c0098892ace54574bb61d66925ee0853"><span font-size="14"><strong>主系统提示词</strong></span><span font-size="14">：Output Style 规则、工具使用规范、环境信息（cwd、分支）、git status 快照等</span></p>
+</td>
+</tr>
+</table>
+<p nodeId="e043049f8c5b423baf1dd258f1975cf0" />
+<p nodeId="2d12a70326ca49b0bdb40dec2d1268d9"><strong>C. Tools 数组（32 个工具定义，以 ClaudeCode Harness 为例）</strong></p>
+<p nodeId="c947f2a6c74942a283324cdb61cc6b85">30 个内置工具 + 2 个 MCP 工具，每个工具都带完整 description 和 JSON Schema，体积可观约13万字符，是 prompt caching 的主要受益对象。</p>
+<table responsive="false" nodeId="e7a0695ab7c643e7a2cb90763a45523d">
+<tr nodeId="1365ef29474f46d1b5ec379ce958a06f">
+<th colwidth="[261]" nodeId="64b7639c9047406f9014b485c7a8ebfc">
+<p nodeId="ae2f5e7a6e19434b86d23e8eb4c3d898">工具</p>
+</th>
+<th colwidth="[148]" nodeId="cb141e0f11af48d2bc39fa86ae6d4dec">
+<p nodeId="452ffe089a2341018a93a5c183373bc1">description 字符</p>
+</th>
+<th colwidth="[138]" nodeId="8852c40aed4f4571ad5ccf73ae734713">
+<p nodeId="15420611500c44418a0ea1c610dc254f">schema 字符</p>
+</th>
+<th colwidth="[102]" nodeId="9e39b156c7ee45e49a2a9a6583a7a917">
+<p nodeId="0f321e85a6f244d4bff9ce82befb58ae">合计</p>
+</th>
+</tr>
+<tr nodeId="e95fe5897e6648b3b049c7d7db6afbb4">
+<td colwidth="[261]" nodeId="128f9556417340e59734b83da79816a9">
+<p nodeId="3c2f51d78fee4a43b3e85801c4c44f95"><code>Artifact</code></p>
+</td>
+<td colwidth="[148]" nodeId="3d3a84bf825148c483c9f688d743687a">
+<p nodeId="5a6bf96d963a4caa935ef454a5ab90fc">16,162</p>
+</td>
+<td colwidth="[138]" nodeId="0b17df9280194f64ab3042d9156a1c06">
+<p nodeId="1ad9640239d0454f9b750905f448d32d">10,648</p>
+</td>
+<td colwidth="[102]" nodeId="d5a6b62cfd484c21b9ce4a468a45ec29">
+<p nodeId="2542e180661746d3bcc059a08202fbaf">26,810</p>
+</td>
+</tr>
+<tr nodeId="7f17dfaed7584588ba4d90b689199b35">
+<td colwidth="[261]" nodeId="6b216078c86543c89d9435cf35a42c01">
+<p nodeId="821bc37abd874565bf7421e62ae4e47b"><code>Workflow</code></p>
+</td>
+<td colwidth="[148]" nodeId="2b5ce88119f349b68efae43346655b37">
+<p nodeId="a024b8fcf77c4a5090429cdc250917a9">19,290</p>
+</td>
+<td colwidth="[138]" nodeId="1e61cb8fea3f4af5810a17682d26bd7e">
+<p nodeId="d48d99209ac74fa1ae49846415606ad9">1,818</p>
+</td>
+<td colwidth="[102]" nodeId="78fb6c76e7824e91a3af383def38a521">
+<p nodeId="f228344b921e4a77b651e775e8503bd2">21,108</p>
+</td>
+</tr>
+<tr nodeId="20fcc9dc7b32412a8d35e1a662c3121a">
+<td colwidth="[261]" nodeId="f6810bc5bdb44e08856784e43f88a793">
+<p nodeId="87ee752ae0834f0b8f58ac53683518a4"><code>DesignSync</code></p>
+</td>
+<td colwidth="[148]" nodeId="fe2b9340698e40439467c10a25849a7b">
+<p nodeId="cf772c1abb344ae8b2fc378f22c66232">3,724</p>
+</td>
+<td colwidth="[138]" nodeId="33f12abaff594a35a651544e4afd752e">
+<p nodeId="9a1572c87f1e408484358655e53497cf">5,393</p>
+</td>
+<td colwidth="[102]" nodeId="ffc0501c7515477e99e6094b203f60cb">
+<p nodeId="fa22820027cf42eba87ebde0a1fef609">9,117</p>
+</td>
+</tr>
+<tr nodeId="a445dc49ebc54ca285ea797d73818bc7">
+<td colwidth="[261]" nodeId="edf74d993d2046b5b8405e335e122455">
+<p nodeId="4559fd3559594a668f5a54a57af891cb"><code>Monitor</code></p>
+</td>
+<td colwidth="[148]" nodeId="f65125ca275a4d4dbfe69d834cf9b8a8">
+<p nodeId="8312b6dcb73f4f178c64f8f4acca6ebc">6,132</p>
+</td>
+<td colwidth="[138]" nodeId="419ad4a5a96d41648a97dc12c817d97f">
+<p nodeId="4bf2f3911e0a4528a3c4d758408fff44">1,246</p>
+</td>
+<td colwidth="[102]" nodeId="2fc16bda663e40199b4a86edebc522f0">
+<p nodeId="3647ae6189724643ae61c58049014fca">7,378</p>
+</td>
+</tr>
+<tr nodeId="91e424ad33d94554914ee006e7d08562">
+<td colwidth="[261]" nodeId="0d38cf8d51464547b69e639c3662ec99">
+<p nodeId="6cae2c834f39456fb7210e1427a0d9db"><code>SendMessage</code></p>
+</td>
+<td colwidth="[148]" nodeId="8fd5dcdd159246c3ba90d21013551a3e">
+<p nodeId="e0e521406492452b91ecc3b86102b837">3,934</p>
+</td>
+<td colwidth="[138]" nodeId="2e3d67f814de4f64b78b257a4a96b9fe">
+<p nodeId="2fc1fc6bc790474aa672f6673b1c7261">2,254</p>
+</td>
+<td colwidth="[102]" nodeId="00d6852b1cfb4f248960c318e191793f">
+<p nodeId="02b616827a7c4eed8493de03dba55af0">6,188</p>
+</td>
+</tr>
+<tr nodeId="bd272b687d834217991331c0b4546bb6">
+<td colwidth="[261]" nodeId="a738697b2ac74c7c9b2a9bd0775bbffc">
+<p nodeId="d0c040c7b3bd4158844e8259636f14f4"><code>SendFeedback</code></p>
+</td>
+<td colwidth="[148]" nodeId="d790c5a9cd6f46b18c4049ceac7cd2d1">
+<p nodeId="ed696ea62e3c4a4391bcdd4d3f04b975">3,467</p>
+</td>
+<td colwidth="[138]" nodeId="8b24c7f91a614242942149c1150e24e6">
+<p nodeId="d8b75979f29b49519f4b6d12e41edda6">2,023</p>
+</td>
+<td colwidth="[102]" nodeId="1996baa3445a4a7a82ed57e37c0e11ca">
+<p nodeId="2e878ab58b2f47688a35a9f5e8662515">5,490</p>
+</td>
+</tr>
+<tr nodeId="9d711a25f1614aefac91fe57290459d6">
+<td colwidth="[261]" nodeId="0f2ad5a4fe6842e88b5f2a50d8a30c9c">
+<p nodeId="03337760e6ff450191731420ada0e923"><code>AskUserQuestion</code></p>
+</td>
+<td colwidth="[148]" nodeId="f3669b9a09b84cab88d6c40c83688b74">
+<p nodeId="6debbf8ab1db4d8cb774c4742c0c49b9">1,786</p>
+</td>
+<td colwidth="[138]" nodeId="44e96fe8fcb94c4eba65e2c653933a6b">
+<p nodeId="55921f21c58f424c96fa5f6d262ee6d5">3,149</p>
+</td>
+<td colwidth="[102]" nodeId="eca691dc67174ad69063bb8e2910cbc6">
+<p nodeId="799fd18cd7bb4371a50dfccd378d0534">4,935</p>
+</td>
+</tr>
+<tr nodeId="799556c36a4342f38e7abbd135ac1568">
+<td colwidth="[261]" nodeId="3b6d4e5fa18f49a59ef54416da1a94e1">
+<p nodeId="a918390215b8478f8c8b4ebe5718b08f"><code>ScheduleWakeup</code></p>
+</td>
+<td colwidth="[148]" nodeId="19dfca74d6474ea3a70163713a722b9c">
+<p nodeId="7359f075a3204a6192d81630ddbe953e">3,396</p>
+</td>
+<td colwidth="[138]" nodeId="42e93e79ee20459483e060663c911b5e">
+<p nodeId="5f20136e271243baad28e183dc028c9d">1,423</p>
+</td>
+<td colwidth="[102]" nodeId="d35f218843584657b44aafb796e81b21">
+<p nodeId="f76fb378851c43d4a8224e8b25ff084b">4,819</p>
+</td>
+</tr>
+<tr nodeId="ad321781ad484bfcbfe6fc26a51ed72a">
+<td colwidth="[261]" nodeId="d43f925dc14d494e96ab3c8479891fa4">
+<p nodeId="29762e70fe8940d7ac6cf8c1185fac50"><code>EndConversation</code></p>
+</td>
+<td colwidth="[148]" nodeId="ed9991e66c89475fb90778f8f9519e7e">
+<p nodeId="1c13575318e841b5aade0d77ae5052b8">4,500</p>
+</td>
+<td colwidth="[138]" nodeId="9443edf3b9884e6098a1324fa98be7f5">
+<p nodeId="51746a51e56d47ae836d59a7f6880d47">126</p>
+</td>
+<td colwidth="[102]" nodeId="05e2398d87c34a7a86086e538eb43589">
+<p nodeId="e23c4db8e6264015af9136dafb0d15ac">4,626</p>
+</td>
+</tr>
+<tr nodeId="41a33b1e75f5494cb2688c3522b8a2ea">
+<td colwidth="[261]" nodeId="2d5643c13ba141fd9ed49e787e190717">
+<p nodeId="eedf2be5d8134ec380b4f5a4a6a7cae3"><code>EnterPlanMode</code></p>
+</td>
+<td colwidth="[148]" nodeId="8479b2d1cc3b472886e754021cd7064a">
+<p nodeId="9431b5eb9de34abd87e1dfdcd72ae41d">4,011</p>
+</td>
+<td colwidth="[138]" nodeId="c8c4909986fb462d865ad64a4dcb536d">
+<p nodeId="5bda7d84d9134aa18d1e0cec9e5a8e12">126</p>
+</td>
+<td colwidth="[102]" nodeId="0e95580e06cc4d61b837adc67ded1e94">
+<p nodeId="09da0dcace5947b1a8f62c6832cfde37">4,137</p>
+</td>
+</tr>
+<tr nodeId="23bef48af98f4bf59b7b1a2efe90f46b">
+<td colwidth="[261]" nodeId="68f6225ac6484dfd917ab62c83a48c53">
+<p nodeId="9f404478a2464038983dad6f4ece9284"><code>EnterWorktree</code></p>
+</td>
+<td colwidth="[148]" nodeId="4dafb111091b41fd96b1f4f89055ecf7">
+<p nodeId="f0f14e934533436c8e5b96820482da19">3,220</p>
+</td>
+<td colwidth="[138]" nodeId="e1c2765370b34b54860e69082365d38f">
+<p nodeId="eb21eec0d1f54e38be5dd08b78e60a9a">703</p>
+</td>
+<td colwidth="[102]" nodeId="e4f7fbe21b7c4681b2cfe2ac841032da">
+<p nodeId="a5428f73e9e54cab9390c718c2e09efa">3,923</p>
+</td>
+</tr>
+<tr nodeId="2a96f97751d948f4855a6ee4f79c3c67">
+<td colwidth="[261]" nodeId="f1b1197a3bb44f2baec1767ef5664f70">
+<p nodeId="6465527ab81342a1b26b2b1e0459e707"><code>CronCreate</code></p>
+</td>
+<td colwidth="[148]" nodeId="4df348e6df2a4eb397842efc8db6b4d3">
+<p nodeId="c7f01cf0d7a344ef88e3e7bae9b04391">2,595</p>
+</td>
+<td colwidth="[138]" nodeId="743f16bd73ba4f8488f3942baeb1e590">
+<p nodeId="921bcba1818847af8806faf543dbb516">907</p>
+</td>
+<td colwidth="[102]" nodeId="789f7ef8f5144f8f9d1ef8c447df33f3">
+<p nodeId="560d4db91ea34a45ae9c2fce09db26e0">3,502</p>
+</td>
+</tr>
+<tr nodeId="3f8d004ae43f492ba54150c7478f0023">
+<td colwidth="[261]" nodeId="badb82e314494009ab89ccb6657d8a00">
+<p nodeId="c0d778f4ab31456d9d106c5f635a2b2e"><code>Agent</code></p>
+</td>
+<td colwidth="[148]" nodeId="9eebb9524885462fa8a85d03ffb00de3">
+<p nodeId="354275ee6ba24ff2ab2d7c0e75027e7c">1,811</p>
+</td>
+<td colwidth="[138]" nodeId="778bce09cde8478980296e3a1c5145c7">
+<p nodeId="99cf0a745e1b4cf68aa8ea635323f482">1,656</p>
+</td>
+<td colwidth="[102]" nodeId="099954def0aa4fb48132e0a2fea99cfa">
+<p nodeId="706de0ea41b74ba4b3763fe0ccdca482">3,467</p>
+</td>
+</tr>
+<tr nodeId="16858b70c5444c428ed9ce3b9ca5c62f">
+<td colwidth="[261]" nodeId="36c5bbe3d4604d55baf52e9e610a68ee">
+<p nodeId="e496e52a5e54428cb5d8f585eeda9a7b"><code>Bash</code></p>
+</td>
+<td colwidth="[148]" nodeId="69f1d17b6f3a4aefa2d9678225fe6322">
+<p nodeId="acc6afcc5e0e4fba972b1ceb8a2f23fc">1,056</p>
+</td>
+<td colwidth="[138]" nodeId="a0a594044cea4a4bb6dd31c19daf5f8e">
+<p nodeId="2c0eed04138941d7a8c6a62422dd4e96">1,426</p>
+</td>
+<td colwidth="[102]" nodeId="8dbb33941df240ec9f8f409260bc2150">
+<p nodeId="292bc159243a40c5a448949a7685a737">2,482</p>
+</td>
+</tr>
+<tr nodeId="58bfaa01a9ab41c7ade5fd5c01e41aef">
+<td colwidth="[261]" nodeId="0e7670cdbf984e68aef114d0310f0d66">
+<p nodeId="9576a48d9ba942c0b8e544812ff53fa8"><code>ExitWorktree</code></p>
+</td>
+<td colwidth="[148]" nodeId="4ec957fa72e643abb054ccb9cb244033">
+<p nodeId="ed9d7ecd23264e75aec86f2d1603d732">1,923</p>
+</td>
+<td colwidth="[138]" nodeId="5430f12724e949be890f3e2be7be1851">
+<p nodeId="2d059fb8edc748cfbba7b34d80789ad7">502</p>
+</td>
+<td colwidth="[102]" nodeId="d00c4a4e76fa4514909dbed2fcd23379">
+<p nodeId="c82c8033a5424fcdb85c092d053bccab">2,425</p>
+</td>
+</tr>
+<tr nodeId="e0f97f5467b74ab7b5046a0f464549e3">
+<td colwidth="[261]" nodeId="f6091f9bbc6c4822bc533d2db988d88a">
+<p nodeId="2826483c3a7e4cecb0f0b5cb2879a39d"><code>ExitPlanMode</code></p>
+</td>
+<td colwidth="[148]" nodeId="43c1714118fa486bac1bfd41098685ab">
+<p nodeId="ff454a34e2db4116a149352ad7abbd59">1,849</p>
+</td>
+<td colwidth="[138]" nodeId="88e8e6812c414b5b87ab1e5fbebef199">
+<p nodeId="d904f9c83171456fbbc6d6aae33abd15">537</p>
+</td>
+<td colwidth="[102]" nodeId="d1542164911e4d58b4da831f3350c5f1">
+<p nodeId="da9f0f6bffdd4a29b4833f7bf007659c">2,386</p>
+</td>
+</tr>
+<tr nodeId="abb1760252224b8da6b109b0eb25df8b">
+<td colwidth="[261]" nodeId="be5780393e4f48d687c30892032b3e9b">
+<p nodeId="c01cb1387d0643e5af6a9d76ea76f663"><code>ReportFindings</code></p>
+</td>
+<td colwidth="[148]" nodeId="c4352e0a1e0e47fea8668dfa59f6e17b">
+<p nodeId="c16dc6a6cd9c4213a29a7bfd6512386b">574</p>
+</td>
+<td colwidth="[138]" nodeId="7e058b27d43b46d59d509983e1c5e481">
+<p nodeId="fcd90ccabb4b4ce29364f25403f6e81d">1,636</p>
+</td>
+<td colwidth="[102]" nodeId="fceea81b124840daa2296d05339d8a84">
+<p nodeId="38f8e7386bfb4d3186735375bce92c21">2,210</p>
+</td>
+</tr>
+<tr nodeId="f1f752398e164fc4ba39b7901e0684fc">
+<td colwidth="[261]" nodeId="4d8094f253f542b4a109e704299f7845">
+<p nodeId="fb559eaadc3647458e2c2b7affdf310f"><code>Skill</code></p>
+</td>
+<td colwidth="[148]" nodeId="b8ce2e3d732f41cf9ed7de78d4ca88c1">
+<p nodeId="39a0a9c082e148b0b4ce81c5b8c37aa0">1,417</p>
+</td>
+<td colwidth="[138]" nodeId="db4c16c28041449895706d1c35ba206c">
+<p nodeId="77e80b68eaa8402e85d2ec53e007bd7e">345</p>
+</td>
+<td colwidth="[102]" nodeId="920a16fcdbf34d9b99fc29e646cc9300">
+<p nodeId="a4283091806044f2bddabdd7592e21f4">1,762</p>
+</td>
+</tr>
+<tr nodeId="4d67cf83718c420cae94b6872c6e4b64">
+<td colwidth="[261]" nodeId="d3fb380578f14e21ade218ab7733f567">
+<p nodeId="c91c7f105aba439d829b9d0172390764"><code>PushNotification</code></p>
+</td>
+<td colwidth="[148]" nodeId="b7628c84b8a640c7908d8589e6c99269">
+<p nodeId="0894c3f8ff5d4205858c8ac278051abb">1,362</p>
+</td>
+<td colwidth="[138]" nodeId="80f611c16e894f739bef2c3e82187f02">
+<p nodeId="1a5e1176416544c0b290e3941a398d00">351</p>
+</td>
+<td colwidth="[102]" nodeId="312553ecbe1e43a09285d829dcedfcda">
+<p nodeId="25d46023db864749891cbd9aa5cf9d44">1,713</p>
+</td>
+</tr>
+<tr nodeId="58ce9a4e4e7549a8ba755fba32641bac">
+<td colwidth="[261]" nodeId="bf3de20363354c21aac3b3b1daf0d3b6">
+<p nodeId="ab0cd8c14cd34d129b5da5a197b29bf2"><code>NotebookEdit</code></p>
+</td>
+<td colwidth="[148]" nodeId="2e7604c997c94c18aff56b46a82d787b">
+<p nodeId="b897dba249b94ceba0d99a2ed62d3dce">619</p>
+</td>
+<td colwidth="[138]" nodeId="1388f5ef586f47f38f8de048557fa939">
+<p nodeId="23c035f5d33449e3a9f4f14f449d8acc">981</p>
+</td>
+<td colwidth="[102]" nodeId="8b2ddd5a1f8d46cb9444fb601bf500c9">
+<p nodeId="fc9b692694574ac18dd77b79b315b9a2">1,600</p>
+</td>
+</tr>
+<tr nodeId="61cf586ba3bc42dba900e3e34e3c6562">
+<td colwidth="[261]" nodeId="858a61bad85143f89689122e02ebb2d2">
+<p nodeId="635e76299e124fe2b621159dbe83eb41"><code>Read</code></p>
+</td>
+<td colwidth="[148]" nodeId="53585c32201e41c9842d8afdd654da75">
+<p nodeId="e1048938a6584a2ca27a0fb4952dfdcd">790</p>
+</td>
+<td colwidth="[138]" nodeId="56d78039ee014929878b9f74c9ea76e2">
+<p nodeId="9a5bccd95855493fa5c6fe9b31c31e2d">776</p>
+</td>
+<td colwidth="[102]" nodeId="33c2a60062e4429e8ab41a4fc584a711">
+<p nodeId="cab3d2d19ee845ea9a9e66cef490568a">1,566</p>
+</td>
+</tr>
+<tr nodeId="2d2c5e7c15034446a46199d1a80a0221">
+<td colwidth="[261]" nodeId="7e4b43d61e7145a3a2df5ae714806e14">
+<p nodeId="53a754ac9b3343648e6c4b31300aa624"><code>TaskOutput</code></p>
+</td>
+<td colwidth="[148]" nodeId="0e4b851c2f0946a3b1a326cacbb1f3ac">
+<p nodeId="2a2f40dbf59747f8b1c3b97cef727429">1,049</p>
+</td>
+<td colwidth="[138]" nodeId="56f063196aa94776a360e9136ee078d9">
+<p nodeId="02d487fcbc524d0badd6c6c261b86db6">465</p>
+</td>
+<td colwidth="[102]" nodeId="a790b2aa9f5d4a229833a77dca84d63e">
+<p nodeId="8d9d8919abdc4f79bed3ea5e2cdd7a7c">1,514</p>
+</td>
+</tr>
+<tr nodeId="657d1091ad0440d99394c1d51df8b4cd">
+<td colwidth="[261]" nodeId="46df39db88ae42009007354b4e2a1b0c">
+<p nodeId="34568372989046cc8298e305949225bb"><code>ListAgents</code></p>
+</td>
+<td colwidth="[148]" nodeId="9ffc244277404997b4cbb76e175ef8ad">
+<p nodeId="c5b71ef72f764ea2b25ab6c1c0a48d2e">777</p>
+</td>
+<td colwidth="[138]" nodeId="4d768603e2084b398389304b2351ee28">
+<p nodeId="6a31a6d67dc1498e884af9ef679dc0fb">336</p>
+</td>
+<td colwidth="[102]" nodeId="64bb45501e9f45e391bb4121b1e216b9">
+<p nodeId="2ac0b1ec2e5c412dab8cdc23aad7db2a">1,113</p>
+</td>
+</tr>
+<tr nodeId="d7871af1f1bf40e39857a7cf69b0709e">
+<td colwidth="[261]" nodeId="a905d801f1194ceba5d7e337e115c4d2">
+<p nodeId="2f3dacce0133451b835f03acc375988a"><code>Edit</code></p>
+</td>
+<td colwidth="[148]" nodeId="91d656f7d1cd425a9c828ca2b9f39c2e">
+<p nodeId="412c9c34134c491fa01dd19b05755673">360</p>
+</td>
+<td colwidth="[138]" nodeId="753ca13c648c46748b695289aea72002">
+<p nodeId="29c86aa7d12d46769461a91891cab8e8">584</p>
+</td>
+<td colwidth="[102]" nodeId="fed45a3f4550491db3caaa7394c87212">
+<p nodeId="49a6914b11e64327bafeb71d175696f9">944</p>
+</td>
+</tr>
+<tr nodeId="3c494eace46f4fe6a76e0ee4848465f8">
+<td colwidth="[261]" nodeId="b5f2716cc4044b3d96f35cb537ce1f96">
+<p nodeId="9fbc928ce7224472b600b454c821f90e"><code>WebSearch</code></p>
+</td>
+<td colwidth="[148]" nodeId="e71a10bd98fc49fc9824a2967163ff49">
+<p nodeId="ad8e9643aae240959bda7882389a9fc7">309</p>
+</td>
+<td colwidth="[138]" nodeId="5e7fd8c880774164945235d429e75205">
+<p nodeId="1a57a7e3c0f1403fb5b23e8540865d9a">499</p>
+</td>
+<td colwidth="[102]" nodeId="0c3558ea8f8547429bde6829e6791ecf">
+<p nodeId="fc801c92b1014ccfba075947e6f8da11">808</p>
+</td>
+</tr>
+<tr nodeId="efabaf847cba465eb50a4be22ba2a8cb">
+<td colwidth="[261]" nodeId="926d78df73234f309c70f23349a39690">
+<p nodeId="0dc4e7bd4d6747ddbf5654492c5a069f"><code>TaskStop</code></p>
+</td>
+<td colwidth="[148]" nodeId="794ea1ef4ebc41658a6fcc5aa6601b60">
+<p nodeId="43745a89e32143f1b55f2712578b941c">378</p>
+</td>
+<td colwidth="[138]" nodeId="587cfc253a524c7c9678d529bb42a06c">
+<p nodeId="086d89aaa79a4768b34664fda6dd7b8a">382</p>
+</td>
+<td colwidth="[102]" nodeId="2844c25f647e4f4c96fc74a705e41a7b">
+<p nodeId="a21ec3a4019043f5bcb9a34728d3fbbd">760</p>
+</td>
+</tr>
+<tr nodeId="92a087fcd5bc4faf99a483a75b6602a9">
+<td colwidth="[261]" nodeId="4beaec4c0932465584a4f8fbf7465210">
+<p nodeId="7939ebb1fe3841a1b05fd9ff06b2bf0e"><code>WebFetch</code></p>
+</td>
+<td colwidth="[148]" nodeId="9d736f40469c43da81360cfd8ce30223">
+<p nodeId="91b337dd106641a5ab2deb04ce3949b1">374</p>
+</td>
+<td colwidth="[138]" nodeId="e552d0f15c8f41d381a82f9bbc2f603c">
+<p nodeId="a346c761ac4d4604872ef3e615406966">336</p>
+</td>
+<td colwidth="[102]" nodeId="9e4cf6e2e2d44bb9830144b3dcf7aebf">
+<p nodeId="f8ea16b00f5849a08a13925e9440c4a5">710</p>
+</td>
+</tr>
+<tr nodeId="48090cb24e2d40eea69da6e5b9d8b748">
+<td colwidth="[261]" nodeId="d83572808c144f8499f917e580087bec">
+<p nodeId="43aa871b6ba4452da3edf50132c2c3d2"><code>Write</code></p>
+</td>
+<td colwidth="[148]" nodeId="9a89aaeed49349c5a2a3e86bfd659a91">
+<p nodeId="78914780d35742dd870952b353b847f4">240</p>
+</td>
+<td colwidth="[138]" nodeId="bd27d3acf61146358d11d47218873e39">
+<p nodeId="bec49e33b50c4d15b7bc28bdc9c5361f">367</p>
+</td>
+<td colwidth="[102]" nodeId="8f48b5e65fdb4d3c8d3603545f9c518e">
+<p nodeId="0940354e40a147eaac967d3171f5fd62">607</p>
+</td>
+</tr>
+<tr nodeId="c1512337baf74ada8808a01f35849449">
+<td colwidth="[261]" nodeId="41d428447ec340798e269aeab0faee1d">
+<p nodeId="b2598237a77241cb97851a15fa607d51"><code>mcp__ide__executeCode</code></p>
+</td>
+<td colwidth="[148]" nodeId="674ba6ee89c64752b537f6e5f7b6de32">
+<p nodeId="7c58636d0ffa4cd885879df90459cd7f">363</p>
+</td>
+<td colwidth="[138]" nodeId="66012a3662dc4e858ed7cb2a5eedcafa">
+<p nodeId="cc6b4e6380994505a88adb26bfbcaeec">226</p>
+</td>
+<td colwidth="[102]" nodeId="fd1c9369f9ad4fcb98e3a910449cb841">
+<p nodeId="19ce774ecaf14cda8a56248b2ac51c1e">589</p>
+</td>
+</tr>
+<tr nodeId="7209b043e1c643eb86d4e9f85077b794">
+<td colwidth="[261]" nodeId="1d6745521062438e84c6e41fe35e9315">
+<p nodeId="2da0329183804023bbbef0ae37bf077f"><code>CronDelete</code></p>
+</td>
+<td colwidth="[148]" nodeId="0298268d6cc24af7b23635f0ddd21743">
+<p nodeId="02805225c9e449a69c73e3054ec7561a">100</p>
+</td>
+<td colwidth="[138]" nodeId="49ee99eb758047cf9fda4ae5953a3295">
+<p nodeId="5e1d8485ca7d4702ae4029c7683fa315">219</p>
+</td>
+<td colwidth="[102]" nodeId="1e88303ddef441068633234b05024539">
+<p nodeId="d1228a3cc5464743afe7c4e5a2d18765">319</p>
+</td>
+</tr>
+<tr nodeId="d3eaa2f6ded04c59b3cb87944c61ff7a">
+<td colwidth="[261]" nodeId="ea45d1373fdf4070839f7c4ed8b3526f">
+<p nodeId="14a2756b900a4266a6994e99518a9cf4"><code>mcp__ide__getDiagnostics</code></p>
+</td>
+<td colwidth="[148]" nodeId="c85363ce6f694bde9d7ce1abb8458a94">
+<p nodeId="24b34b489a234b3995f06b9e8f935845">37</p>
+</td>
+<td colwidth="[138]" nodeId="5c9a26ed6af04d22bf17b5e11f36e2af">
+<p nodeId="7fdf5ddec64445c68077131e819f0d0e">255</p>
+</td>
+<td colwidth="[102]" nodeId="0a8edac66a0b46a6b72ef19968d381b5">
+<p nodeId="423e8cac4be6416f9405aaf298b39d50">292</p>
+</td>
+</tr>
+<tr nodeId="690cc8608bcf4a82919224544e459c60">
+<td colwidth="[261]" nodeId="2df52b4aa3264c76acd8112e8f9c3aca">
+<p nodeId="d7adef1d76924af4b6a9ea43c15c24e9"><code>CronList</code></p>
+</td>
+<td colwidth="[148]" nodeId="f9f173da360e44f59d79ef3109383f4a">
+<p nodeId="f5a6a696668d40cf9770661e77af857c">60</p>
+</td>
+<td colwidth="[138]" nodeId="4869320b0c454a3e8891de4e7f561258">
+<p nodeId="d14eaf78bd37461e9865a0de68d12228">126</p>
+</td>
+<td colwidth="[102]" nodeId="1b0a0a0cac5b45b29e4e97f05d0b798d">
+<p nodeId="1896c071cea74398af407ca003f05984">186</p>
+</td>
+</tr>
+<tr nodeId="3c3bcdd84b754a02aa42d5ef0d393a3f">
+<td colwidth="[261]" nodeId="b30d6fa212254aedb68ae23859f2ecbc">
+<p nodeId="9e6c7c1c1734490391ee7f483b7d6d7a"><strong>合计（32 个工具）</strong></p>
+</td>
+<td colwidth="[148]" nodeId="a47aee8d3d3341218d354a253d41caf5">
+<p nodeId="2e80fd5dbf784586ad24a722d0353177"><strong>87,665</strong></p>
+</td>
+<td colwidth="[138]" nodeId="4d53ba61e60e4e8ab1eb503536c0e506">
+<p nodeId="9cf1775aec66448cb514aa20c823ca09"><strong>41,821</strong></p>
+</td>
+<td colwidth="[102]" nodeId="cfb1556ae2b7489b87c33410f9992419">
+<p nodeId="176aaa7916944b21b8c98cb6385790b3"><strong>129,486</strong></p>
+</td>
+</tr>
+</table>
+<p nodeId="a73bc03955304f25889f4bc9b8a2ce75" />
+<p nodeId="2cb95c35ae3d42afa9fcdb360ec937a9"><strong>D. Messages 数组（5 条消息，约 58k 字符）</strong></p>
+<p nodeId="5ef45a056fa54cda99900cc18e003eec">这是上下文的主体。注意此刻用户刚刚发出问题，messages 里已经装了 5 条：</p>
+<table responsive="false" nodeId="9e858aab589b4fb8bca84e5aa56c32c7">
+<tr nodeId="7f5fc2f358c547fc9c4a02b0665ae619">
+<th colwidth="[65]" nodeId="cc374777e6c84069b817915cad61b7b7">
+<p nodeId="c6849c1129e64e4cb5df237c0d43d658"><span font-size="14">#</span></p>
+</th>
+<th colwidth="[132]" nodeId="1e06323e45874742849f710026051457">
+<p nodeId="f0037e43d2b54ae0ba7b1e3100e1c2f7"><span font-size="14">role</span></p>
+</th>
+<th colwidth="[114]" nodeId="70c97b26f8574b39bacc4a24bdafd119">
+<p nodeId="b53eb314dc9d4d528e7c702a1798f60c"><span font-size="14">字符数</span></p>
+</th>
+<th colwidth="[529]" nodeId="30cf3d52a65d44ca9579ec2fffc44601">
+<p nodeId="c9aceb2925814afeaa322b7806901d94"><span font-size="14">内容</span></p>
+</th>
+<th colwidth="[277]" nodeId="3f05abdb3cba43e8becc2eae061c6466">
+<p nodeId="596fd69fbb1e42e6b1c2a99d64d2cc6e">p.s.</p>
+</th>
+</tr>
+<tr nodeId="3f37a292b7854311841d93a228baa375">
+<td colwidth="[65]" nodeId="c885400cb3214558afb81861b1471813">
+<p nodeId="dadb9123a5a94718806811af20734876"><span font-size="14">[0]</span></p>
+</td>
+<td colwidth="[132]" nodeId="23dd4780777546498ef483869017c898">
+<p nodeId="cb264bacda6643c98bedabaec4a3a031"><span font-size="14">user</span></p>
+</td>
+<td colwidth="[114]" nodeId="fb7a48c585d7484ba61474f94c6d388e">
+<p nodeId="e9977fd222d343c79c183e1b82cb9edd"><span font-size="14">24,158 </span></p>
+</td>
+<td colwidth="[529]" nodeId="d0b97a078f4b418c877c9b80885a6fce">
+<p nodeId="ecf073ea7a2d4be6a93de3802db853a1"><span font-size="14"><strong>CLAUDE.md 注入</strong></span><span font-size="14">：以</span><span font-size="14"><code>&lt;system-reminder&gt;</code></span><span font-size="14"> 形式注入全局 + 项目级别的</span><span font-size="14"><code>CLAUDE.md</code></span><span font-size="14"> + currentDate</span></p>
+</td>
+<td colwidth="[277]" nodeId="dd887e89d1bd4212b5fb687ee8b48451">
+<p nodeId="85c07d57b2b144c895fcb841461ac119">cc 的 harness，在会话第一条用户消息前，自动把一堆配置文件包裹成 &lt;system-reminder&gt; 塞进去，包含：</p>
+<ul nodeId="8782a0537f03421bbdba577b8f0105f1">
+<li nodeId="21f4c38ff6b24f37a91c98e2e71823f9"><a href="http://claude.md" title="claude.md" nodeId="09f7b8b450d9477790f74fc02af46d5a">claude.md</a></li>
+<li nodeId="d7cc88d8feb8404cb84af4d6f8bcdccc"><a href="http://memory.md" title="memory.md" nodeId="796561c733c04e7b88ff105121af64a9">memory.md</a></li>
+<li nodeId="0e207b20586344f9ad10039af3648508">currentDate</li>
+</ul>
+</td>
+</tr>
+<tr nodeId="3a5cde98e55448a290af9af2d359fac4">
+<td colwidth="[65]" nodeId="3996b07778b143a7a3145608a2e8bc7d">
+<p nodeId="c7143f48652c4620b652e91585d40405"><span font-size="14">[1]</span></p>
+</td>
+<td colwidth="[132]" nodeId="1c5ecf209ac043b0bd11098584d5d0f8">
+<p nodeId="ecd23020c1db47b2b62515242f214712"><span font-size="14">system</span></p>
+</td>
+<td colwidth="[114]" nodeId="8d2a5223bd82486fa0df1337e4399926">
+<p nodeId="9fdfecca34304582a87d75d2f9ebee6f"><span font-size="14">32,403</span></p>
+</td>
+<td colwidth="[529]" nodeId="af228f8704bb411f870ea749927e10fe">
+<p nodeId="1ddef6c79fc6457b8e8c9359526399ad"><span font-size="14">available agent + skill descriptions</span></p>
+</td>
+<td colwidth="[277]" nodeId="1763f3c43e384b1bb49abfaa98a160d8">
+<p nodeId="94e9f1ba5cd74d7fab78f3c388338a39" />
+</td>
+</tr>
+<tr nodeId="f12b5d06aa364c27b83e7cf53f0b131c">
+<td colwidth="[65]" nodeId="9bb612d4a1b84dbcb592a369ae6a7e3b">
+<p nodeId="5eb48a7160194126af0198b9eb09576e"><span font-size="14">[2]</span></p>
+</td>
+<td colwidth="[132]" nodeId="7ecbe811cbfb45018c60c95b86fd2aa1">
+<p nodeId="815c47616ec04935b54b56cb8e45ffeb"><span font-size="14">assistant</span></p>
+</td>
+<td colwidth="[114]" nodeId="b25e8bfc1e4c4d899b642821b3a9bb49">
+<p nodeId="6843bb6f74854740bbbc0b57d633e3b7"><span font-size="14">402</span></p>
+</td>
+<td colwidth="[529]" nodeId="a677c9839a4e49fdae091a1935079408">
+<p nodeId="12e23ff5c2dc4ecfa785e41a1b94f26a"><span font-size="14">上一轮问题的回答（含 thinking + text）</span></p>
+</td>
+<td colwidth="[277]" nodeId="504b98b7a7be41f8a1955571736321bb">
+<p nodeId="f0da0f6c0d8745f48f22426c2dad3c13" />
+</td>
+</tr>
+<tr nodeId="235f360264d04f6ba0ee328c4bf8b23a">
+<td colwidth="[65]" nodeId="6418f8e9b367441e9549336c5de09420">
+<p nodeId="77adc87eb3e54871baf3405247d347b0"><span font-size="14">[3]</span></p>
+</td>
+<td colwidth="[132]" nodeId="e648c77b3b314871ab822de93ecf66f0">
+<p nodeId="40998a3d50b040d9a8314691f42514ae"><span font-size="14">user</span></p>
+</td>
+<td colwidth="[114]" nodeId="990605e66305462cbe1cd1df8b610df2">
+<p nodeId="ba53246fe7804051a28542e40c9bfdc6"><span font-size="14">15</span></p>
+</td>
+<td colwidth="[529]" nodeId="1956114b49844d91b96602bba6884e0f">
+<p nodeId="fd47c3610870492f93f2f691915e95c2"><span font-size="14"><strong>用户问题本身</strong></span><span font-size="14">："查一下这周的定向采集完成情况."</span></p>
+</td>
+<td colwidth="[277]" nodeId="575bcf78120f4f25a850faf95a0fd45d">
+<p nodeId="1f13fc8263f1418ab535e37a7ec2645d" />
+</td>
+</tr>
+<tr nodeId="85c1a2392f464fc9abd39d3364ee157b">
+<td colwidth="[65]" bgColor="rgb(237, 250, 244)" nodeId="8739f29f0aae4d0682ed5320cd4e8f21">
+<p nodeId="766e017b15894d34921ed804a17d4f1f"><span font-size="14">[4]</span></p>
+</td>
+<td colwidth="[132]" bgColor="rgb(237, 250, 244)" nodeId="6e60071a1bc1436fa48bc44cddfab05c">
+<p nodeId="cccb084e17fb4bd4bbeddbe130a85f78"><span font-size="14">system [自定义]</span></p>
+</td>
+<td colwidth="[114]" bgColor="rgb(237, 250, 244)" nodeId="051259b101564d0cb1c87ed25fd38b62">
+<p nodeId="55b588ce871343aa9afd8e78977cf93a"><span font-size="14">581</span></p>
+</td>
+<td colwidth="[529]" bgColor="rgb(237, 250, 244)" nodeId="70ec4c7faa514c85ba37ad9ff92a4db2">
+<p nodeId="c27eb1c0821c48a89a22ab7b6380004c"><span font-size="14"><strong>UserPromptSubmit hook 注入</strong></span><span font-size="14">：output-style 提示 + </span><span font-size="14"><code>&lt;ANCHOR&gt;</code></span><span font-size="14"> 持续守则</span></p>
+</td>
+<td colwidth="[277]" bgColor="rgb(237, 250, 244)" nodeId="5cf6ce6c95144733a36c2f0f06901ded">
+<p nodeId="719acf03f6e743e8b52fd8220d1443f0">Anchor 插件作用处</p>
+</td>
+</tr>
+</table>
+<p nodeId="b6ac83c8e43a4ef9bcc2e1b7474ff01d" />
+</km-content>
+</km-collapse>
+<km-html nodeId="09234edcf2e14701a297d02afe0217d6"><![CDATA[
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上下文组成图</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-soft: #93C5FD;
+    --accent-faint: #EFF6FF;
+    --focus: #D97706;
+    --focus-soft: #FBBF24;
+    --evid: #64748B;
+    --evid-soft: #94A3B8;
+    --border: #E7E5E4;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #1E293B;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-soft: #1E40AF; --accent-faint: #1E293B;
+      --focus: #F59E0B; --focus-soft: #B45309;
+      --evid: #94A3B8; --evid-soft: #475569;
+      --border: #334155;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #1E293B;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-soft: #1E40AF; --accent-faint: #1E293B;
+    --focus: #F59E0B; --focus-soft: #B45309;
+    --evid: #94A3B8; --evid-soft: #475569;
+    --border: #334155;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .fig-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+  .legend-row {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+    font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;
+  }
+  .legend-row .item { display: flex; align-items: center; gap: 5px; }
+  .legend-row .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .guide-c { background: var(--accent); }
+  .proc-c { background: var(--focus); }
+  .evid-c { background: var(--evid); }
+
+  .row { margin-bottom: 14px; }
+  .row-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px;
+  }
+  .row-label .name { font-weight: 600; color: var(--text); }
+  .row-label .size { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--text-faint); }
+  .bar {
+    display: flex; height: 30px; border-radius: 5px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 500; white-space: nowrap;
+    padding: 0 5px; overflow: hidden;
+  }
+  .seg.guide { background: var(--accent); color: #fff; }
+  .seg.guide-soft { background: var(--accent-soft); color: #1E3A8A; }
+  .seg.proc { background: var(--focus); color: #fff; }
+  .seg.proc-soft { background: var(--focus-soft); color: #fff; }
+  .seg.evid { background: var(--evid); color: #fff; }
+  .seg.base { background: var(--surface-alt); color: var(--text-muted); }
+  .seg.mini { min-width: 3px; }
+  .depth { margin-left: 26px; }
+  .note {
+    font-size: 0.7rem; color: var(--text-faint); margin-top: 4px; line-height: 1.5;
+  }
+  .callouts {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+    font-size: 0.66rem; color: var(--text-faint);
+  }
+  .callouts .c {
+    display: flex; align-items: center; gap: 4px;
+    border: 1px dashed var(--border); border-radius: 4px; padding: 1px 7px;
+  }
+  .callouts .dot { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+
+  .sum {
+    margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .sum-title {
+    font-size: 0.76rem; font-weight: 600; color: var(--text); margin-bottom: 8px;
+  }
+  .sum-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .sum-cell {
+    flex: 1; min-width: 180px; border-radius: 6px; padding: 8px 12px;
+    border: 1px solid var(--border); background: var(--surface-alt);
+  }
+  .sum-cell .k {
+    font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .sum-cell .k .swatch { width: 9px; height: 9px; border-radius: 2px; }
+  .sum-cell .v {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text);
+  }
+  .sum-cell .d { font-size: 0.66rem; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+  .tail-note {
+    font-size: 0.72rem; color: var(--text-muted); line-height: 1.65;
+    margin-top: 6px; padding: 8px 12px;
+    border-left: 3px solid var(--focus);
+    background: rgba(217, 119, 6, 0.06); border-radius: 0 6px 6px 0;
+  }
+  .tail-note strong { color: var(--focus); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <p class="fig-title">[首轮请求] 上下文组成剖析图</p>
+  <div class="legend-row">
+    <span class="item"><span class="swatch guide-c"></span>指导信息</span>
+    <span class="item"><span class="swatch proc-c"></span>即时过程</span>
+    <span class="item"><span class="swatch evid-c"></span>证据与事实</span>
+    <span class="item" style="margin-left:auto; color: var(--text-faint)">首轮请求合计 ≈ 5.25 万 token</span>
+  </div>
+
+  <div class="row">
+    <div class="row-label"><span class="name">整次请求</span><span class="size">System 5.7% · Tools 59.8% · Messages 34.5%</span></div>
+    <div class="bar">
+      <span class="seg guide-soft" style="width:5.7%">System</span>
+      <span class="seg guide" style="width:59.8%; border-left:1px solid rgba(255,255,255,0.35)">Tools</span>
+      <span class="seg guide-soft" style="width:34.5%; border-left:1px solid var(--border)">Messages</span>
+    </div>
+  </div>
+
+  <div class="row depth">
+    <div class="row-label"><span class="name">System 数组</span><span class="size">3 个 block · ~3.0k token</span></div>
+    <div class="bar">
+      <span class="seg guide-soft mini" style="width:1%"></span>
+      <span class="seg guide-soft mini" style="width:1%; border-left:1px solid var(--border)"></span>
+      <span class="seg guide" style="width:98%">主系统提示词（Output Style 规则 / 工具规范 / 环境信息 / git status）</span>
+    </div>
+    <div class="callouts">
+      <span class="c"><span class="dot" style="background:var(--accent-soft)"></span>计费头 25</span>
+      <span class="c"><span class="dot" style="background:var(--accent-soft)"></span>身份行 13</span>
+      <span class="c"><span class="dot" style="background:var(--accent)"></span>主系统提示词 ~2,955</span>
+    </div>
+  </div>
+
+  <div class="row depth">
+    <div class="row-label"><span class="name">Tools 数组</span><span class="size">32 个工具定义 · ~31.4k token</span></div>
+    <div class="bar">
+      <span class="seg guide" style="width:35.6%">2 个工具 Artifact 7.6k + Workflow 3.6k</span>
+      <span class="seg guide-soft" style="width:64.4%; border-left:1px solid var(--border)">其余 30 个工具定义（description + JSON Schema）</span>
+    </div>
+    <div class="note">prompt caching 的主要受益对象 —— 轮次间保持不变，前缀缓存命中率高。</div>
+  </div>
+
+  <div class="row depth">
+    <div class="row-label"><span class="name">Messages 数组</span><span class="size">5 条消息 · ~18.7k token</span></div>
+    <div class="bar">
+      <span class="seg guide" style="width:38.8%">[0] CLAUDE.md 注入 ~7.2k</span>
+      <span class="seg guide-soft" style="width:59.2%; border-left:1px solid var(--border)">[1] skill descriptions ~11.1k</span>
+      <span class="seg proc mini" style="width:0.6%"></span>
+      <span class="seg proc mini" style="width:0.1%; border-left:1px solid var(--border)"></span>
+      <span class="seg proc-soft mini" style="width:1.3%; border-left:1px solid var(--border)"></span>
+    </div>
+    <div class="callouts">
+      <span class="c"><span class="dot" style="background:var(--accent)"></span>[0] CLAUDE.md（全局+项目规则）~7,246</span>
+      <span class="c"><span class="dot" style="background:var(--accent-soft)"></span>[1] agent + skill descriptions ~11,062</span>
+      <span class="c"><span class="dot" style="background:var(--focus)"></span>[2] 上一轮回答 ~106</span>
+      <span class="c"><span class="dot" style="background:var(--focus)"></span>[3] 用户问题 12</span>
+      <span class="c"><span class="dot" style="background:var(--focus-soft)"></span>[4] ANCHOR 注入 ~257</span>
+    </div>
+  </div>
+
+  <div class="sum">
+    <div class="sum-title">按信息角色汇总（首轮）</div>
+    <div class="sum-row">
+      <div class="sum-cell">
+        <div class="k"><span class="swatch guide-c"></span>指导信息</div>
+        <div class="v">≈ 5.25 万 token · 99.8%</div>
+        <div class="d">系统提示词 + 32 个工具定义 + CLAUDE.md + skill 描述 + ANCHOR —— 决定 Agent 的行为方式</div>
+      </div>
+      <div class="sum-cell">
+        <div class="k"><span class="swatch proc-c"></span>即时过程</div>
+        <div class="v">~118 token · 0.2%</div>
+        <div class="d">上一轮回答 + 当前用户问题 —— 标记此刻要处理什么</div>
+      </div>
+      <div class="sum-cell">
+        <div class="k"><span class="swatch evid-c"></span>证据与事实</div>
+        <div class="v">0</div>
+        <div class="d">首轮尚无工具输出 / 检索结果入场</div>
+      </div>
+    </div>
+    <div class="tail-note">首轮几乎全部是<strong>指导信息</strong>；之后每轮请求新增 3 组消息（上一轮响应 + 工具执行结果 + 系统提醒），31 轮下来上下文涨到 8.85 万 token，<strong>增量 90%+ 来自工具输出（证据与事实）。</strong></div>
+  </div>
+</div>
+</body>
+</html>
+
+]]></km-html>
+<h2 nodeId="f4decce7bf014b34bb8cbbc49bd54b3a">二、全局信息文件</h2>
+<p nodeId="e648e20d92e04792b3f50ba9f5604aef">本章节讨论的全局信息文件，指在会话启动时整体注入的指导信息，如：User Prompt（区别于 System Prompt）、AGENTS.md、CLAUDE.md等。这些文件直接决定 Agent 的基本行为方式，是上下文重要的组成部分。以 AGENTS.md 为例，OpenAI 的理解是：</p>
+<blockquote nodeId="72451f536f3f4e219bdaf396763d53c1">
+<p nodeId="12febdb5afac44a4bba8c5d27b077289">“Give Codex a map, not a 1,000-page instruction manual”<km-footnote id="ff8c180f-4840-4f89-9074-f0719749ac5b" annotate="Give Codex a map, not a 1,000-page instruction manual：原文是 “Context management is one of the biggest challenges in making agents effective at large and complex tasks. One of the earliest lessons we learned was simple: give Codex a map, not a 1,000-page instruction manual.”
+
+https://openai.com/zh-Hans-CN/index/harness-engineering/" nodeId="75d1e52262044ebbbfa607676f0800c3" /></p>
+</blockquote>
+<p nodeId="51fce9a86ffa478ba1f527ba4e38a5f6">他们尝试过一个巨大的 <code>AGENTS.md</code>，但失败了，原因有四个：</p>
+<ul nodeId="8492f6a47a8c440f94ad160c82198e32">
+<li nodeId="60ff7d307b41430c9a3979f010f26ae8">
+<p align="start" nodeId="e81e36334ac84af4a1159dedc6e626eb">上下文是稀缺资源。巨型指令文件会挤占任务描述、代码和真正相关文档的位置，导致 Agent 忽略关键限制，错误方向优化；</p>
+</li>
+</ul>
+<ul nodeId="bc92dd165940473f93459ee112dd0f55">
+<li nodeId="2b92ef5410184b2082e32acb64fd8d2c">
+<p align="start" nodeId="51d28bcaefbc43d5933045cf66b54dea">过多指导会变成“无指导”。当所有内容都标为重要时，没有内容真正重要；</p>
+</li>
+</ul>
+<ul nodeId="da3e63e964954cb9ae5ea1a910658a2a">
+<li nodeId="a85ef7e6f1404bde98a19a7a82ed40fb">
+<p align="start" nodeId="9818b5571d6e48149643dd6a2badc5c4">文档会迅速腐化，单体手册很容易累积过时规则。Agent 无法判断哪些还有效，人类也会逐渐停止维护；</p>
+</li>
+</ul>
+<p align="start" nodeId="c3312dde3a32408da59da8dc371406cc">因此他们的方案是：</p>
+<blockquote nodeId="9ed67ea062af4a7a938d38f18166cb43">
+<p align="start" nodeId="5c313a3967c2479586318faa1669cd05">“So instead of treating AGENTS.md as the encyclopedia, we treat it as the table of contents.”</p>
+</blockquote>
+<p align="start" nodeId="68625620ea474ef6a2c0673e8211e7db">即不把 <code>AGENTS.md</code> 当百科全书，而把它当目录页。OpenAI 的 <code>AGENTS.md</code> 大约 100 行，只提供稳定入口和到深层知识源的指针；真正的知识库放在仓库内结构化的 <code>docs/</code> 目录中，包括设计文档、产品规格、执行计划、架构说明、质量指标、安全规范等。这样实现了“渐进式披露”（progressive disclosure）：Agent 从一个小而稳定的入口开始，按需逐层深入，而不是在开始时就被海量信息淹没。</p>
+<pre language="Plain Text" title="AGENTS.md 示例" isExpand="false" nodeId="9951acf4-7299-455b-a8de-18423781fbde"><code>AGENTS.md
+ARCHITECTURE.md
+docs/
+├── design-docs/
+│   ├── index.md
+│   ├── core-beliefs.md
+│   └── ...
+├── exec-plans/
+│   ├── active/
+│   ├── completed/
+│   └── tech-debt-tracker.md
+├── generated/
+│   └── db-schema.md
+├── product-specs/
+│   ├── index.md
+│   ├── new-user-onboarding.md
+│   └── ...
+├── references/
+│   ├── design-system-reference-llms.txt
+│   ├── nixpacks-llms.txt
+│   ├── uv-llms.txt
+│   └── ...
+├── DESIGN.md
+├── FRONTEND.md
+├── PLANS.md
+├── PRODUCT_SENSE.md
+├── QUALITY_SCORE.md
+├── RELIABILITY.md
+└── SECURITY.md</code></pre>
+<h2 nodeId="12d4f5223673427a9b5f99a425a2b903">三、Skill<km-footnote id="f8614046-8124-4ae1-953a-e8d6a2698fea" annotate="" nodeId="121ef6e261544ed5a6137f9b026f3de6" /></h2>
+<p nodeId="389e4c9137a2484b8a476faf30ffcbae">本章节讨论 Skill 的设计。Skill 对上下文的影响可以分成两层：一方面，Skills 的名称和描述以较高优先级注入上下文，作用约等于一份全局文件；另一方面，Skill 的正文按需加载，其内容质量往往直接决定 Agent 能否按预期完成任务。</p>
+<p nodeId="97dda1beceef46f7a7353006b64a9ced"><strong>Skill 的设计</strong></p>
+<p nodeId="6091b9aa600e403e88b7d6c17000674d"><strong>渐进式披露</strong><km-footnote id="91611706-00bd-46f9-85b9-39c3f2684238" annotate="" nodeId="992732b7149645b5bedc1b8b90eefce2" /><strong>（Progressive Disclosure）</strong>是 Skill 灵活可扩展的核心设计原则 —— 就像组织良好的手册从目录开始、再到具体章节、最后是详细附录，Skill 让 Agent 按需加载信息，无需将整个 Skill 内容读入上下文窗口，因此 Skill 中可捆绑的上下文量实际上是无限的。Skill 的设计可分为三层：</p>
+<ul nodeId="05aac49f434748828c1ff203ea8f4231">
+<li nodeId="bef69bd86abf49f8a09491e07a431553">
+<p nodeId="14c9cb3099e74bf1a98c79444d8a0575">YAML 元数据（name + description）：必须包含名称和描述，会话初始化时，所有的 Skills 的这部分信息会加载到上下文中（如 1.2 中的分析，该部分位于 Messages 数组 中）</p>
+<table responsive="false" nodeId="79dc65a24aec4166bb733b8d0e9ac360">
+<tr nodeId="a726eca87fdb4ca1918160a2635ec607">
+<th colwidth="[366]" nodeId="fab7a3aa863a439097755c64b84e5572">
+<p nodeId="a6028b0a20d642588d9b5d481b3bb946"> 名称（name）</p>
+</th>
+<th colwidth="[721]" nodeId="533830cf8493411cb0a9e60353495fcf">
+<p nodeId="49006f37551041d8887a4131df334b09">描述（description）</p>
+</th>
+</tr>
+<tr nodeId="704a187046494eee8bcf8b3a22e20181">
+<td colwidth="[366]" nodeId="d213bd6f22e3492daa4c01f16ce4f4fa">
+<p nodeId="46ced6aeff7045d7906c51ea3860ab93">Skill 的命名建议使用小写连字符格式，例如（skill-creator）。不推荐使用下划线或驼峰命名，如：skill_creator 或 skillCreator</p>
+</td>
+<td colwidth="[721]" nodeId="1204a85b45e341c0aa393c1aa5a38d14">
+<p nodeId="5abb8fc75cec44668ed5d33dc8aeabe1">Skill 的描述部分应包含三要素：能力概述 + 触发条件 + 排他边界</p>
+<p nodeId="72804f2a1d76450aaeb0a28b157bdd22">应当注意该部分内容的长度，适中为宜</p>
+</td>
+</tr>
+</table>
+</li>
+<li nodeId="64082865c33243db97577e3af71e1b4f">
+<p nodeId="3d4ba857efc54ef0af8be009ba5df6f3">正文（SKILL.md）：这是核心的执行指令层，包含 Agent 完成任务所需的步骤和规则。</p>
+<table responsive="false" nodeId="687f7fcd04134dbcbae149b8e65fc13c">
+<tr nodeId="a288cebe0e0b4f2db6d5b442f62f8b5f">
+<th colwidth="[50]" nodeId="d5838fad3dae4cf1a767f89a0c42bdaf">
+<p nodeId="228094b8f5ec4f009e1cd63cf345a89c" />
+</th>
+<th colwidth="[276]" nodeId="edd60985a40e419aa33b42a9a0fe957d">
+<p nodeId="1c2d40b29459468881fcd3dbbac1170a">建议规范</p>
+</th>
+<th colwidth="[764]" nodeId="1a87abf307a4497a889a38cb6a9fc4ff">
+<p nodeId="35b14c605e9a4ffc90ed2b8dd2e39ac3">详细内容</p>
+</th>
+</tr>
+<tr nodeId="b4005578a87d42669af9cf625bd656bf">
+<td colwidth="[50]" numCell="true" nodeId="9359239b4f57474c93966972f04530d3">
+<p nodeId="0c375db595b2493aa256f831dc56e96c" />
+</td>
+<td colwidth="[276]" nodeId="9b20ab4ebcc64fbda0b7c86a58ef3509">
+<p nodeId="17137bc057974708a8b2e4f8e7d05c07">控制正文规模，坚持渐进式披露</p>
+</td>
+<td colwidth="[764]" nodeId="eb01efee035148a3b9f63da517950ed3">
+<p nodeId="fad67bfa91824ed583a1569fff59f6fc">建议 SKILL.md 正文应控制在 500 行（2~3k tokens）以内，若超出该长度可以考虑按功能点拆分为子 Skills，由 SKILL.md 负责整体描述和能力路由。</p>
+</td>
+</tr>
+<tr nodeId="09920671a92843c49e6754d349f648f8">
+<td colwidth="[50]" numCell="true" nodeId="464e14ce49fc4b51a2e028f302bfbb61">
+<p nodeId="6ab4a08ecf19488cb90e175343a94489" />
+</td>
+<td colwidth="[276]" nodeId="cb319aa108f44b8f85f4d38b4964797e">
+<p nodeId="4a941a0a13d642aaab0d4c9ee6bdc894">前置检查写在前面，并规定处理策略</p>
+</td>
+<td colwidth="[764]" nodeId="424bd5452aac42ed812995bb92fbfc58">
+<p nodeId="99e12621733749e4bc59dccbe3ec6b7b">任何依赖外部工具、CLI 或认证状态的 Skill，都必须在正文开头写明前置检查步骤，并明确检查失败时的处理动作，减少让 Agent 在后续步骤中遭遇隐性失败。</p>
+<pre language="Plain Text" title="citadel skill" nodeId="4ddfab2a-69c6-4345-bd9b-ad55e8597788"><code>## 前置检查：确保 CLI 最新
+
+每次执行命令前，先检查 `@it/oa-skills` 是否为最新版本：
+
+```bash
+npm list -g @it/oa-skills --depth=0 --registry=http://r.npm.sankuai.com 2&gt;/dev/null | grep oa-skills
+```</code></pre>
+<p nodeId="928462796ee0476390f9370628af5f06" />
+</td>
+</tr>
+<tr nodeId="20305876bf354f8a82f34b1a59abc60b">
+<td colwidth="[50]" numCell="true" nodeId="684c07be491f46ac91b94ca654a14584">
+<p nodeId="bc7dd9c9f4194ce68e4d6e48b278f81f" />
+</td>
+<td colwidth="[276]" nodeId="0e3435206c784b558fb84dd5fa3d1620">
+<p nodeId="4898de287e3b414da9fa3da1bafb750b">意图路由显式化</p>
+</td>
+<td colwidth="[764]" nodeId="708a40cd92e94e89af8d9b8c3dea0f12">
+<p nodeId="3859a663689f4ab5b6619eeb04f85e45"><span color="rgb(62, 62, 62)">对于复杂使用场景和多功能的 Skills 能力体系，在 SKILL.md 中引用文件时，应当建立一份明确的路由表（使用契约）。</span></p>
+<pre language="Plain Text" title="knowledge-flow skill" nodeId="929d02e7-1631-4166-99f6-765254408feb"><code>## 功能路由
+
+根据用户意图，读取对应的 skill 文件后执行：
+
+&gt; ⚠️ **强制约束**：路由到某个功能后，**必须先用 Read 工具读取对应的 skill 文件**，再开始执行。
+&gt; 禁止凭记忆直接操作——即使上下文中已有相关信息，skill 文件包含协议约束（质量门控、状态机步骤等），不可跳过。
+
+| 用户意图 | 操作 |
+|----------|------|
+| 知识检索（用户提问 / Agent 执行任务中需要领域背景知识） | Read `skill-retrieval.md` |
+| 入库文档（单篇或多篇）/ mark-done | Read `skill-ingestion.md` |
+| 批量入库父目录 | Read `skill-batch-ingestion.md` |
+| 优化目录结构 | Read `skill-folder-opt.md` |
+
+...</code></pre>
+</td>
+</tr>
+<tr nodeId="964b8d79b79543289f446872531acd30">
+<td colwidth="[50]" numCell="true" nodeId="7c89f254b61e4ebb9cc22f6f42d68baa">
+<p nodeId="5af843a048bd469cb6f7927009f622f1" />
+</td>
+<td colwidth="[276]" nodeId="3c50c2c443cf44a0ac15f3deebee7568">
+<p nodeId="f5bbab6458a04f9e858bc63249498531">编排流程和知识文件解耦</p>
+</td>
+<td colwidth="[764]" nodeId="6178c24c3cad47eaa11ece5b19132e10">
+<p nodeId="32a7d0ef53ec49328ec3ca3c262fbd42">SKILL.md 正文只写“编排”，如：流程步骤、路由规则、前置检查、调用契约等。知识文件如果体量较少可以下沉到 references/ 知识文件夹中，如果体量大可以使用外挂知识库能力（如 llm-wiki 式的 skill rag<km-footnote id="d2910578-60e4-4cdd-a82c-928ac54e2b0b" annotate="" nodeId="c2473477bf95455385b895bac6c03c39" />）。SKILL.md 只需说明知识使用方式和存储路径。</p>
+</td>
+</tr>
+</table>
+</li>
+<li nodeId="53068cf35d6e46dd9ffe29479b97cd4c">
+<p nodeId="a5143e5c98ae44ef9f28b7d9ad92876b">关联文件：当 Skill 承担的任务较为复杂时，可在目录中制作不同的文件夹供 Agent 在使用该 Skills 时按需获取。</p>
+<table responsive="false" nodeId="b03cc313cd714feb852f8fe8130f9c02">
+<tr nodeId="f91cfe40db6a49af8dfaeedf8bc84226">
+<th colwidth="[306]" nodeId="a567e6c397764609bd37e6ef8fcaec9d">
+<p nodeId="3ebe3baa305a4379b89abd41512c3169">建议规范</p>
+</th>
+<th colwidth="[763]" nodeId="4a2b395e2be94fecb670b776dea7245b">
+<p nodeId="e1f157921756479f8619655729f9fe23">详细内容</p>
+</th>
+</tr>
+<tr nodeId="ed2cdfd2258748729c318a075447e2fb">
+<td colwidth="[306]" nodeId="8a4b9f3965a647c69a70aabe4cfedc36">
+<p nodeId="43692fbcfc9b4512af9c9bdb8300ce2d">目录结构</p>
+</td>
+<td colwidth="[763]" nodeId="821b1884751e4d4d9c6c5cf47c1cc080">
+<pre language="Plain Text" title="示例" nodeId="c7fe29fd-f16d-4f2c-9d06-46504c67421b"><code>skill-name/
+├── SKILL.md                    # 必需：YAML 元数据（name + description）+ 执行指令正文
+│                               #   正文控制 500 行以内，详细资料下沉到 references/
+│                               #   引用其他文件时用相对路径，引用层级保持一层
+├── scripts/                    # 可选：可执行代码（Agent 可直接调用的脚本）
+│   ├── extract.py              #   要求：自包含或声明依赖、错误信息友好、优雅处理边界情况
+│   └── validate.sh             #   语言不限（Python / Bash / JavaScript 等常见）
+├── references/                 # 可选：补充文档（只读查阅，Agent 按需加载）
+│   ├── REFERENCE.md            #   详细技术参考
+│   ├── FORMS.md                #   表单模板或结构化数据格式
+│   └── domain-specific.md      #   领域专属文件（如 finance.md、legal.md）
+│                               #   单个文件保持聚焦——按需加载时小文件消耗更少上下文
+├── assets/                     # 可选：静态资源
+│   ├── templates/              #   文档模板、配置模板
+│   ├── images/                 #   图表、示例图片
+│   └── data/                   #   查找表、schema 等数据文件
+└── ...                         # 其他任意文件或目录（标准允许自由扩展）</code></pre>
+</td>
+</tr>
+</table>
+</li>
+</ul>
+<p nodeId="48fecdb9501d48a088568b7e0519708e"><strong>Skill 中的知识组织方法</strong></p>
+<p nodeId="a30d8f75aae4427c81a7cdcb353c662e"><span color="rgb(62, 62, 62)"><strong>什么时候该拆文件？</strong></span><span color="rgb(62, 62, 62)"> 一条经验法则：当一个文件超过 300 行，或某个 Step 的规则超过 100 行时，就是拆分信号。文件太长不光浪费 token，还会让 Agent 的注意力在大段文本中迷失。</span><span color="rgb(62, 62, 62)"><strong>如何组织知识分层？根据使用频率对知识进行分层组织。</strong></span><span color="rgb(62, 62, 62)"> 越频繁用到的知识，离入口越近；越偶尔查阅的知识，越往深处放。这样 Agent 每次只加载当前步骤真正需要的内容，不会把上下文窗口塞满无关信息。实践中可以用一棵简单的决策树来判断：</span></p>
+<pre language="Plain Text" title="skill组织方式判断" nodeId="01af1636-00fe-4098-863b-6655645d42f7"><code>这段知识是否每次激活 Skill 都需要？
+│
+├── 是 ──→ 放 SKILL.md                       # 入口文件，每次激活必读
+│
+└── 否 ──→ 是否每次进入该模块时都需要？
+           │
+           ├── 是 ──→ 放模块主文件             # 如 creator.md（模块级入口）
+           │
+           └── 否 ──→ 是否仅在某个特定 Step 才需要？
+                      │
+                      ├── 是 ──→ 放对应的 phase 文件   # 如 collect-phase.md
+                      │
+                      └── 否 ──→ 是否只在特定条件下查阅？
+                                 │
+                                 ├── 是 ──→ 放参考文件       # 如 tools.md / safety.md
+                                 │
+                                 └── 否 ──→ 考虑是否需要保留  # 可能冗余 → 删除或合并</code></pre>
+<pre language="Plain Text" title="一个例子" isExpand="false" nodeId="c1c00251-90f6-4653-98ff-eb10df2dad38"><code>trade-ab-skill/
+├── SKILL.md             ← 意图路由表、全局安全红线（每次激活必读）
+├── modules/creator/creator.md           ← 创建流程 Step 编排、scenarioId 对照表（进入创建模块才读）
+├── modules/creator/collect-phase.md     ← 参数填充的 11 项执行清单（仅 Step 2 才读）
+├── modules/creator/validate-phase.md    ← 校验规则（仅 Step 3 才读）
+├── modules/creator/tools.md             ← MCP 工具接口列表（调接口时按需查阅）
+└── modules/creator/safety.md            ← 安全约束详细规则（validate 阶段按需加载）</code></pre>
+<p nodeId="0cab072e291144de8ca217caa2126489"><strong>用脚本扩展 Skills 的能力边界</strong></p>
+<p nodeId="3f7acf1f9d0a4505a36eb40697547f91"><span color="rgb(62, 62, 62)"><strong>核心理念</strong></span><span color="rgb(62, 62, 62)">：将确定性计算逻辑封装为脚本，由 Agent 调用执行而非自行推导。脚本是 Skill 突破 LLM 能力边界的利器。</span><span color="rgb(62, 62, 62)"><strong>什么时候需要写成脚本？</strong></span><span color="rgb(62, 62, 62)">如果这件事让 LLM 做有概率出错，但让脚本做能 100% 确定性完成，那就该封装成脚本。如果发现自己在 SKILL.md 中编写公式让 Agent 运行计算，该逻辑也应该被挪到脚本中。</span></p>
+<table responsive="false" nodeId="cc792803ea5942fe924d5a79576f5469">
+<tr nodeId="abc44d8fd5494543b18efd5168474143">
+<td colwidth="[119]" bgColor="#F4F5F7" nodeId="bd740c4cc7dd4b20b96e3751584f5ee9">
+<p nodeId="bf3a1aefa8064adf805775a15bc14eb5"><span color="rgb(62, 62, 62)">场景</span></p>
+</td>
+<td colwidth="[274]" bgColor="#F4F5F7" nodeId="eaa13a306ba240a282946c18a7aaea30">
+<p nodeId="484e12805cd5463aa0b84b3e9d113bc3"><span color="rgb(62, 62, 62)">纯指令的局限</span></p>
+</td>
+<td colwidth="[304]" bgColor="#F4F5F7" nodeId="ba6eb9c00151493c924ab5c7005c8267">
+<p nodeId="dec4d61ff7f94300ad6eb132dd6404dc"><span color="rgb(62, 62, 62)">脚本的优势</span></p>
+</td>
+</tr>
+<tr nodeId="aa0f427cca10418c87bf8072348b27a3">
+<td colwidth="[119]" nodeId="19cbd7787aae4719b8eb8ef59877b942">
+<p nodeId="668750a7d1c04939865f307ac9e782a2"><span color="rgb(62, 62, 62)">配置文件读写</span></p>
+</td>
+<td colwidth="[274]" nodeId="352c9395ab264bcda7eea61e6f2c3787">
+<p nodeId="b0ddd5ef26754d3284a8bf1be2bc33f6"><span color="rgb(62, 62, 62)">LLM 可能写入格式错误的 JSON</span></p>
+</td>
+<td colwidth="[304]" nodeId="79c0df3a47f64ecaa0d672f47dca2f69">
+<p nodeId="0e043a0d8a584c5f9bb3dd740840948a"><span color="rgb(62, 62, 62)">脚本保证格式正确，原子写入</span></p>
+</td>
+</tr>
+<tr nodeId="00f74b36930240549e4a687fc0abd765">
+<td colwidth="[119]" nodeId="eaf2147cb96b4834a67970dc93755a38">
+<p nodeId="c2f27c9a658c456c84591b85c9b3fd34"><span color="rgb(62, 62, 62)">环境检测</span></p>
+</td>
+<td colwidth="[274]" nodeId="7062f154e9ff49049f6363f7e16e3b99">
+<p nodeId="759d333487bc4ec3ba290bbbe9674872"><span color="rgb(62, 62, 62)">LLM 无法可靠检测系统状态</span></p>
+</td>
+<td colwidth="[304]" nodeId="7399e8205bc54138a88573d10708e0c6">
+<p nodeId="470445f359df4633ba7db93d60efcd9e"><span color="rgb(62, 62, 62)">脚本直接查询，返回结构化结果</span></p>
+</td>
+</tr>
+<tr nodeId="41e4da0fd56f4c90947700f5dbdf41f0">
+<td colwidth="[119]" nodeId="ea8beea44cec4652ae0a21b782d60c9a">
+<p nodeId="f15c58389b2942fcada7a0de0b61e645"><span color="rgb(62, 62, 62)">日志采集</span></p>
+</td>
+<td colwidth="[274]" nodeId="9dd28edc0ef94ca590e81c1a574550d1">
+<p nodeId="892d1c9584994afb80fd3bf66876156e"><span color="rgb(62, 62, 62)">LLM 不应直接处理网络请求</span></p>
+</td>
+<td colwidth="[304]" nodeId="5c925d9e0aa141dbb80307a110655a9b">
+<p nodeId="aa6455effb314d268a3479468b772556"><span color="rgb(62, 62, 62)">脚本封装 HTTP 调用，异常自处理</span></p>
+</td>
+</tr>
+<tr nodeId="a5d1966561a54f6cb97aa36bbb4f024b">
+<td colwidth="[119]" nodeId="8b2d459661b749ea8a295c15f9f703bd">
+<p nodeId="7cc04c15b65146b2b646737d99f28c05"><span color="rgb(62, 62, 62)">复杂计算</span></p>
+</td>
+<td colwidth="[274]" nodeId="c906692ba99248819c8b499e5292e97f">
+<p nodeId="8d27a59709974256ac2d3f175290e28d"><span color="rgb(62, 62, 62)">LLM 算术不可靠</span></p>
+</td>
+<td colwidth="[304]" nodeId="ca0688eac57b440e9ef6ed6d1106e018">
+<p nodeId="591d5e76c5be416f96a14a061585d5a8"><span color="rgb(62, 62, 62)">脚本精确计算</span></p>
+</td>
+</tr>
+</table>
+<p nodeId="8ddd81ba90f74d57b6c81ce945da0c84"><span color="rgb(62, 62, 62)"><strong>脚本的设计遵循四个原则：</strong></span></p>
+<ol nodeId="40a84f56d3624682b83f8d3229e94a41">
+<li nodeId="c502b5634dc24eb99a3f981052991119"><span color="rgb(62, 62, 62)">自愈性——脚本内部处理所有异常，始终正常退出，绝不阻断 Skill 主流程</span></li>
+<li nodeId="4439c7d2f18b413dada37fb1c013ee1c"><span color="rgb(62, 62, 62)">结构化输出——统一输出 JSON，方便 Agent 解析和流转</span></li>
+<li nodeId="1b2faeb7827d4dbdba0771ca6c506c6f"><span color="rgb(62, 62, 62)">幂等性——多次执行结果一致，预检脚本只追加缺失项，不覆盖已有配置</span></li>
+<li nodeId="584ac88e4db246a89d51d017713683ff"><span color="rgb(62, 62, 62)">安全边界——只操作指定文件，不触碰其他系统资源</span></li>
+</ol>
+<h2 nodeId="8442463f737448e38949b4ab8063f6df">四、工具<km-footnote id="82b0eabc-86f2-4b4b-8288-6062e8a760ca" annotate="" nodeId="ed4784c0b1a24f2c8485cd3c48ed55ef" /></h2>
+<p nodeId="1bb5ff571a0c460083f4c8bf23075394"><strong>工具搜索工具</strong><km-footnote id="485340c4-5297-41cd-b9da-ffac269471a9" annotate="" nodeId="2aec4ef9afd84e48a7e240323f6fd5d6" /><strong>：</strong>工具定义会大量消耗上下文，在我们 1.2 的例子中，工具定义占约 31k token。为 Agent 提供工具搜索工具，而非全量加载所用工具。该工具建设思路为：</p>
+<ol nodeId="1fc199e9a3ad49018fe673dea1b69139">
+<li nodeId="7d4f518140b94cdaaa1df08608890fc3">建设工具目录索引，把每个工具的“名称 + 描述 + 参数名 + 参数描述”拼接成文档</li>
+<li nodeId="f526d361bd36484985625cf11625e110">拆分为常驻和非常驻，常驻工具集合无需搜索一直存在，非常驻工具集合登记进索引，通过工具搜索工具（search_tools）按需取出</li>
+<li nodeId="7f4347345faa41519176c1a2c9767183">
+<p nodeId="af192f104e834a11974441a4351ff61c">注入元工具代替非常驻工具集，形如：</p>
+<pre language="Plain Text" title="search_tools 工具示例" nodeId="561dfbcd-8ba9-4dff-a0d3-e148873da4ca"><code>{
+  "name": "search_tools",
+  "description": "按任务需求检索可用工具。先用自然语言描述你要做什么，返回最匹配的工具定义。找不到时换关键词重试。",
+  "input_schema": { "query": "string", "top_k": "int, default 5" }
+}</code></pre>
+</li>
+</ol>
+<p nodeId="797d9f58677c45ccbe336f40d4180f54"><strong>程序化工具调用</strong><km-footnote id="a03a9726-f8cc-4a6d-b3cf-41f9f94e1009" annotate="" nodeId="bbfac820f06a480293aa1f3565058a1d" /><strong>：</strong>传统方式中，每次工具调用的中间结果都进入上下文（如日志查询文件），占用大量上下文空间，甚至触发输出截断。可由 Agent 生成脚本代码，在代码执行环境中批量调用工具（对应本文实践 6.5），只将最终结果输出写入上下文。</p>
+<p align="start" nodeId="d678e267a3ed411796423c8ef5e73c3d"><strong>返回有意义的上下文：</strong>工具返回值应使用语义标识符而非加密标识符——用“2024年Q3规划会议”而非 <code>evt_2024_q3_001</code>，用 <code>username</code> 而非 <code>user_id_hash</code>。语义标识符让 Agent 无需额外查询就能理解上下文。文章还提出可控详细程度的响应格式模式：默认返回简洁模式（约 200 token），Agent 可以主动请求详细模式（约 600 token，多 3 倍），让 Agent 根据需要控制 token 消耗。</p>
+<p align="start" nodeId="e274ed01d3d44884bb77f000d02b8167"><strong>优化 Token 效率：</strong>Claude Code 工具响应默认上限 25,000 token，工具应远低于此限制。分页和过滤应是默认设置而非可选项。截断时应附带引导信息，比如“结果已截断，请使用更具体的查询来缩小范围”，引导 Agent 采用更好的策略。错误消息也是关键指导手段——差的错误消息 <code>{"error": "INVALID_PARAMS", "code": 400}</code> 给 Agent 的信息为零，好的错误消息应具体说明出错原因、提供正确格式示例，让 Claude 下次能修正。</p>
+<table responsive="false" nodeId="863c541acafc4673af6842f7d9b6cd11">
+<tr nodeId="49f3e842deb34c3d89023852e39976fd">
+<th colwidth="[168]" nodeId="3bd80ad1afe14cd0954935265820bf1a">
+<p nodeId="dd960a8ac28d49bf99665fd00193893f">检查类型</p>
+</th>
+<th colwidth="[697]" nodeId="b1a2397042fb4008b1f788a82baef606">
+<p nodeId="5c98a9fb0d2a431ea26ebd7df69f9620">检查内容</p>
+</th>
+</tr>
+<tr nodeId="2d1c31670635446aafb0a77d8315cca1">
+<td colwidth="[168]" nodeId="430cbffa795a420d91f8b3133f9c1911">
+<p nodeId="bf7fe1677ead42c9924171b4af5f87b6"><strong>返回值阶段</strong></p>
+</td>
+<td colwidth="[697]" nodeId="30991208e8d24db6b3ce7e9848339621">
+<p nodeId="0640b5e09ceb4097940ec4e1067c0b6f">返回值是否使用语义标识符？</p>
+<p align="start" nodeId="17779eb8d1534ea6bc8ca55ad6b92d99">是否有简洁/详细模式控制详细程度？</p>
+<p align="start" nodeId="89dea12676334f38a032cf26381f6ac1">响应是否默认分页/过滤？</p>
+</td>
+</tr>
+<tr nodeId="0918fb12134a4d2da0732a1023d3a4be">
+<td colwidth="[168]" nodeId="f912dbd0c95649a6a38f5f40cd5899c7">
+<p nodeId="f666f1ea63154c04aa91206630e1341a"><strong>错误处理阶段</strong></p>
+</td>
+<td colwidth="[697]" nodeId="07b65187971c4a25a0719990d1ca923c">
+<p nodeId="5e1822203f834de3ad3ed7a96ee54329">错误消息是否具体说明了出错原因？</p>
+<p align="start" nodeId="169bb6e1ead843a8bad500e0c0177392">错误消息是否提供了正确格式示例？</p>
+<p align="start" nodeId="ab613931f5ce4544b54d2b721737f6c9">截断消息是否引导 Agent 采用更好的策略？</p>
+</td>
+</tr>
+</table>
+<h2 nodeId="0b65b200f8394720bbc974f23a62c88d">五、上下文问题诊断：什么时候能判断可能是上下文的问题</h2>
+<h3 align="start" nodeId="8079b410ec154016be0e6eed9e786cfe"><strong>5.1 先判断：问题出在上下文的典型信号</strong></h3>
+<p nodeId="9dc2d03122014ce1ab57cd54804ce12f">上下文问题的本质是「模型决策所需的信息，在采样时刻不在窗口里、被淹没了、或者是错的」。可以先看失败案例有没有这些特征：</p>
+<p align="start" nodeId="89610e53d2d74fcc9bf2f87145dec0af"><strong>信息不在场（缺失）</strong>：模型答非所问、编造事实、问已经告诉过它的事情。这时要问：这个信息真的在上下文里吗？很多时候是注入链路断了——子 Agent 的返回没拼进主 Agent 的 prompt、RAG 检索没命中、工具返回被截断。Anthropic 称之为 "dropped context"，是长时程任务最常见的失败模式。</p>
+<p align="start" nodeId="e48a37c26fcd4d638bbe11deaa6dd936"><strong>信息在场但被淹没（稀释）</strong>：任务前半段表现正常，越跑越差；或者简单任务做对、上下文塞满后开始忽略早期指令。这就是 Context Rot（上下文腐烂）——token 越多，注意力预算被摊得越薄，回忆精度随长度梯度下降。典型信号是「早期指令被无视、后期工具结果被反复引用」。</p>
+<p align="start" nodeId="463a0e14d0634479bcfef90f042ec827"><strong>信息是错的（污染）</strong>：上下文里有幻觉残留、过期的中间结论、甚至前面轮次的错误自我强化。子 Agent 架构里还有一类：上一步的失败信息被原样带入下一步，污染了后续推理。</p>
+<p align="start" nodeId="46c523b087974d9fb68871f23785306a"><strong>快速诊断思路</strong></p>
+<ul nodeId="5737b269657a4eb084709ecd1a5a5a2a">
+<li nodeId="2ec20e4f792843ea8349b6b03d36e179"> 同一个任务失败，换一个全新的干净上下文重新跑一次。新会话里轻松做对，大概率是上下文问题；干净上下文也错，多半是 Prompt/指令/流程设计/模型本身的问题</li>
+<li nodeId="7f8191219b9f4b0aa784f5325052c822">通过消息提醒，指引 Agent 拿到关键信息，观察纠偏后是否符合预期。若通过干预则回到正轨，大概率也是上下文的问题。</li>
+</ul>
+<h3 align="start" nodeId="5a56bafd4c5d44659104cc5b0961ef72"><strong>5.2 再做验证：从业界实践中提炼的方法</strong></h3>
+<p nodeId="0e83dc6a604d4e14a5e23b7e128542df"><strong>1. Trace 分析（事后的第一步）</strong>。把失败 case 的完整上下文在采样时刻 dump 出来，逐块检查四件事：关键信息在不在？在的话放在什么位置（头部/尾部/中间）？有没有相互矛盾的块？token 总量是多少？LangSmith、Langfuse、Braintrust 这类 LLM 可观测性平台的核心价值就在这——按 trace 回放每一轮的真实输入。</p>
+<p align="start" nodeId="cc6e124b49774e79a037a23115443b40"><strong>2. 消融与注入实验（最硬的证据）</strong>。这是验证「是不是上下文问题」的金标准，本质是控制变量：</p>
+<ul nodeId="d4e51f67e08b4fa6b02e0bf8000f1474">
+<li nodeId="aed3c0f0a0ca43de803c476fb0e3cc0c"><strong>加法实验</strong>：在失败 case 的上下文里手动补上缺失的信息，重放。如果补上就对了，证明是信息缺失；补上还错，就不是上下文问题。</li>
+<li nodeId="c13ab2b170764de6862ffe2457f7d654"><strong>减法实验</strong>：把无关内容删掉、只留最小充分集重放。如果瘦身后表现恢复，证明是稀释/腐烂。</li>
+<li nodeId="dccb3f89a1e24078a120e90202ef2167"><strong>位置实验</strong>：同样的信息挪到上下文头部或尾部重放。表现随位置显著变化，说明是注意力稀释而非信息本身的问题。</li>
+</ul>
+<p align="start" nodeId="774ff4dc00604320ac2d3bdd83de9986">要做重放（replay），前提是请求可复现：固定 model、temperature=0 或记录 seed、完整记录 messages 序列。</p>
+<p nodeId="88566c694acb46bdbdfb2bd9c0ca42f7">3. <strong>基于 DeepSeek Harness 的会话分叉实验。</strong>DeepSeek Harness 提供了一项能力：从会话的任意消息边界 fork 出一个新的会话，该会话后的所有内容被截断，把边界之前的完整上下文原样带入新会话继续执行。这本质上是截断重放，把它用作验证手段，可以对失败 case 做边界定位：</p>
+<ul nodeId="a257c9b9a4bc4839b5de2fa3180de462">
+<li nodeId="367126e7035b42e9a00525b35d9835de"><strong>截断实验：</strong>怀疑某个轮次引入了污染（错误结论开始自我强化）时，从该轮次之前 fork 重放。如果切掉后缀就恢复正常，证明问题确实出在被截断的段落；</li>
+<li nodeId="6d09ac0a8272449b858fc43d101331fd"><strong>二分定位：</strong>对长会话多次 fork、逐步缩小边界，相当于对“上下文从哪里开始变质”做二分搜索——比整段 dump 审计更快收敛到失效点。</li>
+</ul>
+<h2 nodeId="fd45a1cef0b74187b8565dc720acf5ad">六、解决方案</h2>
+<p nodeId="38895859-371f-4276-8062-00a27209bee0">围绕“如何让关键信息在 Agent 工作时都处于在场且被利用的状态”，本文梳理出如下五种解法，并给出上下文问题的解空间：</p>
+<table responsive="false" nodeId="6e406049-134f-4565-9ddb-676855217d7d">
+<tr nodeId="9da11484-4885-4c0b-9bf4-da5e81fcaef9">
+<th colwidth="[311]" nodeId="7098cdb5-a72d-417e-9cf5-d284a8f6370f">
+<p nodeId="845c7e57-bbd5-448c-b066-dd992af8d47a">解法</p>
+</th>
+<th colwidth="[446]" nodeId="7b89f8be-63cb-44c8-8921-3a7cd7b53328">
+<p nodeId="0d26f6ff-c353-47b2-bd06-2e1542a7cca3">做什么</p>
+</th>
+<th colwidth="[253]" nodeId="1ee2a86a-72ef-4332-b186-cfe2c00ceecc">
+<p nodeId="0e9d199e-d3f3-4989-840c-4453cbc6b75b">来源</p>
+</th>
+</tr>
+<tr nodeId="de8a81aa75e447d19396911cb6be25f2">
+<td colwidth="[311]" nodeId="747f955396474b23bdbe63d0df9b915a">
+<p nodeId="8bf3a345-466d-4c11-bf05-6876cf5bd20c">6.1 上下文重置 + 结构化交接</p>
+</td>
+<td colwidth="[446]" nodeId="dddc8e4352b14a29926bce5abc28d60f">
+<p nodeId="a0dd2ef5-df3a-4d8e-b245-00d61bbd14e5">定期换新会话，状态由外部工件承载</p>
+</td>
+<td colwidth="[253]" nodeId="2c1d502ae87b4d66ac730e72ad53e57c">
+<p nodeId="7c8b7cf5-986d-404c-a2ae-a5853498cb09">Anthropic</p>
+</td>
+</tr>
+<tr nodeId="2dbb64ad2a4a4c8da193c2181be0731f">
+<td colwidth="[311]" nodeId="d032d8c1db484c5fb467433f317889e9">
+<p nodeId="ca89dff8-e776-4452-af57-befff1691294">6.2 图状态持久化 + 节点局部上下文</p>
+</td>
+<td colwidth="[446]" nodeId="51902e26607b42bd9fc4ba1c25e1848f">
+<p nodeId="93c23926-2581-4f70-80b9-2337c2a86398">状态外置，节点按需投喂最小切片</p>
+</td>
+<td colwidth="[253]" nodeId="b05d0945e55b45d0ba3c7a40d7b54379">
+<p nodeId="198a922a-eba1-403a-8649-797437de307f">LangGraph</p>
+</td>
+</tr>
+<tr nodeId="2864b064-64c6-4024-8b53-eeba2e02f4f6">
+<td colwidth="[311]" nodeId="b8c555b3-c60a-459a-a31d-b7f70fa34b6c">
+<p nodeId="7549f91e-6415-4df0-9dfc-709e389cf43d">6.3 关键信息持续注入</p>
+</td>
+<td colwidth="[446]" nodeId="385aae06-34a8-4b5a-beff-954b6b64ea8b">
+<p nodeId="5834e34e-f095-4280-801a-dccc300d34e6">不动结构，把关键信息抬到每条消息的关注高位</p>
+</td>
+<td colwidth="[253]" nodeId="c8cd415e-a564-451a-8de8-c60b8399ce58">
+<p nodeId="0b066f6f-b5b5-494b-920b-eeac8f1a212f">领域 Agent 实践（场景1-2）</p>
+</td>
+</tr>
+<tr nodeId="292b16a0-ceae-4e82-9566-9e820fe4d8cd">
+<td colwidth="[311]" nodeId="8dee9051-ea3a-41c7-ad21-be563dffe8cb">
+<p nodeId="522a581a-12d0-4a45-b147-cefe2658c02d">6.4 主子 Agent 流程编排</p>
+</td>
+<td colwidth="[446]" nodeId="925ecead-42bd-4e50-9b35-d057dd5abed2">
+<p nodeId="c636a095-c0f3-4a70-bfe3-ce3719540d8e">长流程切给多个独立上下文，交付物接力</p>
+</td>
+<td colwidth="[253]" nodeId="e5e18e2b-5259-42b3-ae16-639321a44a21">
+<p nodeId="986720db-de41-429f-8540-fb44ce52b543">领域 Agent 实践（场景3）</p>
+</td>
+</tr>
+<tr nodeId="ad1db575-84b7-47f1-bf91-1f8a0bce2a56">
+<td colwidth="[311]" nodeId="4112553d-a3ca-4f19-9ec3-ef6e02233db4">
+<p nodeId="b42627b1-6243-4a77-80d8-5804df9a12b0">6.5 固定任务剥离 + 微上下文流水线</p>
+</td>
+<td colwidth="[446]" nodeId="d0c822f2-bf37-4492-9924-ab0d22cb9866">
+<p nodeId="0eaf323c-ce0c-4791-9efa-00c0d3627432">将流程固定的批量任务从 Agent 自主执行剥离，转化为工具调用</p>
+</td>
+<td colwidth="[253]" nodeId="371eb79a-09d5-4ea5-bcac-a6c3da4e4b3e">
+<p nodeId="f351ee19-0d42-41b5-a16c-bb42518b3e9c">领域 Agent 实践（场景4）</p>
+</td>
+</tr>
+</table>
+<p nodeId="f351960ddbf54b25b32efdad99f3c876">一句话概括这些解法：注入是加<km-footnote id="cfe55e5b-06d4-443d-935a-a2f65394215b" annotate="加：往每条消息里加关键约束" nodeId="4b25a82bfa6a4cefb34d6b42fcbe30f6" />、流程编排是拆<km-footnote id="c42ea0fe-ccc2-49d9-acf9-2f0697d80bff" annotate="拆：把长流程拆给多个独立上下文" nodeId="8af2e09e34124ea68a9ac33103449996" />、剥离是减<km-footnote id="5e5de676-cdd4-49b1-93af-9f13e48d9c2c" annotate="减：把固定流程的任务从 Agent 自主执行中减掉" nodeId="b2337637694443e8915e986bb612689b" />、重置是换<km-footnote id="b28cf977-71d5-4dc5-abf8-61fe7dfdb2b0" annotate="换：整个会话换新，依靠交接工件衔接" nodeId="0552390248414ee598f52ebd20c7620c" />、外置是搬<km-footnote id="d25cda19-0460-443b-87f1-217796bee733" annotate="搬：把状态存储搬到上下文之外" nodeId="7db9ae45691040bb88d2df58e79eea77" />。其中，解法一、二来自业界方法论，解法三至五来自我们的领域 Agent 实践。</p>
+<km-html nodeId="bc6c0ad1ae6340beaf7b671eeb645b47"><![CDATA[<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上下文问题的解空间</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #1E293B;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #1E293B;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .fig-title {
+    font-size: 1rem; font-weight: 700; color: var(--text);
+    margin-bottom: 12px;
+  }
+  .legend-row {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+    font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;
+  }
+  .legend-row .item { display: flex; align-items: center; gap: 5px; }
+  .legend-row .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  /* ===== 解空间网格 ===== */
+  .space-grid {
+    display: grid;
+    grid-template-columns: 64px 1fr 1fr;
+    gap: 6px;
+  }
+  .col-head {
+    text-align: center; font-size: 0.74rem; font-weight: 600; color: var(--text);
+    padding: 8px 6px; background: var(--surface-alt); border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .col-head .sub { font-weight: 400; font-size: 0.66rem; color: var(--text-faint); display: block; margin-top: 1px; }
+  .row-head {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    background: var(--surface-alt); border-radius: 6px; border: 1px solid var(--border);
+    padding: 10px 4px; min-height: 100%;
+  }
+  .row-head .col-v {
+    writing-mode: vertical-rl; text-orientation: mixed;
+    display: flex; align-items: center;
+  }
+  .row-head .main { font-size: 0.72rem; font-weight: 600; color: var(--text); letter-spacing: 1px; word-spacing: 0; }
+  .row-head .sub { font-weight: 400; font-size: 0.64rem; color: var(--text-faint); }
+  .quad {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; background: var(--bg);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .quad-tag {
+    font-size: 0.64rem; color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .sol-card {
+    border-radius: 8px; padding: 10px 12px;
+    background: var(--surface-alt); border: 1px solid var(--border);
+  }
+  .sol-card .head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .sol-card .num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 700;
+    color: #fff; border-radius: 3px; padding: 0 6px; display: inline-block; min-width: 18px; text-align: center;
+  }
+  .sol-card .num.a { background: var(--accent); }
+  .sol-card .num.b { background: var(--focus); }
+  .sol-card .name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+  .sol-card .mech { font-size: 0.7rem; color: var(--text-muted); line-height: 1.55; margin-top: 4px; }
+  .sol-card .when { font-size: 0.68rem; color: var(--text-muted); line-height: 1.55; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border); }
+  .sol-card .when strong { color: var(--focus); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <p class="fig-title">上下文问题的解空间</p>
+  <div class="legend-row">
+    <span class="item"><span class="swatch" style="background:var(--accent)"></span>领域 Agent 实践</span>
+    <span class="item"><span class="swatch" style="background:var(--focus)"></span>业界方法论</span>
+  </div>
+
+  <div class="space-grid">
+    <div></div>
+    <div class="col-head">关键信息在上下文里<span class="sub">留在原位，对抗稀释</span></div>
+    <div class="col-head">关键信息搬到上下文外<span class="sub">外置状态，按需取回</span></div>
+
+    <div class="row-head"><span class="col-v main">强依赖 Agent 自主规划</span><span class="col-v sub">流程无法预先完备编排</span></div>
+    <div class="quad">
+      <span class="quad-tag">信息在场 + 对抗稀释</span>
+      <div class="sol-card">
+        <div class="head"><span class="num a">3</span><span class="name">关键信息持续注入</span></div>
+        <div class="mech">不动上下文结构，把关键约束随每条消息抬到权重高位</div>
+        <div class="when"><strong>适用</strong>：会话无法避免变长，且约束必须全程生效</div>
+      </div>
+    </div>
+    <div class="quad">
+      <span class="quad-tag">信息外置 + 动态分解</span>
+      <div class="sol-card">
+        <div class="head"><span class="num b">1</span><span class="name">上下文重置 + 结构化交接</span></div>
+        <div class="mech">定期清空换新会话，状态由进度文件等外部工件承载</div>
+        <div class="when"><strong>适用</strong>：跨天级的超长程任务，每个会话只攻克一个小目标，达成即新建，依靠交接文件进行衔接</div>
+      </div>
+    </div>
+
+    <div class="row-head"><span class="col-v main">弱依赖 Agent 自主规划</span><span class="col-v sub">流程可预先完备编排</span></div>
+    <div class="quad">
+      <span class="quad-tag">调度编排 + 独立短会话</span>
+      <div class="sol-card">
+        <div class="head"><span class="num a">4</span><span class="name">主子 Agent 流程编排</span></div>
+        <div class="mech">流程由调度层预先编排，子 Agent 各自独立会话，逐环节执行</div>
+        <div class="when"><strong>适用</strong>：流程可预先编排为多个环节，由调度层分派子 Agent 逐环节执行</div>
+      </div>
+    </div>
+    <div class="quad">
+      <span class="quad-tag">信息外置 + 流程外置</span>
+      <div class="sol-card">
+        <div class="head"><span class="num a">5</span><span class="name">固定任务剥离 + 微上下文流水线</span></div>
+        <div class="mech">将流程固定、边界清晰的批量任务从 Agent 剥离，交由脚本内置的 LLM API 调用完成</div>
+        <div class="when"><strong>适用</strong>：任务边界清晰、输入输出明确、可批量并行</div>
+      </div>
+      <div class="sol-card">
+        <div class="head"><span class="num b">2</span><span class="name">图状态持久化 + 节点局部上下文</span></div>
+        <div class="mech">状态全部外置（Checkpointer / Store），节点按需投喂最小切片</div>
+        <div class="when"><strong>适用</strong>：流程结构确定、环节多且长，中途失败或暂停后能从上次进度继续</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>]]></km-html>
+<h3 nodeId="8a7ba3ec136345d2a406574557830aa5"><strong>6.1 Anthropic</strong><km-footnote id="f92392a2-b0ae-4b17-9e4a-0aeef34ab38a" annotate="" nodeId="2c619291c0fe47c0bc6edcd8d73a576a" /><strong> 给出的解法</strong><km-footnote id="251c01a1-ad96-48d3-92ca-1b6f0d025312" annotate="" nodeId="a9d1ca5d0e024b47aeb1ce96319983c8" />：上下文重置 + 结构化交接</h3>
+<p nodeId="19eb90f00a7147958c9092a6ebff5ffc">Anthropic 在长程任务的 harness 设计中给出了解法，可概括为「初始化一次，之后每轮增量执行，并用外部工件完成跨会话交接」，而不是让同一个 Agent 长期依赖上下文压缩、或指望它记住一份很长的流程说明。</p>
+<ul nodeId="07d11399-3238-4d39-b8a3-20175528e195">
+<li nodeId="f1665b83-8c04-4d1b-8b4d-77be07d54956"><strong>Initializer Agent 搭好执行环境</strong>：首轮不直接做业务，而是创建 <code>init.sh</code>（稳定启动环境）、<code>claude-progress.txt</code>（记录已完成事项与进度）、初始 Git 提交（固化初始文件状态）和一个结构化 feature list。</li>
+<li nodeId="c6d54e05-eb39-4d16-9f96-e90bfa06c5c1"><strong>每轮 Coding Agent 固定执行“重新定位”</strong>：看当前工作目录 → 读进度文件 → 读 feature list → 查 Git 日志 → 运行 init.sh → 先做基础端到端验证（确认环境未被上一会话留在损坏状态）；随后从未完成 feature 中选取最高优先级的一项，且一次只做这一项。</li>
+<li nodeId="840efec16ee440178528aef56a327f79"><strong>feature list 是防“提前收工”的机制</strong>：把需求拆成可端到端验证的功能需求，每项初始标为 <code>passes: false</code>。后续 Agent 不允许随意改写、删除需求或测试，只能在充分验证后把状态改为通过。</li>
+<li nodeId="e8e90b86-c7f5-49b0-8aff-904ee42a057c"><strong>验证通过才更新状态</strong>：完成一个小功能后必须先做真实用户路径的端到端验证，通过后才把该 feature 置为 <code>passes: true</code>，写入进度文件并创建带描述的 Git commit —— 下一轮 Agent 通过「进度文件 + Git 历史 + 结构化功能清单」快速恢复工作，不必猜测前一轮发生了什么。</li>
+</ul>
+<p nodeId="dd3b51bf22ff48d89f144797895c2319"><strong>与压缩的本质区别：</strong>压缩把早期对话原地概括、保持同一 Agent 的连续性，但缩短的历史仍在同一上下文中继续膨胀，上下文焦虑<km-footnote id="f27d8133-f352-4b9c-91ef-f87e2ee993d1" annotate="上下文焦虑：Anthropic 在一项研究中发现，当模型在接近自身感知的上下文极限时，会表现出「context anxiety」——过早地宣布任务完成、提前结束工作。仅靠压缩不足以支撑长任务性能，因此上下文重置成为 harness 设计的必要环节。
+https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" nodeId="ca2a2ebc5ff0449d9560f387132eadc3" />无法消除；重置则提供全新状态，代价是交接的编排复杂度、token 开销和每次切换的延迟。</p>
+<pre language="Mermaid" nodeId="e5ae80de-c8b2-4a58-b856-9b64292be72d"><code>flowchart TD
+    A["高层目标"] --&gt; B["Planner / Initializer"]
+    B --&gt; C["规格、任务清单、交接工件"]
+
+    C --&gt; D["阶段契约：范围、完成定义、验证方法"]
+    D --&gt; E["Generator：只做一个可控工作块"]
+    E --&gt; F["提交产物与结构化进度"]
+    F --&gt; G["Evaluator：独立验证与打分"]
+
+    G --&gt;|达标| H["更新状态，进入下一工作块"]
+    G --&gt;|未达标| I["详细反馈"]
+    I --&gt; E
+
+    H --&gt; J{"上下文是否已漂移或接近失效？"}
+    J --&gt;|是| K["Fresh Context + 结构化 Hand-off"]
+    J --&gt;|否| D
+    K --&gt; D</code></pre>
+<km-collapse active="false" nodeId="2afe6c3a262042588447480be1a91888">
+<km-title>点击展开内容</km-title>
+<km-content>
+<table responsive="false" nodeId="c1030c701ffc431a89a9becde77f216d">
+<tr nodeId="6ac6d204c93b4d66af0a7276d16b0d1b">
+<th colwidth="[441]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="78586ba11e604e1dbae1d3c81e337690">
+<p nodeId="d5cc3b4d5b844a66a9cb6959e8e5684d"><strong>原始问题</strong></p>
+</th>
+<th colwidth="[486]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="9c627513ca704654a4f65ceb4bff4c8f">
+<p nodeId="ead0d599d3eb48c6a6fddb664bf51650"><strong>Anthropic 的对应机制</strong></p>
+</th>
+</tr>
+<tr nodeId="8dd2cb84e494459097610db3bb20cf52">
+<td colwidth="[441]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="7f6f31995bc241489c8ddba61be44e1f">
+<p nodeId="71246b7712924cf7902789e9dee805e2">上下文跨会话断裂，后续 Agent 不知道之前发生了什么</p>
+</td>
+<td colwidth="[486]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="c429f26f12ef49c6aae8052876d75a1c">
+<p nodeId="baa18eccc09f4e4d984e227817ce5917"><code>claude-progress.txt</code> 加 Git 历史作为交接工件</p>
+</td>
+</tr>
+<tr nodeId="8799281bdf864f6bbc1ce030e40aedf3">
+<td colwidth="[441]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="e9dbf427c6a34b808e8873312d0faed7">
+<p nodeId="bfbd5b82a39749d9a7fef2e251d250f7">Agent 一次做太多，做到一半上下文耗尽</p>
+</td>
+<td colwidth="[486]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="ac744156563e4916bef79e0126322506">
+<p nodeId="9e6b1f3740fd420b91df95fbaf0457c8">每轮只做一个 feature，要求 incremental progress</p>
+</td>
+</tr>
+<tr nodeId="a92265945fe94fd89690adaeb7626788">
+<td colwidth="[441]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="11c0a88a0d5f49368f58873987cd81c5">
+<p nodeId="ada8412afa0d4c77b0fa4bcfdbe063ed">Agent 过早宣布整个项目完成</p>
+</td>
+<td colwidth="[486]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="16ba0d39a2aa45b9a245eed452a5e3b1">
+<p nodeId="97b2d5f9975844bc8c8450f8bd3c6ff5">用完整 feature list，所有功能初始为 <code>passes: false</code></p>
+</td>
+</tr>
+<tr nodeId="ba93e35c552e41e8882d9c35cf01196e">
+<td colwidth="[441]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="e589a067f9044a6b86bfe93b6707c1f7">
+<p nodeId="ece58585373844ef96b4a05035af9af0">前一轮留下损坏、未文档化的环境</p>
+</td>
+<td colwidth="[486]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="9834a729bb5c4c1ba2c02a021418e27a">
+<p nodeId="f39bab6436ee46b882a8b55a3ad08f30">新会话先跑基础验证；旧会话结束前必须提交干净、可工作的状态</p>
+</td>
+</tr>
+<tr nodeId="2ab06d4293cb45bbae40c23ea24dde27">
+<td colwidth="[441]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="0922e2521c25440a80eb0c1e6e012277">
+<p nodeId="b6d573f6731b4d489d3c1ca07d4a64a6">模型虚假标记完成</p>
+</td>
+<td colwidth="[486]" verticalAlign="middle" color="rgb(13, 13, 13)" nodeId="a7595ad85728471d8e624d453e210bd2">
+<p nodeId="a0f9f40954e941c3b1c88a24820f7aee">只有经过端到端测试后才允许更新 <code>passes</code></p>
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<h3 nodeId="5f758f7ccd5342a88e798424bc0ff366"><strong>6.2 Langgraph 的解法</strong><km-footnote id="90f397a8-1b60-496a-b274-a6fd2f77ef7e" annotate="" nodeId="3179e0940f814414894e19c1dd48e22b" />：图状态持久化 + 节点局部上下文</h3>
+<p nodeId="94da277422984d61b2d9857314d16df3">LangGraph 把这类长流程问题直接建模为「图状态的持久化执行」——不让模型记住整个过程，而是将执行过程显式拆成图（Graph）+ 节点（Node）+ 状态（State）+ 检查点（Checkpoint）。解决方案分四层：</p>
+<ul nodeId="a0511745-97ec-41a6-ae1e-19afac17c696">
+<li nodeId="5da1ab35-1cca-405e-9459-d9905cc6096e"><strong>用 Node 替代长 Skill 中的连续自然语言步骤</strong>：一个 Node 只做一件事（读取需求 / 校验输入 / 检索知识 / 生成方案 / 独立评审 / 发布结果），边（Edge）与条件边定义状态转移 —— 原本 20k token Skill 里的流程长说明变成图结构的节点和边，模型在每个节点只获得本步骤真正需要的局部上下文。</li>
+<li nodeId="d5c759fb-56f1-4cee-83ee-1b1a03566264"><strong>State 存原始数据、不存格式化文本：</strong>共享状态拆成原始且类型化的字段，每个节点按需从 State 选取字段、在自己的内部组装局部 prompt —— 状态存进 State ≠ 状态喂给模型：存储层收下全部字段，进入模型上下文的只有当前节点选取、裁剪后的最小切片。</li>
+<li nodeId="d8c3919d-d299-4b8f-a6ad-aec8aaacb2be"><strong>Checkpointer + Store 两级持久化</strong>：Checkpointer 保存单个线程的图状态快照，支撑当前长任务的断点续跑、人工审批与故障容错；Store 保存图状态之外的应用级数据——跨任务的领域知识、用户偏好、共享事实。</li>
+</ul>
+<pre language="Mermaid" title="示例" nodeId="37445ce3-e7e4-47bf-a24b-05c0579fdd39"><code>flowchart TD
+    A["任务输入"] --&gt; B["Intake Node"]
+    B --&gt; C["Analyze Node"]
+    C --&gt; D["Execute Node"]
+    D --&gt; E["Verify Node"]
+    E --&gt;|通过| F["Deliver Node"]
+    E --&gt;|失败且可修复| D
+    E --&gt;|缺信息或高风险| G["interrupt：等待人工/主 Agent"]
+    G --&gt; D
+
+    B -.每个节点后保存.-&gt; H["Checkpointer：线程状态快照"]
+    C -.每个节点后保存.-&gt; H
+    D -.每个节点后保存.-&gt; H
+    E -.每个节点后保存.-&gt; H
+
+    I["Store：长期领域规则、用户偏好、共享知识"] --&gt; C
+    I --&gt; D</code></pre>
+<pre language="Plain Text" title="示例" isExpand="false" nodeId="f3ca863a-96cc-44d9-9e51-6a7f6059696b"><code>短全局约束
+→ 每个 Node 都注入。
+
+流程步骤与阶段转移
+→ Graph 的 Node / Edge / Conditional Edge。
+
+当前任务状态、验证结果、重试次数、工件引用
+→ Checkpointed State。
+
+跨任务稳定知识、用户偏好、领域规范
+→ Store / RAG。
+
+本阶段详细规则和操作清单
+→ 当前 Node 按需加载并组装成局部 prompt。
+
+高风险动作、信息缺失、质量不确定
+→ interrupt()，等待人工或主 Agent 的 Command(resume=...)。</code></pre>
+<h3 nodeId="ded59f81492a4b35bac06aa88c98c0c2">6.3 关键信息持续注入</h3>
+<km-html nodeId="9acc49450afc4edb969b15d8f6660e6d"><![CDATA[<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上下文稀释与 Anchor 唤起</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --history: #E7E5E4;
+    --tools: #F5F5F4;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #334155;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --history: #334155; --tools: #1E293B;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #334155;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --history: #334155; --tools: #1E293B;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .tag-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .tag-row .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 500;
+    color: var(--accent); border: 1px solid var(--accent-faded);
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+  }
+  .label-line {
+    font-size: 0.85rem; color: var(--text-muted);
+    line-height: 1.7; margin-bottom: 8px;
+  }
+  .label-line.divider {
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .label-line strong {
+    color: var(--text); font-weight: 600;
+  }
+  .bar-group { margin-bottom: 12px; }
+  .bar-label {
+    font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .demo-note {
+    font-size: 0.75rem; color: var(--text-faint); line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .demo-note .mono { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+  /* 注意力阶梯：sequential scale，由浅到深表示注意力强弱 */
+  .attn-legend {
+    display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+    margin: 2px 0 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    color: var(--text-faint);
+  }
+  .attn-legend .scale { display: flex; gap: 3px; }
+  .attn-legend .scale i { width: 16px; height: 12px; border-radius: 2px; display: block; }
+  .attn-legend .scale i.a1 { background: #EFF6FF; border: 1px solid var(--border); }
+  .attn-legend .scale i.a2 { background: #93C5FD; }
+  .attn-legend .scale i.a3 { background: #2563EB; }
+  .seg.attn-1 { background: #EFF6FF; color: #1E3A8A; }
+  .seg.attn-2 { background: #93C5FD; color: #1E3A8A; }
+  .seg.attn-3 { background: #2563EB; color: #fff; }
+  .bar {
+    display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 500; white-space: nowrap;
+    padding: 0 6px;
+  }
+  .seg.anchor { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .seg.anchor.idle {
+    background: transparent; color: #2563EB;
+    border: 1px dashed #2563EB;
+  }
+  .litm span.marker::before, .litm span.noarrow::before { content: none; }
+  .litm span.marker { font-size: 0.7rem; color: var(--text-faint); }
+  .litm {
+    position: relative; height: 18px; margin-top: 5px;
+  }
+  .litm span {
+    position: absolute; left: 40%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 0.68rem; color: var(--text-faint);
+  }
+  .litm span::before {
+    content: "↑"; margin-right: 4px; color: var(--text-faint);
+  }
+  .litm span.end-arrow::before { content: none; }
+  .litm span.end-arrow {
+    transform: none; left: auto; right: 0;
+  }
+  .litm span.end-arrow::after {
+    content: "↑"; margin-left: 4px; color: var(--text-faint);
+  }
+  .refocus {
+    position: relative; height: 24px; margin: 26px 4% 12px 28%;
+    border-top: 2px dashed var(--focus);
+    border-left: 2px dashed var(--focus);
+    border-right: 2px dashed var(--focus);
+    border-radius: 10px 10px 0 0;
+    opacity: 0.9;
+  }
+  .refocus .drop {
+    position: absolute; top: 0; bottom: -5px; width: 0;
+    border-left: 2px dashed var(--focus);
+    transform: translateX(-1px);
+  }
+  .refocus .drop::after {
+    content: ""; position: absolute; bottom: 0; left: -7px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 8px solid var(--focus);
+  }
+  .refocus::before {
+    content: ""; position: absolute; left: -7px; bottom: -5px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 8px solid var(--focus);
+  }
+  .refocus .tag {
+    position: absolute; top: -21px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 10px; white-space: nowrap;
+    font-size: 0.72rem; color: var(--focus); font-weight: 500;
+  }
+  .hint-note {
+    display: flex; gap: 12px; align-items: stretch;
+    margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .hint-note .cell {
+    flex: 1; border-radius: 6px; padding: 8px 12px; border: 1px solid;
+  }
+  .hint-note .cell.is { border-color: var(--focus); background: rgba(217, 119, 6, 0.07); }
+  .hint-note .cell.not { border-color: var(--border); background: var(--surface-alt); }
+  .hint-note .kicker {
+    font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;
+  }
+  .hint-note .cell.is .kicker { color: var(--focus); }
+  .hint-note .cell.not .kicker { color: var(--text-muted); }
+  .hint-note .text { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+  .hint-note .cell.is .text { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; }
+  .hint-note .sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .hint-note .vs {
+    display: flex; align-items: center; color: var(--text-faint);
+    font-size: 0.7rem; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tag-row">
+    <span class="badge">上下文工程</span>
+    <span class="badge">长程任务</span>
+    <span class="badge">对抗上下文稀释</span>
+  </div>
+  <p class="label-line"><strong>问题表现</strong> — 约束仍在上下文中，但 Agent 的注意力被累积的对话历史和工具输出稀释，重要信息文件逐渐淡出视野。又或是长程任务触发多轮 Compact，早期加载的全局文件 / skills 保留不完整，语义缺失。</p>
+  <p class="label-line divider"><strong>解法</strong> — 通过 webhook / hook / plugin 等方式在用户消息输入时，注入 HINT-NOTE，使得 Agent 持续关注关键信息。</p>
+
+  <p class="demo-note">下图示例中，假设我们希望 Agent 持续关注的信息是 <span class="mono">&lt;全局信息&gt;</span> 和 <span class="mono">&lt;Skills&gt;</span> 这两部分的内容。</p>
+
+  <div class="attn-legend">
+    <span>上下文利用度</span>
+    <span class="scale"><i class="a1"></i><i class="a2"></i><i class="a3"></i></span>
+    <span>弱 → 强</span>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>会话初期</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:34%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:12%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-3" style="width:12%; border-left:1px solid rgba(255,255,255,0.35)">Skills</span>
+      <span class="seg attn-2" style="width:18%">工具调用</span>
+      <span class="seg attn-3" style="width:12%">消息</span>
+      <span class="seg anchor idle" style="width:12%">&lt;ANCHOR&gt;</span>
+    </div>
+    <div class="litm"><span class="end-arrow" style="left:auto; right:0%">Anchor 注入但无需发挥作用 — 上下文较为简短干净</span></div>
+  </div>
+  <div class="bar-group">
+    <div class="bar-label"><span>多轮交互后</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:22%">System Prompt + Tools</span>
+      <span class="seg attn-1" style="width:12%">全局信息</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">早期对话</span>
+      <span class="seg attn-1 anchor" style="width:7%; border-left:1px solid var(--border)">&lt;ANCHOR&gt;</span>
+      <span class="seg attn-1" style="width:25%; border-left:1px solid var(--border)">工具输出</span>
+      <span class="seg attn-1" style="width:12%; border-left:1px solid var(--border)">Skills</span>
+      <span class="seg attn-2" style="width:9%">近期对话</span>
+    </div>
+    <div class="litm">
+      <span class="marker" style="left:28%">↑</span>
+      <span class="marker" style="left:85%">↑</span>
+      <span class="noarrow" style="left:56%">Lost in the Middle — 全局信息 / Skills 被淹没在冗长上下文中</span>
+    </div>
+  </div>
+  <div class="bar-group">
+    <div class="bar-label"><span>多轮交互后 + 消息输入</span></div>
+    <div class="refocus">
+      <span class="tag">HINT 提醒 → Agent 重新关注到关键信息</span>
+      <span class="drop" style="left:68%"></span>
+    </div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:20%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:11%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-1" style="width:13%">早期对话</span>
+      <span class="seg attn-1 anchor" style="width:7%; border-left:1px solid var(--border)">&lt;ANCHOR&gt;</span>
+      <span class="seg attn-1" style="width:16%; border-left:1px solid var(--border)">工具输出</span>
+      <span class="seg attn-3" style="width:11%">Skills</span>
+      <span class="seg attn-2" style="width:8%">近期对话</span>
+      <span class="seg attn-3" style="width:5%">消息</span>
+      <span class="seg attn-3 anchor" style="width:9%; border-left:1px solid rgba(255,255,255,0.35)">&lt;ANCHOR&gt;</span>
+    </div>
+    <div class="litm"><span class="end-arrow" style="left:auto; right:0%">Anchor 随消息注入 — Agent 找回关注力</span></div>
+  </div>
+
+  <div class="hint-note">
+    <div class="cell is">
+      <div class="kicker">✓ ANCHOR 是 HINT（引子）</div>
+      <div class="text">「执行过程中严格遵守 xxx skill」</div>
+      <div class="sub">只点名关键信息，不含具体规则与约束细节；Agent 借由它重新读取文件、或在上下文中找回完整内容</div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="cell not">
+      <div class="kicker">✗ 不是信息录入处</div>
+      <div class="text">不把 skill 的约束条款、执行规则誊写进 Anchor</div>
+      <div class="sub">堆入细节会让 Anchor 膨胀，重新稀释注意力，也违背极简引子的设计初衷</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+]]></km-html>
+<h5 nodeId="8b5016a7-0bf4-435f-bd6b-bbd1a5ffd799"><strong>场景一：到餐标注答疑 Agent</strong></h5>
+<p nodeId="7497637f7ee74a3db784a22aa4646cc9"><strong>场景一特点：</strong>全局文件和 Skills 文件在会话伊始即加载，随着用户的提问上下文持续膨胀，Agent 失去对早期加载的重要文件的关注度。</p>
+<p nodeId="7d5c2ad0-9dd1-4338-a6de-1ac24946f02b">到餐标注答疑 Agent 依托 CatPaw Claw（群聊虾），部署在大象群聊中，为标注团队提供菜品匹配相关的实时答疑服务。群聊虾的行为主要依赖于两类约束文件：</p>
+<ul nodeId="f2efb8e1-a71e-4b38-b788-862a53b06de9">
+<li nodeId="5a94469b-ea99-461f-a6da-1540a1bd73bb"><strong>Skills</strong>：如 <code>knowledge-flow</code> skill，定义了检索协议的完整执行流程（切换知识库 → 读取检索协议 → 沿目录树导航 → 读取学城文档 → 基于文档内容作答）；</li>
+<li nodeId="7eb385e0-36bd-4fc9-af7d-b476b3e3977e"><strong>全局行为规则</strong>：通过 <code>group-context-hook/AGENTS.md</code>在会话启动时注入，包括指定知识库为 <code>knowledge-biaozhu</code>、禁止使用 fallback 兜底检索、禁止凭上下文记忆直接回答等强制规则。</li>
+</ul>
+<p nodeId="c0954d66-39a1-48fb-ad4b-5fc1ed1f5b53">在上下文较短时，这两层约束都能起到良好的作用。用户发送“水煮鱼 水煮肉片”或“炸蛋螺蛳粉与煎蛋螺蛳粉一致吗”这类菜品匹配问题时，群聊虾能正确切换到正确的知识库，走完整的 <code>knowledge-flow</code> 检索流程，基于实际读取的学城文档内容（如《BML5.0精准匹配人工标注规则》《精准匹配最新答疑对齐结论》等）给出准确回答。</p>
+<p nodeId="91b83b7fbcc64da6a8660f029f77523a"><strong>场景一上下文问题</strong></p>
+<p nodeId="685e8919-00ef-4c90-8ed2-f7fd920ee415">随着群聊持续进行，上下文窗口不断累积。标注答疑群一天可产生数十轮对话，涉及不同用户的不同问题——菜品匹配、规则咨询、case 判断。在这种长程会话中，早期注入的全局行为规则以及 Skills 文件虽然仍在上下文窗口中，但其约束力逐渐衰减：</p>
+<ol nodeId="ef0eb6db-b6ed-4e55-97c7-be37b9349c3d">
+<li nodeId="ece50501-a231-4501-94e2-fb1567a97bf7"><strong>长会话中的规则关注力衰减</strong>：<code>group-context-hook/AGENTS.md</code> 中关于“必须使用 <code>knowledge-flow</code> 完整检索流程”的强制规则，在系统上下文中排在靠前的位置。但随着用户消息逐轮累积，这些规则的权重不断下降<km-footnote id="c967d354-c889-4bcb-8b06-4443196b27be" annotate="这些规则的权重不断下降：skill 中定义的完整检索协议在长程对话中可能退化为部分执行，甚至被完全跳过。：Anthropic 在工程博客 《Effective context engineering for AI agents》中提出 context rot（上下文腐蚀）这一概念，并强调模型的注意力随上下文变长而摊薄。
+https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" nodeId="b9ed7004a2d3443498f44ad4100adf2f" />，模型倾向于依赖最近几轮对话中的上下文线索来决定行为，而非严格遵守启动时注入的全局规则。</li>
+<li nodeId="98b965d2-fd43-4856-93f3-e959a852d701"><strong>知识库检索被跳过</strong>：在实际运行中，当连续处理多个菜品匹配问题时，模型可能因为 token 成本考虑或“上一轮刚读过相关文档”的上下文暗示，跳过重新检索流程<km-footnote id="6ed86890-a983-4e99-8b01-e273bfd8935e" annotate="“上一轮刚读过相关文档”的上下文暗示，跳过重新检索流程：《When Not to Trust Language Models》一文中系统对比了模型“凭记忆答”与“检索后答”的边界：对高频、流行的知识，模型倾向于直接用参数化记忆作答且效果不错；但记忆不可靠时模型并不会主动转向检索。换言之，模型对自己“知道什么”缺乏校准——上下文中上一轮刚出现过的文档内容会被当作“已掌握的知识”直接复用，而非触发重新检索。
+https://arxiv.org/abs/2212.10511" nodeId="405f0600b9d34ce288dbb665588bae0d" />，直接基于之前的检索结果或上下文记忆作答。</li>
+</ol>
+<p nodeId="4a43be803fe84f18ade397c431e543d4"><strong>场景一解决思路</strong></p>
+<p nodeId="f1d303cb-990c-4eab-be86-63568892218f">基于 OpenClaw hook 机制开发<code>biaozhu-prompt-hook</code> 插件。在每次构建用户 prompt 时，对到餐标注答疑群中触发条件的消息（包含“一致、匹配”关键词，或符合“菜品A &amp; 菜品B”格式）注入规则文本。</p>
+<pre language="Plain Text" isExpand="false" nodeId="81ca450a-23c8-47e9-9c76-678bff1db9d8"><code>⚠️ 【强制规则】当前消息被识别为菜品匹配/一致性问题。你必须严格遵守以下规则：
+
+1. **禁止使用 fallback 兜底检索**。如果知识库中未检索到相关知识，应清晰说明"知识库中暂无相关内容"。
+2. **禁止凭上下文记忆直接回答**。即使上一轮对话中已经读过相关文档，也必须重新走完整检索流程。
+3. **必须使用 knowledge-flow skill 完整检索流程作答**：
+   - 确认当前激活知识库为 knowledge-biaozhu
+   - 读取 skill-retrieval.md 获取检索协议
+   - 沿目录树导航，读取 data_structure.md
+   - 到达叶子节点后读取学城文档内容
+   - 基于实际读取的文档内容组织答案
+4. **回答中必须体现实际读取了知识库文档的证据**（如引用文档内容、文档链接）。
+
+用户原始消息：{用户原始消息}</code></pre>
+<p nodeId="e3dcdec2-a876-4cb8-97e6-b235ef373688">经实际验证，该 Hook 上线后成功解决因上下文稀释带来的相关约束失效问题，群聊虾在处理菜品匹配问题时均严格执行了知识库检索流程，未出现凭记忆回答的情况。</p>
+<km-collapse active="false" nodeId="20390949c8694ba1a88895cbe5704ef6">
+<km-title>优化前后效果对比</km-title>
+<km-content>
+<table responsive="false" nodeId="4ae61ddb19e7462db4c50107ee87b852">
+<tr nodeId="77b0efc5c4644a949a3adb2e965b3520">
+<th colwidth="[479]" nodeId="7e408350cec84340b3e12dca938314c4">
+<p nodeId="76cf8a3b62284e729ba472ddf80ac2c5">优化前 （若干轮会话之后）</p>
+</th>
+<th colwidth="[618]" nodeId="96fa3fd8daff4ca0b1543871cc0ef66d">
+<p nodeId="d062f924df9f4fc697e9f198bd9bce53">优化后（若干轮会话之后）</p>
+</th>
+</tr>
+<tr nodeId="d592591379f146199eb59cf9e3a43e75">
+<td colwidth="[479]" nodeId="9964656b118f4b41b1f108564c767658">
+<p nodeId="ac3d68412be8472ca874b5957721c2b4">Q：方便面和泡面一致吗？</p>
+<p nodeId="84657c63511b405d8f788af6547ee2e7">A：</p>
+<p nodeId="2fd032efa456452d8c4f071bf70a5f7a"><strong>相同</strong></p>
+<p nodeId="2c836c50f0cd4458928d5723c237c855">「方便面」和「泡面」是同一食材/菜品的两种常见称呼，物理实物完全相同，按规则判断为<strong>相同菜品</strong>。</p>
+<p nodeId="4ebe2d6ba2cb43f382bfbe98bd98195a"><span color="#FF4A47"><strong>&lt;---- 缺失判断依据条目</strong></span></p>
+<p nodeId="2ceaa3addf9f4fc686aa01f0c2e81e66"><span color="#FF4A47"><strong>&lt;---- 缺失拆解过程</strong></span></p>
+<p nodeId="8282714d5ce540209247fa46fa3b5aeb">参考：BML5.0 精准匹配规则 — 食材名称不同但实物相同场景</p>
+<p nodeId="e16225ab4438464a837b1041579b5cf3"><span color="#FF4A47"><strong>&lt;---- 参考文献非链接，仅为上下文中出现过的文档题目</strong></span></p>
+<p nodeId="400981093a3a4c59957140027fce32e1"><span color="#FF4A47"><strong>&lt;---- 缺少知识库使用标识</strong></span></p>
+</td>
+<td colwidth="[618]" nodeId="b53d9404e79a4ba29e5d00f86a4b5291">
+<p nodeId="f38f15ba5a4e4d71a0f69ae3327783c5">Q：手打香贡丸子 与 手打贡肉丸子一致吗？</p>
+<p nodeId="cd8d6dc4cf214d658efe7ee7bb0812db">A：</p>
+<p nodeId="bcea5c5848ba473e8f676aac94e53081"><strong>手打香贡丸子 与 手打贡肉丸子：一致，判为相同。</strong></p>
+<p nodeId="d087bb36e174446db76d0c17b582ea51"><strong>判断依据</strong>（来自《BML5.0【精准匹配】人工标注规则》）：</p>
+<p nodeId="40988edc7e634c05a2818f2bbffd3658"><strong>规则b</strong>：物理世界中食材名称不同，但实物相同，菜品判断为相同。如：凌波鱼 VS 巴沙鱼，上海青 VS 小青菜。<span color="#FF4A47"><strong>&lt;---- 明确说明依据条目</strong></span></p>
+<p nodeId="2da2c70c83314a28abeb2a353b46371b"><strong>分析</strong>：<span color="#FF4A47"><strong>&lt;---- 明确分析拆解过程</strong></span></p>
+<ul nodeId="f924dbfe5eba424bb51a6b3091cf6e9f">
+<li nodeId="57fbcb99d5d244c5a17455dee2c72f83">"<strong>手打</strong>"为双侧一致的烹饪方法（手工捶打），不构成差异</li>
+<li nodeId="9972393a1f064ac79ce300218bd42eb4">核心比对"<strong>香贡</strong>"与"<strong>贡肉</strong>"——在物理世界中，"香贡"与"贡肉"指代同一种食材（均为加工猪肉制品，常用于制作丸子），只是名称表述不同</li>
+<li nodeId="67f3d884358a4b80969c0597ab2fa947">如同"凌波鱼"与"巴沙鱼"名称不同但实物相同，"香贡"与"贡肉"属于同一食材的不同叫法</li>
+<li nodeId="63046051d041426abb4956fccf50e923">核心食材均为贡肉/香贡 + 丸子 → 实物相同 → 适用规则b → 相同</li>
+</ul>
+<p nodeId="3d9588e909ab4b43a65ed93bcabab0c6"><strong>参考</strong>：</p>
+<ul nodeId="528899f5124748aa85ca364ab4b959c6">
+<li nodeId="c77378f70ec24a6c91de54e8c45965d5"><a href="https://km.sankuai.com/collabpage/2762094445" title="BML5.0【精准匹配】人工标注规则" autoUpdate="true" nodeId="0f757fbe4ab04105b2f382b2b1dd0d43">BML5.0【精准匹配】人工标注规则</a> <span color="#FF4A47"><strong>&lt;---- 严格遵循输出规范，附带参考文档链接</strong></span></li>
+</ul>
+<p nodeId="f967c3ae95164d51b66ea758f1b8cc48">⚠️ 若实际 dish_list 中"香贡"与"贡肉"在物理形态或加工工艺上有明确差异（如一方为猪肉丸一方为牛肉丸），可存疑群内对齐确认。</p>
+<p nodeId="fc660aa634de468a88388923f730895a"><em>📚 知识库：knowledge-biaozhu </em><span color="#FF4A47"><strong>&lt;---- 明确知识库使用标识</strong></span></p>
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<p nodeId="c2846d5c3d0149798d0ca92bdf143f83">方案详见：<a href="https://km.sankuai.com/collabpage/2783394597" title="到餐标注答疑群 Prompt Hook 配置" autoUpdate="true" nodeId="f1eae94214024fae88ac6afbf7cf33c7">到餐标注答疑群 Prompt Hook 配置</a></p>
+<h5 nodeId="508dc3f4e51f409999718724fcfbd4e5"><strong>场景二：智能门户外卖 Agent</strong></h5>
+<p nodeId="852139e8b12d4e739c5166903b104cd1"><strong>场景二特点：</strong>该 Agent 包含有两套完整的能力体系，每套能力对应不同的知识库和 Skills，用户会在同一会话中频繁切换使用功能，当上下文堆积后，由于用户输入内容往往不包含明确的执行动作，使得 Agent 受到上下文惯性<km-footnote id="45a95164-75a9-4244-a23e-cce08a8635a0" annotate="" nodeId="c4114bace93149cfae6701a583c8bcd3" />影响逐渐失去判断力。</p>
+<p nodeId="f0f46b654ca04d24a5f329d184a3f21e">智能门户外卖 Agent 主要面向用户覆盖两类业务场景：</p>
+<ul nodeId="8097134a4f4a43768240f711340db28d">
+<li nodeId="e12acd38f00e490296d58f7e84128d2d"><strong>需求澄清</strong>：外卖场景下的需求理解、需求澄清以及 PRD 生成等相关事宜；</li>
+<li nodeId="e43fd483353e4c8a99fa8c8900adea42"><strong>CASE 排查 &amp; 答疑</strong>：外卖业务数据异常排查、指标查询、字段口径咨询等。</li>
+</ul>
+<p nodeId="7722928678c1437cab6b4f5a1da94ef8">用户在同一个会话中可能交替进行两类工作：先讨论一个 PRD 需求，然后切到数据查询验证某个指标，再回到需求修改。两套能力相互独立，背后有不同的知识库和相应的 skills 体系支持。因此，用户的工作切换往往都意味着 Agent 进行 skills 变更和知识库变更。会话新启动时，这些 skill 定义和知识库绑定关系都通过 skills 文件和 <code>AGENTS.md</code> 清晰地加载到上下文中。在短会话中，模型能正确识别用户意图并切换到对应的 skills 和知识库。</p>
+<p nodeId="e53743967369449ea3eeebd385eddbe2"><strong>场景二上下文问题</strong></p>
+<p nodeId="65154f6aae7b4c1cabbef9568eb9c7aa">当一个会话持续若干轮，且经历了多次“需求讨论 → 数据查询 → 回到需求”的来回切换后，上下文稀释带来了任务惯性：</p>
+<ol nodeId="b72865009ed144799ba973c2a76da7ab">
+<li nodeId="e866cb5b48cf441e91b66d00f53684b9"><strong>Skill 惯性沿袭</strong>：用户从需求方向切换到“查一下近一周的采集完成率”（数据方向）时，Agent 因为上下文中最近大量存在 需求澄清相关的对话，倾向于继续沿用需求澄清体系处理新消息，而非切换到 CASE 排查体系，此时全局信息中定义的路由规则虽然仍在上下文中，但被大量需求澄清相关对话淹没。</li>
+<li nodeId="03c48be734034aae90158908f318dc7f"><strong>历史结论污染新任务</strong><km-footnote id="39e1339c-0a38-4b59-8529-089e290cdb9d" annotate="历史结论污染新任务：《Adaptive Chameleon or Stubborn Sloth》该文在研究“上下文记忆与外部证据冲突时模型怎么办”时发现，当外部证据与模型已有记忆部分吻合时，模型会 cling to 与记忆一致的部分，同时无视冲突部分——即标题中的 “Stubborn Sloth”（固执的树懒）一面。
+https://arxiv.org/abs/2305.13300" nodeId="06ba341193f14998943afa46a6789a03" />：上一任务中确认的表名、口径假设、数据结论，被模型当作“已知事实”带入新任务，而非重新走知识检索流程。比如上一任务讨论了某表的某个字段口径，新任务查采集完成率时，模型直接复用该口径假设，而非从新知识库中重新检索。</li>
+</ol>
+<p nodeId="148547d0cac4434cb5def1a8aef27c12">这些问题的共同根源是：在长程会话中，模型对“当前应该做什么”的判断，越来越依赖上下文中最近的对话模式，而非严格遵守 skill 文件中定义的路由规则和切换流程。</p>
+<p nodeId="0ab717d0421149fc97f77dce6089f54f"><strong>场景二解决思路</strong></p>
+<p nodeId="5bf01790426b42458ebc5650b1f7cf81">基于 CatX 的 webhook 基建，以接口调用的方式在用户输入时注入相关约束信息。</p>
+<p nodeId="1a0a32f6d15843ca81a40ad03cf7cc92">注入的路由闸门设计如下：</p>
+<pre language="Plain Text" isExpand="false" nodeId="147e1593-e66d-40b3-a609-10a42bd11b3e"><code>### 话题路由闸门（最高优先级，每条用户消息必执行）
+
+&gt; 本规则优先于既有任务惯性。无论上下文多长、上一任务是否完成，
+&gt; 收到每一条新的用户消息后，都必须先执行本闸门。
+&gt; 在闸门完成前，禁止直接检索知识库、调用数据工具、生成 SQL、
+&gt; 创建或修改文档、执行任务处理。
+
+#### 0. 维护唯一状态卡
+[当前任务 / 当前 skill / 当前知识库 / 任务阶段]
+
+#### 1. 每条消息先进行任务判定
+延续任务 / 新任务 / 不确定
+
+#### 2. Skill 与知识库路由规则
+| 用户意图 | skill | 知识库 |
+|---|---|---|
+| 需求/PRD | prd-ops-agent | knowledge-waimai-db |
+| 异常排查/指标查询 | case-auto-solver-test | knowledge-case-solver-test |
+
+#### 3. 路由后的强制边界
+不得使用上一任务的知识库检索结果、表名、假设</code></pre>
+<p nodeId="a098d7acd9a440e2bad835ee6d4bd8a5">经实际验证，该 webhook 上线后，模型在长程会话中的任务切换行为显著改善：用户从需求讨论切换到数据查询时，模型能正确识别为新任务，执行原子切换流程，输出路由行后再进入新 skill 的正式流程，不再出现沿用旧 skill 和知识库的情况。</p>
+<km-collapse active="false" nodeId="46978a8513b94b31a97fcae70be24ce9">
+<km-title>优化前后效果对比</km-title>
+<km-content>
+<table responsive="false" nodeId="2490dd590adc4252a2bf7f48fde98441">
+<tr nodeId="2cd1bf5e200c4834a74024f7fa3645a2">
+<th colwidth="[538]" nodeId="3e076cfc0d1e41bbad645d6f4b713a6c">
+<p nodeId="8be2989aaf684481ba0db08577faf2b8"><span font-size="14">优化前（长程任务，多轮会话后切换任务）</span></p>
+</th>
+<th colwidth="[647]" nodeId="adde0f2444bc49238dd9a2123b48ebbe">
+<p nodeId="18fe64f339774f57a45e507ad783dac8"><span font-size="14">优化后（长程任务，多轮会话后切换任务）</span></p>
+</th>
+</tr>
+<tr nodeId="f8d238170226478fbe7f304f7b543e77">
+<td colwidth="[538]" nodeId="c1c75971809540fcb8bc3c1e7672c0dc">
+<p nodeId="6b66bfcde4d346ea9c3a4a74ef5d4cd1">a. 任务开始，干净上下文</p>
+<p nodeId="80409193070f423ba4e960fff4e57f8b"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254797955825?isNewContent=false&amp;contentType=1" name="" width="1306" height="398" nodeId="a1d77402df8a4ea7bac2a1253ec09de0" /></p>
+<p nodeId="b3d1f6a790b9436faf13d567e6b1aa66">b. 需求澄清中，多轮会话，占据大量上下文</p>
+<p nodeId="50d8685f6be941bea22574d399a1a346">c. 需求澄清结束，转向进行问题排查 &amp; 咨询，未能识别场景，沿着上下文惯性，继续在需求澄清体系下进行，直接导致该 CASE 排查失败。</p>
+<p nodeId="04794d2f33bd492393786f5a1ef535d3"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254800660717?isNewContent=false&amp;contentType=1" name="" width="1306" height="321" nodeId="c47878dcb85a4299857ecebc7162a70b" /></p>
+</td>
+<td colwidth="[647]" nodeId="235ec10648ea451cb65672c945679bce">
+<p nodeId="5bcf7fabf1f4486eafa94ddec947f342">a. 任务开始，干净上下文</p>
+<p nodeId="6ea57742ec6a42089d084008a161e03c"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254800029428?isNewContent=false&amp;contentType=1" name="" width="1306" height="327" nodeId="d58d4c150dc548a1a8a5f1c28d99cfbe" /></p>
+<p nodeId="845ab4451c444fe89463901c3876bb85">b. ... CASE 排查中，多轮会话，占据大量上下文，tool_calls 100+</p>
+<p nodeId="bba1f4fdbd8c4a1890e2be546d9fc0ba">c. 排查结束，用户想根据排查结果讨论需求文档</p>
+<p nodeId="9087c04415ea485d9f0a68b0835057cc" />
+<p nodeId="141b95e3cd8e4bf5a0ae319f2200605a"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254799400913?isNewContent=false&amp;contentType=1" name="" width="1306" height="225" nodeId="65b0c359d6534cf993c9b13d32dece85" /></p>
+<p nodeId="c6edc9c10b1b4b2c85093119479a115d" />
+<p nodeId="d899dec34f9f44c1995d81754d69f867" />
+<p nodeId="da42cd4f0ad84ef5bc97effd36c209d1" />
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<p nodeId="1886f096910a43bab201ccbe4eaa996e">方案可参考：<a href="https://km.sankuai.com/collabpage/2766020578" title="Webhook 订阅指南" autoUpdate="true" nodeId="1b087e25b8854664a588650d23f0da4d">Webhook 订阅指南</a></p>
+<h3 nodeId="9c6237aa13a2483d8ce9a9026b717dfd">6.4 主子 Agent 流程编排</h3>
+<km-html nodeId="249c7c430aeb4fa4bdd96ffa4aba4e90"><![CDATA[<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>主子 Agent 设计：交付物接力</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --history: #E7E5E4;
+    --tools: #F5F5F4;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #334155;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --history: #334155; --tools: #1E293B;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #334155;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --history: #334155; --tools: #1E293B;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .tag-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .tag-row .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 500;
+    color: var(--accent); border: 1px solid var(--accent-faded);
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+  }
+  .label-line {
+    font-size: 0.85rem; color: var(--text-muted);
+    line-height: 1.7; margin-bottom: 8px;
+  }
+  .label-line.divider {
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .label-line strong {
+    color: var(--text); font-weight: 600;
+  }
+  .bar-group { margin-bottom: 12px; }
+  .bar-label {
+    font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .demo-note {
+    font-size: 0.75rem; color: var(--text-faint); line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .demo-note .mono { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+  .attn-legend {
+    display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+    margin: 2px 0 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    color: var(--text-faint);
+  }
+  .attn-legend .scale { display: flex; gap: 3px; }
+  .attn-legend .scale i { width: 16px; height: 12px; border-radius: 2px; display: block; }
+  .attn-legend .scale i.a1 { background: #EFF6FF; border: 1px solid var(--border); }
+  .attn-legend .scale i.a2 { background: #93C5FD; }
+  .attn-legend .scale i.a3 { background: #2563EB; }
+  .seg.attn-1 { background: #EFF6FF; color: #1E3A8A; }
+  .seg.attn-2 { background: #93C5FD; color: #1E3A8A; }
+  .seg.attn-3 { background: #2563EB; color: #fff; }
+  .bar {
+    display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bar.short { height: 24px; }
+  .seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 500; white-space: nowrap;
+    padding: 0 6px;
+  }
+  .litm span.marker::before, .litm span.noarrow::before { content: none; }
+  .litm span.marker { font-size: 0.7rem; color: var(--text-faint); }
+  .litm {
+    position: relative; height: 18px; margin-top: 5px;
+  }
+  .litm span {
+    position: absolute; left: 40%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 0.68rem; color: var(--text-faint);
+  }
+  .litm span::before {
+    content: "↑"; margin-right: 4px; color: var(--text-faint);
+  }
+  .litm span.end-arrow::before { content: none; }
+  .litm span.end-arrow {
+    transform: none; left: auto; right: 0;
+  }
+  .litm span.end-arrow::after {
+    content: "↑"; margin-left: 4px; color: var(--text-faint);
+  }
+  /* 并排迷你条：字段A/B 同行 */
+  .mini-row { display: flex; gap: 14px; }
+  .mini { flex: 1; min-width: 0; }
+  .mini .bar-label {
+    display: block; font-size: 0.72rem; margin-bottom: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .mini .bar { height: 26px; }
+  .mini .bar .seg { font-size: 0.62rem; padding: 0 4px; }
+  .mini .litm { margin-top: 3px; height: auto; }
+  .mini .litm span { position: static; transform: none; font-size: 0.64rem; white-space: normal; text-align: center; display: block; }
+  .mini .litm span::before { content: none; }
+  .hint-note {
+    display: flex; gap: 12px; align-items: stretch;
+    margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .hint-note .cell {
+    flex: 1; border-radius: 6px; padding: 8px 12px; border: 1px solid;
+  }
+  .hint-note .cell.is { border-color: var(--focus); background: rgba(217, 119, 6, 0.07); }
+  .hint-note .cell.not { border-color: var(--border); background: var(--surface-alt); }
+  .hint-note .kicker {
+    font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;
+  }
+  .hint-note .cell.is .kicker { color: var(--focus); }
+  .hint-note .cell.not .kicker { color: var(--text-muted); }
+  .hint-note .text { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+  .hint-note .cell.is .text { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; }
+  .hint-note .sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .hint-note .vs {
+    display: flex; align-items: center; color: var(--text-faint);
+    font-size: 0.7rem; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tag-row">
+    <span class="badge">上下文工程</span>
+    <span class="badge">主子 Agent 设计</span>
+    <span class="badge">交付物接力</span>
+  </div>
+  <p class="label-line"><strong>问题表现</strong> — 单 Agent 在同一会话中跑完五个研发环节，PRD 全文、技术方案、代码 diff、测试日志全部堆积在同一上下文中，早期环节的结论随执行推进滑向中段低权重区。</p>
+  <p class="label-line divider"><strong>解法</strong> — <strong>主子 Agent 设计</strong>：调度 Agent 只持有任务级全局状态（计划、进度、交付物路径），执行细节由子 Agent 各自独立上下文冷启动承接 —— 关键结论以落盘交付物显式传递，而非会话记忆。</p>
+
+  <p class="demo-note">下图对比三种上下文形态。条1：单 Agent 长会话跑全链路；条2：调度 Agent 视角——只见编排调用与交付物路径；条3：子 Agent 视角 —— 以代码开发 Agent 为例，独立短会话冷启动，环节间交付物接力。</p>
+
+  <div class="attn-legend">
+    <span>上下文利用度</span>
+    <span class="scale"><i class="a1"></i><i class="a2"></i><i class="a3"></i></span>
+    <span>弱 → 强</span>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>单 Agent 长会话跑全链路</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:20%">System Prompt + Tools</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">PRD 全文</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">技术方案</span>
+      <span class="seg attn-1" style="width:13%; border-left:1px solid var(--border)">代码 diff</span>
+      <span class="seg attn-1" style="width:19%; border-left:1px solid var(--border)">测试日志</span>
+      <span class="seg attn-2" style="width:12%">近期对话</span>
+      <span class="seg attn-3" style="width:10%">消息</span>
+    </div>
+    <div class="litm">
+      <span class="marker" style="left:32%">↑</span>
+      <span class="noarrow end-arrow" style="left:auto; right:0">五个环节的过程产物全部堆积在同一上下文，早期结论滑向低权重区、约束力衰减</span>
+    </div>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>调度 Agent 视角：只管编排、不管执行</span></div>
+    <div class="bar short" style="width:64%">
+      <span class="seg attn-3" style="width:30%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">&lt;编排调用链&gt;</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">消息</span>
+    </div>
+    <div class="litm"><span class="end-arrow">调度 Agent 只持有任务级全局状态——计划、进度、交付物路径，执行细节不进入调度上下文</span></div>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>子 Agent 视角：独立上下文冷启动（以代码开发 Agent 为例，五个环节各如此）</span></div>
+    <div class="bar short" style="width:64%">
+      <span class="seg attn-3" style="width:30%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">交付物输入</span>
+      <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">复杂工具调用链</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">阶段产出</span>
+    </div>
+    <div class="litm"><span class="end-arrow">独立短会话冷启动：输入是上一环节的落盘交付物（需求分析报告 → 技术方案 → … → 测试报告接力），而非会话记忆延续</span></div>
+  </div>
+
+  <div class="hint-note">
+    <div class="cell is">
+      <div class="kicker">✓ 主 Agent 只做编排，不做执行</div>
+      <div class="text">调度 Agent：计划 + 进度 + 交付物路径</div>
+      <div class="sub">交付物以文件落盘跨 Agent 传递，天然免疫压缩与稀释——子 Agent 需要时随时重新读取</div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="cell not">
+      <div class="kicker">✗ 不是全量装填的长会话</div>
+      <div class="text">单 Agent 跑完五个环节</div>
+      <div class="sub">PRD、方案、diff、测试日志全部堆积，上下文随环节数线性膨胀，每个阶段都在为其他阶段的上下文买单</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>]]></km-html>
+<p nodeId="42104394-0855-4870-9b34-4244ef6ac012"><strong>场景描述：计算 Agent</strong></p>
+<p nodeId="f7c1b8d3-9848-4c17-859f-0804625ad5fe">BML 计算团队承担美团 14 条业务线的核心比价计算能力支撑，覆盖境内住宿、到餐、到综、外卖、境外住宿、门票等业务方向。一次需求交付要走完“需求分析 → 技术方案 → 代码开发 → 单元测试 → 集成测试”的完整研发流水线，属于典型的长程任务。团队构建了“1 + 5”的多 Agent 体系，涵盖 1 个调度层 + 5 个执行层专家 Agent。</p>
+<p nodeId="223dc3e6-2ba6-426e-bf8a-bb6f8474d280"><strong>上下文问题</strong></p>
+<p nodeId="fda9bdc4-7b00-4872-be7c-c9b5b99da4fd">如果让单个 Agent 在同一会话中顺序走完五个环节，上下文稀释必然发生：</p>
+<ol nodeId="676ada5f-7d16-413a-a39f-035f98ea3381">
+<li nodeId="a8b0c302-e911-49d4-a95c-28a8b5eceacf"><strong>全链路上下文超载</strong>：PRD 全文、架构知识库文档、多份编码任务文档、代码 diff、测试日志全部堆积在同一个上下文窗口。早期需求分析阶段读入的 PRD 与承接边界，到编码阶段已被大量代码内容推向上下文中段低权重区，技术方案阶段确定的接口契约、模块边界在编码执行时约束力已经衰减。</li>
+<li nodeId="f1ae32b9-f51f-45fa-b46c-c7b990ad43dc"><strong>串行任务的记忆污染</strong>：多份编码任务文档需严格串行执行，上一任务遗留的代码上下文、文件记忆会污染下一任务的执行（与场景2的“历史结论污染新任务”同源）。</li>
+<li nodeId="09cfcbfd-1d40-45e9-8865-5e6f4a82c00e"><strong>压缩裁减关键结论</strong>：长流程大概率触发多轮上下文压缩，需求边界、方案决策等早期关键结论被摘要化甚至丢失，后续阶段基于不完整信息继续执行。</li>
+</ol>
+<p nodeId="944aae89-3947-42be-a9e1-1aa08bfafa47"><strong>解决思路</strong></p>
+<p nodeId="1fb731fd-ef77-4038-901f-ab9180b245f7">与场景1-2“在单一上下文内对抗稀释”的思路不同，这里的解法是通过主子 Agent 的设计来切分上下文：</p>
+<ul nodeId="91496bc9-3093-4b85-9d2f-bf86b8ccef4e">
+<li nodeId="4bc028ac-f095-4777-a4cc-ead44c18a65d"><strong>调度层只管编排、不管执行</strong>：task-dispatcher 不亲自执行任务，只负责发现可用 Agent、校验 Skill 完整性、制定执行计划、串行/并行调度子 Agent、跟踪进度和收集交付结果。主 Agent 的上下文中只保留任务级全局状态（计划、进度、交付物路径），不被任何环节的执行细节膨胀。</li>
+<li nodeId="913fa43a-2acb-40f8-b248-a0a9eb20a1b7"><strong>子 Agent 独立上下文冷启动</strong>：每个执行层专家 Agent 以全新上下文启动，只接收上一环节的交付物作为输入。每个环节从干净上下文开始，关键约束通过交付物显式传递，而非依赖会话记忆。</li>
+<li nodeId="9deef299-6472-4f60-b01a-c7053a053c24"><strong>交付物落盘作为跨 Agent 上下文载体</strong>：所有交付物持久化存储，以文件形式跨 Agent 传递。文件天然免疫上下文压缩与稀释 —— 子 Agent 需要时随时重新读取。</li>
+</ul>
+<p nodeId="9453e24b-d5ef-4ff1-945d-bb1b9bc30452">方案详见：<a href="https://km.sankuai.com/collabpage/2759750556" title="BML计算代码架构与AI Coding多Agent协同方案" autoUpdate="true" nodeId="b561c7fcef8a4a889aca4819c0452b35">BML计算代码架构与AI Coding多Agent协同方案</a></p>
+<h3 nodeId="e37cdef16d514d709d5fc893bbf997d0">6.5 固定任务剥离 + 微上下文流水线<km-footnote id="94e1fd85-2547-456c-848e-d3dcc366fc20" annotate="主 Agent 把“一堆字段”打包交由脚本执行；脚本中以 LLM API 调用的形式给每个字段开一条五阶段小流水线并行跑，主 Agent 不感知字段加工和推理的过程，只接收返回结果。" nodeId="3b96bf2a7f4a466d93edf46185e0c594" /></h3>
+<km-html nodeId="4c39abd9816743c5986cf3473ea305db"><![CDATA[<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>固定任务剥离 + 微上下文流水线</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF9;
+    --surface-alt: #F5F5F4;
+    --text: #1C1917;
+    --text-muted: #78716C;
+    --text-faint: #A8A29E;
+    --accent: #2563EB;
+    --accent-faded: #93C5FD;
+    --history: #E7E5E4;
+    --tools: #F5F5F4;
+    --border: #E7E5E4;
+    --focus: #D97706;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F172A; --surface-alt: #334155;
+      --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+      --accent: #60A5FA; --accent-faded: #1E40AF;
+      --history: #334155; --tools: #1E293B;
+      --border: #334155;
+      --focus: #F59E0B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A; --surface-alt: #334155;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-faint: #64748B;
+    --accent: #60A5FA; --accent-faded: #1E40AF;
+    --history: #334155; --tools: #1E293B;
+    --border: #334155;
+    --focus: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.5; padding: 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  .tag-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .tag-row .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 500;
+    color: var(--accent); border: 1px solid var(--accent-faded);
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+  }
+  .label-line {
+    font-size: 0.85rem; color: var(--text-muted);
+    line-height: 1.7; margin-bottom: 8px;
+  }
+  .label-line.divider {
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .label-line strong {
+    color: var(--text); font-weight: 600;
+  }
+  .bar-group { margin-bottom: 12px; }
+  .bar-label {
+    font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .demo-note {
+    font-size: 0.75rem; color: var(--text-faint); line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .demo-note .mono { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+  .attn-legend {
+    display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+    margin: 2px 0 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    color: var(--text-faint);
+  }
+  .attn-legend .scale { display: flex; gap: 3px; }
+  .attn-legend .scale i { width: 16px; height: 12px; border-radius: 2px; display: block; }
+  .attn-legend .scale i.a1 { background: #EFF6FF; border: 1px solid var(--border); }
+  .attn-legend .scale i.a2 { background: #93C5FD; }
+  .attn-legend .scale i.a3 { background: #2563EB; }
+  .seg.attn-1 { background: #EFF6FF; color: #1E3A8A; }
+  .seg.attn-2 { background: #93C5FD; color: #1E3A8A; }
+  .seg.attn-3 { background: #2563EB; color: #fff; }
+  .bar {
+    display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bar.short { height: 24px; }
+  .seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 500; white-space: nowrap;
+    padding: 0 6px;
+  }
+  .litm span.marker::before, .litm span.noarrow::before { content: none; }
+  .litm span.marker { font-size: 0.7rem; color: var(--text-faint); }
+  .litm {
+    position: relative; height: 18px; margin-top: 5px;
+  }
+  .litm span {
+    position: absolute; left: 40%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 0.68rem; color: var(--text-faint);
+  }
+  .litm span::before {
+    content: "↑"; margin-right: 4px; color: var(--text-faint);
+  }
+  .litm span.end-arrow::before { content: none; }
+  .litm span.end-arrow {
+    transform: none; left: auto; right: 0;
+  }
+  .litm span.end-arrow::after {
+    content: "↑"; margin-left: 4px; color: var(--text-faint);
+  }
+  /* 并排迷你条：字段A/B 同行 */
+  .mini-row { display: flex; gap: 14px; }
+  .mini { flex: 1; min-width: 0; }
+  .mini .bar-label {
+    display: block; font-size: 0.72rem; margin-bottom: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .mini .bar { height: 26px; }
+  .mini .bar .seg { font-size: 0.62rem; padding: 0 4px; }
+  .mini .litm { margin-top: 3px; height: auto; }
+  .mini .litm span { position: static; transform: none; font-size: 0.64rem; white-space: normal; text-align: center; display: block; }
+  .mini .litm span::before { content: none; }
+  .hint-note {
+    display: flex; gap: 12px; align-items: stretch;
+    margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .hint-note .cell {
+    flex: 1; border-radius: 6px; padding: 8px 12px; border: 1px solid;
+  }
+  .hint-note .cell.is { border-color: var(--focus); background: rgba(217, 119, 6, 0.07); }
+  .hint-note .cell.not { border-color: var(--border); background: var(--surface-alt); }
+  .hint-note .kicker {
+    font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;
+  }
+  .hint-note .cell.is .kicker { color: var(--focus); }
+  .hint-note .cell.not .kicker { color: var(--text-muted); }
+  .hint-note .text { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+  .hint-note .cell.is .text { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; }
+  .hint-note .sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .hint-note .vs {
+    display: flex; align-items: center; color: var(--text-faint);
+    font-size: 0.7rem; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tag-row">
+    <span class="badge">上下文工程</span>
+    <span class="badge">固定任务剥离</span>
+    <span class="badge">微上下文流水线</span>
+    <span class="badge">字段级隔离</span>
+  </div>
+  <p class="label-line"><strong>问题表现</strong> — 主 Agent 在单一长会话中逐字段处理，每个字段的加工和推理在字段完成后即失去价值，却持续占据上下文，随着上下文膨胀，Agent 对后续字段的处理逐渐脱轨。</p>
+  <p class="label-line divider"><strong>解法</strong> — 固定任务剥离：整套字段处理剥离为独立脚本，主 Agent 只发起一次工具调用、接收 tool_result，复杂执行过程不进入主 Agent 上下文；微上下文流水线：脚本以字段为隔离单元，给每个字段开一条五阶段的小流水线并行执行。</p>
+
+  <p class="demo-note">下图对比三种上下文形态。条1：单 Agent 长会话逐字段串行；条2：主 Agent 视角 —— 上下文中剥离字段加工的复杂执行过程；条3：字段级微上下文 —— 字段 A 与 字段 B 各自一个独立短会话。</p>
+
+  <div class="attn-legend">
+    <span>上下文利用度</span>
+    <span class="scale"><i class="a1"></i><i class="a2"></i><i class="a3"></i></span>
+    <span>弱 → 强</span>
+  </div>
+
+  <div class="bar-group">
+    <div class="bar-label"><span>单 Agent 长会话逐字段串行</span></div>
+    <div class="bar">
+      <span class="seg attn-3" style="width:18%">System Prompt + Tools</span>
+      <span class="seg attn-1" style="width:14%; border-left:1px solid var(--border)">字段 A 中间推理</span>
+      <span class="seg attn-1" style="width:14%; border-left:1px solid var(--border)">字段 B 中间推理</span>
+      <span class="seg attn-1" style="width:14%; border-left:1px solid var(--border)">字段 C 中间推理</span>
+      <span class="seg attn-1" style="width:19%; border-left:1px solid var(--border)">… 字段 N 中间推理</span>
+      <span class="seg attn-2" style="width:11%">近期对话</span>
+      <span class="seg attn-2" style="width:10%">消息</span>
+    </div>
+    <div class="litm">
+      <span class="marker" style="left:32%">↑</span>
+      <span class="noarrow end-arrow" style="left:auto; right:0">多个字段的加工推理过程在上下文中堆积，上下文加速膨胀且持续占用 Agent 注意力</span>
+    </div>
+  </div>
+
+    <div class="bar-group">
+    <div class="bar-label"><span>主 Agent 视角 —— 固定任务剥离</span></div>
+    <div class="bar short" style="width:64%">
+      <span class="seg attn-3" style="width:30%">System Prompt + Tools</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">全局信息</span>
+      <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">&lt;简短工具调用链&gt;</span>
+      <span class="seg attn-3" style="width:22%; border-left:1px solid rgba(255,255,255,0.35)">消息</span>
+    </div>
+    <div class="litm"><span class="end-arrow">脚本内部的五阶段、并发、重试均不进入主 Agent 上下文</span></div>
+  </div>
+
+<div class="bar-group">
+    <div class="bar-label"><span>字段级微上下文</span></div>
+    <div class="mini-row">
+      <div class="mini">
+        <div class="bar-label">字段 A</div>
+        <div class="bar">
+          <span class="seg attn-3" style="width:36%">System Prompt + Tools</span>
+          <span class="seg attn-3" style="width:24%; border-left:1px solid rgba(255,255,255,0.35)">字段 A 上下文</span>
+          <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">复杂工具调用链</span>
+          <span class="seg attn-3" style="width:14%; border-left:1px solid rgba(255,255,255,0.35)">加工结果</span>
+        </div>
+              </div>
+      <div class="mini">
+        <div class="bar-label">字段B</div>
+        <div class="bar">
+          <span class="seg attn-3" style="width:36%">System Prompt + Tools</span>
+          <span class="seg attn-3" style="width:24%; border-left:1px solid rgba(255,255,255,0.35)">字段 B 上下文</span>
+          <span class="seg attn-3" style="width:26%; border-left:1px solid rgba(255,255,255,0.35)">复杂工具调用链</span>
+          <span class="seg attn-3" style="width:14%; border-left:1px solid rgba(255,255,255,0.35)">加工结果</span>
+        </div>
+              </div>
+    </div>
+  <div class="litm">
+      <span class="marker" style="left:50%">↑</span>
+      <span class="end-arrow">每个字段一个独立短会话：字段定义 + 投影样本 + 按需知识 → 复杂工具调用链（五阶段推理）→ 加工结果即释放</span>
+    </div>
+    </div>
+
+  <div class="hint-note">
+    <div class="cell is">
+      <div class="kicker">✓ 复杂性被挡在工具调用之外</div>
+      <div class="text">主 Agent：一次 tool_use + 一条 tool_result</div>
+      <div class="sub">脚本内部的五阶段流水线、字段并发、状态与重试，对主 Agent 完全不可见，上下文零占用</div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="cell not">
+      <div class="kicker">✗ 不是越攒越大的会话</div>
+      <div class="text">逐字段串行 + 全局知识文件全量注入</div>
+      <div class="sub">上下文随字段数线性增长，字段加工处理过程与无关知识加速上下文膨胀</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>]]></km-html>
+<p nodeId="a4a8ad12-412f-410f-9606-d1041e02b203"><strong>场景描述：采集执行Agent</strong></p>
+<p nodeId="2fed7e3a-f826-43f7-9128-8e6b4081f985">采集执行 Agent 的单次任务通常需要处理大量交付字段。除直接取值字段外，每个字段都需要经历一整套工作：理解字段加工逻辑 → 识别正常/异常/边界分支 → 从真实报文中选择输入样本 → 为未覆盖分支构造测试输入 → 计算期望输出 → 检查分支覆盖与业务约束。部分字段的输入是嵌套结构复杂的大型 JSON 对象，单个字段的分析上下文就可能很大。如果全部工作由采集执行 Agent 在一个长会话中逐字段完成，这属于典型的批量长程任务。</p>
+<p nodeId="ed7c99b4-30ab-40ae-b74e-0d325a949f91"><strong>问题现象</strong></p>
+<p nodeId="fd4c5cf6-31ca-40ae-acaa-8073bdcb07cf">若直接让主 Agent 在单一长会话中持有全部字段的处理过程，会触发多条问题路径：</p>
+<ol nodeId="f2eeba72-2b8d-462a-a040-ce5eaf1ae9ae">
+<li nodeId="f6c8479f-7abd-4c6c-891c-a300452c3c1c"><strong>临时信息持续占用 Agent 上下文空间</strong>：字段的分支分析、样本筛选等只在当前字段生成测试用例时有用，字段完成后即失去价值。但主 Agent 长期持有这些中间推理，导致上下文随字段数量线性增长、不同字段的信息相互干扰。</li>
+<li nodeId="18b65557-92d0-4694-8fe9-1a92ad8d71dc"><strong>全局知识注入加速上下文膨胀</strong>：金额字段要求结果为正数、时间戳字段需要明确单位和时区、枚举字段需要业务含义 —— 若把所有规范写入一个大知识文件，每次 Agent 都携带大量与当前字段无关的知识加速了上下文膨胀。</li>
+<li nodeId="9809d717-1701-4690-be89-3f14c95c0216"><strong>批量任务执行的确定性和 Agent 自主执行的不确定性冲突</strong>：在长程任务执行中，状态恢复、输入去重、JSON 结构校验、格式校验等确定性工作如果交给 Agent 自行完成必然会出现分支漏覆盖、expected 与输入错位、中断后重复执行已成功字段等问题，直接影响交付质量。</li>
+</ol>
+<p nodeId="ec7a22bf-8596-441d-90e7-8cba014645fb"><strong>解决思路</strong></p>
+<p nodeId="42b72ee1-ada1-403b-a441-59481c14f84f">在该场景中，对边界清晰、输入输出明确的批量任务，不再让 Agent 阅读 skills + 自主规划，而是把整套字段处理剥离为独立脚本，脚本内部以固定流程调用 LLM API —— 即固定任务剥离 + 微上下文流水线。对主 Agent 而言，这只是一次普通的工具调用：发起调用、接收 tool_result，脚本内部的处理复杂性完全不进入主 Agent 上下文。脚本内部则把批量任务收敛为固定流程，流程中的每次模型调用只携带当前工作单元所需的最小上下文，处理完成即释放、上下文不累积。</p>
+<ul nodeId="32948ea7-3ddb-4326-9fea-43fe9be27f50">
+<li nodeId="b6c1b692-e9cb-40f1-94a8-3dedc18fb29c"><strong>字段级上下文隔离</strong>：以字段为最小隔离单元，每个字段只能看到完成自身任务所需的信息（字段定义、相关候选记录等），无关 JSON 节点不进入 Prompt。</li>
+<li nodeId="fbff5785-a3ec-4677-b0c9-ce86edd0969e"><strong>字段内五阶段固定流水线</strong>：分支分析 → 真实样本逐条打标 → 边界构造 → expected 生成 → 独立复核，五个节点按固定依赖顺序串行执行，各有固定输入输出协议，模型节点不承担通用 Agent 的规划职责，会话消息和临时推理在字段处理结束后释放。</li>
+<li nodeId="52351c09-b866-4f00-bcb0-98127fcb8077"><strong>清晰划分 Agent 与脚本的职责边界</strong>：需要语义理解的工作（分支提取、样本打标、边界构造、expected 推导）交给 Agent；能确定性判断的工作（并发调度、状态保存、输入指纹、断点恢复、结构校验、结果组装）交给程序脚本。</li>
+<li nodeId="87f57228-ebd9-4cc4-871a-dc44af80e6de"><strong>知识与工具按需注入</strong>：按字段名精确匹配或加工逻辑正则匹配命中规则后，才向模型节点注入对应的领域知识和工具。</li>
+</ul>
+<p nodeId="27f3a2a3-e31d-431e-9d7b-ecddfb7edc87">方案详见：<a href="https://km.sankuai.com/collabpage/2783824273" title="字段级验证数据生成脚本设计说明" autoUpdate="true" nodeId="3bef13bf10404bc5a854d5286151ad40">字段级验证数据生成脚本设计说明</a></p>
+<km-appendix nodeId="fb83a5f027bf404daf19b799953a6dbf" />
+<km-collapse active="false" nodeId="cbf583dc836143148277c60b7e79c9b3">
+<km-title>1. 工具设计</km-title>
+<km-content>
+<p nodeId="53f3840160aa464880a415a08d1fffdc"><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" title="anthropic writing-tools-for-agents" nodeId="c06ccf52d1d74955a3edb9dec541d8d4">anthropic writing-tools-for-agents</a></p>
+<p nodeId="635298012e664560b52266c48cb956ad">设计原则：</p>
+<p nodeId="faaebc8f660048918517ac1a1e563bd6"><strong>选对工具</strong>。更多工具不等于更好结果。常见的错误是把现有 API 端点直接包装成工具，不考虑 Agent 的"可操作性"（affordances）。Agent 的上下文有限，不能像传统软件那样遍历所有数据。与其提供 <code>list_contacts</code> 让 Agent 逐个翻阅，不如提供 <code>search_contacts</code> 直接定位。工具可以整合多个离散操作：与其提供 <code>list_users</code> + <code>list_events</code> + <code>create_event</code> 三个工具，不如提供一个 <code>schedule_event</code> 在内部完成查找空闲时间和创建事件的全流程。设计测试标准是：如果只给人类这些工具，他们是否会以同样的方式拆解任务？</p>
+<p align="start" nodeId="6404b59c410b4337aaf7b35f564ca237"><strong>工具命名空间</strong>。当 Agent 访问数十个 MCP 服务器时，工具名可能冲突。推荐用服务前缀或资源前缀做命名空间，如 <code>asana_search</code>、<code>jira_search</code>。没有命名空间时 Agent 会困惑"search 指的是哪个服务？"导致调用错误工具。Anthropic 还发现前缀 vs 后缀命名空间在不同模型上性能差异不可忽视，建议在自己的评估框架中测试两种方式。</p>
+<p nodeId="646a521a532e48f0a136cf0a4981df1f"><strong>提示词工程化工具描述</strong>。工具描述直接加载到 Agent 的上下文窗口中，实质上是"工具行为的系统提示词"。高质量描述应包含：工具做什么和用途、何时使用何时不用、每个参数的描述格式和示例、特殊查询格式、领域特定术语、与其他工具的关系、已知限制。文章用 SWE-Bench 的真实案例证明了工具描述优化的巨大影响：优化 Claude Sonnet 3.5 的编程工具描述后，SWE-bench Verified 分数达到当时最先进水平。此外，MCP 工具还应包含注解标记（如 <code>destructive: true</code>、<code>requires_confirmation: true</code>）来让 Agent 理解工具的副作用。</p>
+<p nodeId="194d0d5ea61d4ddcab5b227f25752c1f" />
+<p nodeId="18b7cb688a734762bc00896b6a8d9422">在 Claude 5 代模型的新法则中，Anthropic 进一步提出：从"列出大量工具调用示例"转向"把工具接口设计清楚，让参数本身说明用法"。Claude Code 的 TodoWrite 工具旧描述有 9100 个字符塞满示例，新版本只列出 pending/in_progress/completed 三种状态和一个并发约束（同时只能有一个 in_progress），模型就能正确使用。</p>
+<p nodeId="abc61e82087f48e59c8f9102fef4e323" />
+<p nodeId="44cd3b60edfc4364b6e0dc334905c8fd">检查清单：</p>
+<p nodeId="bd49634b08704fab8eb5ecfbe08d4b6d"><strong>设计阶段</strong></p>
+<p align="start" nodeId="e8fba15e5bba4c4fb728c0df3facb8b9">每个工具是否符合 Agent 自然划分任务的方式？</p>
+<p align="start" nodeId="2585ba5e06fb43eda0b633cd316c642d">零散工具是否整合成了高层工具？</p>
+<p align="start" nodeId="7c72051fad624942bf268eb9570a476b">每个工具是否有清晰的单一目的？</p>
+<p align="start" nodeId="f93d68547d984300aa7cd052be2cefae"><strong>命名阶段</strong></p>
+<p align="start" nodeId="c9598345c5824c888f8f885fd7c5dc1c">工具是否有一致的命名空间？</p>
+<p align="start" nodeId="7bfaa31f8de64865af45621ef70e71bd">看工具名就能判断它属于哪个服务/资源吗？</p>
+<p align="start" nodeId="da95400091434908811b9732238dd0ea">参数名是否无歧义？（用 <code>user_id</code> 而不是 <code>user</code>）</p>
+<p align="start" nodeId="ab1ff884d46f4cd5a6b940026dc1f492"><strong>返回值阶段</strong></p>
+<p align="start" nodeId="4d7ea4c13b1442d9ac297cf360b5c64a">返回值是否使用语义标识符？</p>
+<p align="start" nodeId="c21a48192d0b4da3bea6ffb25f6f095c">是否有简洁/详细模式控制详细程度？</p>
+<p align="start" nodeId="c37041e15a45419ea791c5722ed8676e">响应是否默认分页/过滤？</p>
+<p align="start" nodeId="835180b94ea14062b581f70e4645cbf0"><strong>错误处理阶段</strong></p>
+<p align="start" nodeId="90708b38c4d34889af49a2762f0c096f">错误消息是否具体说明了出错原因？</p>
+<p align="start" nodeId="28bba8856f4c4dd6be7536053e58dbbd">错误消息是否提供了正确格式示例？</p>
+<p align="start" nodeId="726350dd4bac4285832af10e4277160e">截断消息是否引导 Agent 采用更好的策略？</p>
+<p align="start" nodeId="88769a5dcb97440ab467de4cb4460123"><strong>文档阶段</strong></p>
+<p align="start" nodeId="0cad8667e6904df0b1ed163dbfc2cf20">描述是否说明了何时使用以及何时不使用？</p>
+<p align="start" nodeId="404ddc6eff9646bb94f1f6f619c70a93">特殊查询格式是否有文档说明？</p>
+<p align="start" nodeId="07e5645688934919813fe74cd737b3dc">工具之间的关系是否有解释？</p>
+<p align="start" nodeId="dcc49764304c404dad5cdd7da9b3f48f">是否用评估套件测试了描述的效果？</p>
+</km-content>
+</km-collapse>
+<km-collapse active="false" nodeId="2eb6a16867884a169a7375be0971681b">
+<km-title>2. Prompt 工程</km-title>
+<km-content>
+<p nodeId="33e8578f7f804c608315890edb9c3ec7">openAI：<a href="https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api" title="best-practices-for-prompt-engineering-with-the-openai-api" nodeId="22456eb362ba4f6f87d27f7fdb668491">best-practices-for-prompt-engineering-with-the-openai-api</a>（最近仍在维护）</p>
+<p nodeId="d75cda1f08ad47b982aadc44909de680">核心规范（八条法则）：使用最新模型；将指令放在提示词开头，使用 <code>###</code> 或 <code>"""</code> 分隔指令和上下文；对背景、结果、长度、格式、风格等尽可能具体和详细；通过示例阐明所需输出格式；从零样本开始，然后少量样本，都不行再微调；减少模糊和不精确的描述；与其只说不该做什么，不如说该做什么；特定于代码生成场景使用"引导词"将模型推向特定模式。同时给出了参数调优规范：Temperature 控制随机性（0=确定性，1=创造性），Top-K 限制候选 token 数量，Top-P 控制累积概率。</p>
+<p nodeId="473f872f3c5a4908ab37a019c5cb3769"><u>openAI:</u><a href="https://help.openai.com/en/articles/10032626-prompt-engineering-best-practices-for-chatgpt" title="Prompt engineering best practices for ChatGPT" nodeId="c85349fe08a84b1b99e1ea4cea9365fd">Prompt engineering best practices for ChatGPT</a></p>
+<p align="start" nodeId="b175ea7dbfd8493e9e8c1a39bd582c76">核心规范（六大策略）：写出清晰的指令（把话说详细、让模型充当角色、使用分隔符、指定步骤、指定输出长度）；提供参考文本（减少幻觉）；将复杂任务拆分为更简单的子任务；给模型时间"思考"（CoT）；使用外部工具；系统地测试变更。</p>
+<p nodeId="0b26fb0ffe0b4a31a031b223093ba6f6">25年：<a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview" title="anthropic-prompt-engineering" nodeId="be29c739547346b98b7b21044778d454">anthropic-prompt-engineering</a></p>
+<p nodeId="5d87a4dbeab9485d9f1fd097e21b228e">核心规范：使用 XML 标签分区结构化提示词（<code>&lt;context&gt;</code>、<code>&lt;task&gt;</code>、<code>&lt;constraints&gt;</code>、<code>&lt;format&gt;</code>），因为 Claude 在训练时大量接触了 XML 格式；找到"正确的海拔高度"——具体到足以有效引导行为，又灵活到足以给模型强启发式；先从最精简的提示测试，再根据失败模式逐步补充；使用少量但多样化的 few-shot 示例（"对 LLM 来说，示例就是价值千言的图片"）；给 Claude 一个角色设定来引导行为模式；使用思维链（CoT）让模型在回答前先推理。</p>
+<p nodeId="8fb0b081b548428cafda6af4ca27e3cf"><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/claude-4-prompt-engineering" title="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/claude-4-prompt-engineering" nodeId="aced95077ed8428c98c32b35d1725fbb">https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/claude-4-prompt-engineering</a></p>
+<p nodeId="da767d29f69c455685cbbe655a2e9b7f">清晰直接（Be clear and direct）。Claude 4 比前代更字面地理解指令——你说什么它就做什么，不会自动泛化。这意味着指令需要明确、直接，避免歧义。Anthropic 在另一篇对比文章中明确指出："Claude Opus 4.7 越来越字面，严格遵循指令，不会自动泛化"——这与 GPT-5.5"越来越高效，直接追求结果，选择最优路径"形成对比。</p>
+<p align="start" nodeId="e8a7c6ff0ac446579be895e64ed1bd92">展示而非告知（Show don't tell）。使用示例而非描述性规则来引导行为。给 Claude 看你想要的格式和风格，比用文字描述"请写得专业一点"更有效。</p>
+<p align="start" nodeId="c62abed11294457cb691e860f83382d4">使用 XML 标签结构化。Claude 在训练时大量接触了 XML 格式，用 XML 标签包裹关键部分（指令、示例、输入数据）能帮助 Claude 更好理解上下文。</p>
+<p align="start" nodeId="d713fec4033a4a82970c9f56a1e35b43">给 Claude 角色。通过系统提示赋予 Claude 明确的角色定位，引导其行为模式。</p>
+<p align="start" nodeId="f73f36b9cfb6450c83aa353e26325cce">预填充回复。对于需要精确控制输出格式的场景，可以在 assistant 消息中预填充开头内容来引导 Claude 的输出方向。</p>
+<p nodeId="0d36f453edc24c0993295e51d19a9350" />
+<p nodeId="ed656265cda84d039b85441a51864edc">Google:：<a href="https://www.kaggle.com/whitepaper-prompt-engineering" title="Prompt Engineering Whitepaper (Kaggle)" nodeId="016c3324df5045c5bbfaa503be355217">Prompt Engineering Whitepaper (Kaggle)</a></p>
+<p nodeId="360eae45c99244f6aa3b05400ff29dcb">核心规范分两大部分。第一部分是 LLM 输出配置：输出长度控制需考虑能源消耗、响应时间和成本；温度（Temperature）控制随机性和创造性；Top-K 和 Top-P 控制采样范围；三种参数需要综合调优而非单独调整。第二部分是提示技巧：通用提示/零样本（直接给指令不提供示例）；单样本和少样本（提供 1 个或多个输入-输出示例，注意打散类别顺序防止记忆）；系统提示（设定整体行为和约束）、角色提示（赋予模型身份）、上下文提示（提供背景信息）三种提示视角；回退提示（Step-back，先让模型思考一般性原理再回答具体问题）；思维链（CoT，让模型分解推理步骤）；自我一致性（多次采样取多数结果）；思维树（ToT，探索多条推理路径）；ReAct（推理与行动交替）；自动提示工程（APE，让模型自动优化提示）。最后给出了系统级最佳实践：指令优于约束（写"确保无错别字"而不是"不要写错别字"）；提供具体示例；保持简洁明了；随模型更新调整提示。</p>
+<p nodeId="509c60a8c11549ae91cd496f6016f28d" />
+</km-content>
+</km-collapse>
+<km-collapse active="false" nodeId="aa9be78db2e842678c9eebd12a5e4915">
+<km-title>3. 关键信息持续注入 —— Anchor 插件使用说明</km-title>
+<km-content>
+<p nodeId="e785dd77b23941f4b96dcd528f2dfb1c">发送该文档给 Agent 即可一键安装 plugin —— <a href="https://km.sankuai.com/collabpage/2782328652" title="Anchor 插件：对抗长程任务上下文稀释的持续守则注入" autoUpdate="true" nodeId="2fee74b9209e4ba3a392a38fee87d600">Anchor 插件：对抗长程任务上下文稀释的持续守则注入</a></p>
+<p nodeId="3c04dc5af9804f3c94c78055bf067127"><strong>三个命令上手使用 Anchor 插件</strong></p>
+<table responsive="false" nodeId="fd839931345043749d6ef6746561af0a">
+<tr nodeId="746bc04221d54295b04a852613c5d6e0">
+<th colwidth="[159]" nodeId="13a0f6a83bf944f5b90171c80f467ec1">
+<p nodeId="46f35015900e41b2912be4538b117d8d">动作</p>
+</th>
+<th colwidth="[307]" nodeId="134d7cbdb8d94e08b413a455812739d7">
+<p nodeId="8a22f27c5bf64294b067fce27c5b0b1f">命令</p>
+</th>
+<th colwidth="[563]" nodeId="740893ffab04422cbe50c3c28f9ffe4f">
+<p nodeId="84c81881b7ac47c497145a7db0408827">示例</p>
+</th>
+</tr>
+<tr nodeId="4ae86e65fa5d4c1da8ed2fbc3a6116a5">
+<td colwidth="[159]" nodeId="d9275c4647744cada6a53b3eb4ec3099">
+<p nodeId="c3dfd738616c4c04a0e7011ac1cf6246">创建&lt;守则&gt;</p>
+</td>
+<td colwidth="[307]" nodeId="cc870c4b5e344a248c4cf05c5b903fc9">
+<p nodeId="138717cb61654d0aa326a5464d267653">/anchor:anchor &lt;你的守则&gt;</p>
+<p nodeId="cc910de4271f4fc9b6a3f4220fc8a3ed">p.s. &lt;守则&gt; 超过 200 字会有过长提示</p>
+</td>
+<td colwidth="[563]" nodeId="ad5bf6973b6f4ea69f634edcc9d2e8bf">
+<p nodeId="a6df2082907e4305a8ee28e08ec17b22"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254798126055?isNewContent=false&amp;contentType=1" name="" width="1306" height="391" nodeId="cd4af424feae44b2ae0a086c8a623762" /></p>
+</td>
+</tr>
+<tr nodeId="b511aeba2cc04cafa701e863bba16d11">
+<td colwidth="[159]" nodeId="efd51fce8fe8400c8bc8a92254c1a011">
+<p nodeId="cd22fa0a285145739b12605e86ac4a5b">查看&lt;守则&gt;</p>
+</td>
+<td colwidth="[307]" nodeId="2c62680549fc4ec2b38277a9df4655f2">
+<p nodeId="e57ea3db02e34f9fbda1fca5b08649cd">/anchor:anchor show</p>
+</td>
+<td colwidth="[563]" nodeId="87b5de541481437ebf683c3c29b665ec">
+<p nodeId="b65d08b8452e4d0e9b1a645f4f70cd0a"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254798353001?isNewContent=false&amp;contentType=1" name="" width="1306" height="254" nodeId="7a3b4823e8aa418d82dc620af965ec39" /></p>
+</td>
+</tr>
+<tr nodeId="add2a9b0b8634852934e5f1aa1f3993e">
+<td colwidth="[159]" nodeId="d82a0bc968ea4c158c05bb2946b01563">
+<p nodeId="15ef4c5dc9b1440dbb225363af96d06b">删除&lt;守则&gt;</p>
+</td>
+<td colwidth="[307]" nodeId="cbc77e7d46bd4fbca568e09886eea8ac">
+<p nodeId="12cba570de4d455ca91d7b8d354fd9c7">/anchor:anchor off</p>
+</td>
+<td colwidth="[563]" nodeId="1177b41a0aa442ce84a329cea65ba9d0">
+<p nodeId="2837b079070a4c5d970e0a364e82054c"><img src="https://km.sankuai.com/api/file/cdn/2786220186/254799870462?isNewContent=false&amp;contentType=1" name="" width="1306" height="213" nodeId="da5ac5a6d0c94e13a86cc2f45c28bf65" /></p>
+</td>
+</tr>
+</table>
+</km-content>
+</km-collapse>
+<km-collapse active="false" nodeId="3ed4ef76d38746da81637d8826084f30">
+<km-title>4. 要解决什么问题</km-title>
+<km-content>
+<p nodeId="00ed6f3a654841d6b01f443fa0c98622">在长程会话 &amp; 任务中，Agent 在会话启动时会通过加载系统提示词或读取执行任务的 skills 文件和全局行为规则等（如 AGENTS.md）获取到一系列的规范和约束。这些约束在会话初期能被严格遵守，但随着对话轮次累积，它们的影响力会逐渐衰减。这并非模型“忘记”了这些约束 —— 它们仍然在上下文窗口中。问题在于 Agent 如何理解上下文的内容<km-footnote id="4160a437-529e-4438-a1ff-335771697b16" annotate="Agent 如何理解上下文的内容：模型倾向于依赖最近几轮对话中的上下文线索来决定行为：《Lost in the Middle》一文中指出，在多文档问答和键值检索任务上系统改变关键信息在上下文中的位置，模型性能呈 U 型曲线。即是，关键信息放在上下文开头（primacy）或结尾（recency）时性能最好，放在中段时性能显著下降。
+对照到我们的场景：会话初期注入的 system prompt、skills 文件、AGENTS.md，随着对话累积，逐渐从“开头高权重区”滑向“中段低权重区”——即使从未被截断，其被利用的概率也在下降。
+https://arxiv.org/abs/2307.03172" nodeId="ef3e16a3d6284548b54ebe8f63e11339" />：最新的消息占据更高的关注度，<strong>早期的约束在上下文中被逐渐稀释。</strong>更糟的是，当上下文触发压缩时，早期加载的 skills 和规则文件可能在压缩中被裁减或丢失，而非完整保留。上述问题会导致领域 Agent 在跑长程任务时逐渐脱离预设的约束框架，从而出现不符合预期的行为。</p>
+<p nodeId="d87e49356729466390518eabb9dc1483" />
+<p nodeId="ef76560d4c7c482ba158949fb1630d85">上下文问题不止稀释一个分支 —— 冲突、污染、信息缺失各有其机理。<strong>但稀释在其中占据主干地位</strong>：其一，它不需要任何偶发条件，只要会话足够长必然发生；其二，其余分支多数是上下文稀释引发的次生问题 —— 注意力被稀释，矛盾信息才会悄然通过（冲突）；规则的权重先被稀释，上一任务的执行惯性才压得过路由规则（污染）；上下文膨胀到极限触发压缩，裁减掉的关键信息就是缺失。解决好上下文稀释问题，其余分支随解法一并受益。</p>
+<p nodeId="24e65f96b4c14c91bab29ffa3f26bc48" />
+<p nodeId="23bd15fc1d63457f8d2c5ea0b96ef2f8" />
+<p nodeId="d0bd5dca531d4758bedc37a127f32de7" />
+<p nodeId="19da063cc697465a93b59f3860dcbe50">Langfuse 就是这层的标准答案：<a href="https://cloud.tencent.com/developer/article/2714837" title="https://cloud.tencent.com/developer/article/2714837" nodeId="15bd618975094c96984232e86535205c">https://cloud.tencent.com/developer/article/2714837</a></p>
+<ul nodeId="3148276dcf934d83bc2f31c8b7b8802f">
+<li nodeId="ddd3e515fcbc45a981ad81f893c82ceb"><strong>行车记录仪（Tracing）</strong>：不是可选项，是必选项。没有它，你的 Agent 是在裸奔。</li>
+<li nodeId="51f3e35587304eddb89ab10cb67afe0f"><strong>质量评估（Evaluation）</strong>：从「感觉还行」升级到「数据说话」。</li>
+<li nodeId="8fd88473866c4a6faefae656edc55cb9"><strong>Prompt 版本管理</strong>：让最重要的配置可治理、可追溯、可实验。</li>
+<li nodeId="061960b3b43d465083da2370bdb86e29"><strong>成本监控</strong>：账单里的钱不会撒谎，但没有工具你看不出来它往哪跑。</li>
+</ul>
+<p nodeId="8d87d7d42a5d4ff79f6cca7a6794ad58" />
+<p nodeId="5c66203b8bef415b8673c154ce202e43" />
+</km-content>
+</km-collapse>
+<p nodeId="b87e89041fa149b7bac1fa7ce745fb7b" />
+<p nodeId="5efc870f023447a984c3314cd90bcb9b" />
+<p nodeId="73fa6830d12e48bfb9c513eeb919e72f" />
+<p nodeId="5eba5d11f6274f359d013770c0540aa2" />
+<km-footnote-list nodeId="80c435c2cea5479190d1648341a02caf">
+<km-footnote-item footnoteNodeId="75d1e52262044ebbbfa607676f0800c3" nodeId="8bd6ac0f0d20493ea2d56662aab35ac6"><p nodeId="1b2445331736493fabb629b2e939e93d">Give Codex a map, not a 1,000-page instruction manual：原文是 “Context management is one of the biggest challenges in making agents effective at large and complex tasks. One of the earliest lessons we learned was simple: give Codex a map, not a 1,000-page instruction manual.”</p>
+<p nodeId="dbcc14355dd24e1caf1f11945d5d5331" />
+<p nodeId="2132ab46c719449fa38126562c6464ce"><a href="https://openai.com/zh-Hans-CN/index/harness-engineering/" title="https://openai.com/zh-Hans-CN/index/harness-engineering/" nodeId="50d15b8f27ea447baf70e4656c720e28">https://openai.com/zh-Hans-CN/index/harness-engineering/</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="121ef6e261544ed5a6137f9b026f3de6" nodeId="46aa9e9486fb4d0ea027d93517caba51"><p nodeId="7b8932628fb64a13a8eec6a8d5ec35ff">SKILL：<a href="https://mp.weixin.qq.com/s/fVqp5E-UJ9-b7kgAcvekCw" title="Harness 工程之道：Skill 原理与最佳实践" nodeId="811a91cc46bc42a4860f4c6621fe4923">Harness 工程之道：Skill 原理与最佳实践</a>；</p>
+<p nodeId="2673e56c5a5940a8bb938c6c14f2195c"><a href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" title="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" nodeId="cac43f651a494978a5374daf954e598c"></a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="992732b7149645b5bedc1b8b90eefce2" nodeId="8e6fa7fd9cc84bb7ba66841c0a5bb8ea"><p nodeId="b9c3013b759b4990be5176d721a34e2d">渐进式披露：<a href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" title="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" nodeId="76e1f8b5ccec49e0acc743116a24ce14">https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="c2473477bf95455385b895bac6c03c39" nodeId="cfaad7259a9044ebb688a0f3c225e588"><p nodeId="7b9084581dfa420193b07754b15b2d6d">如 llm-wiki 式的 skill rag：<a href="https://km.sankuai.com/collabpage/2767816201" title="https://km.sankuai.com/collabpage/2767816201" autoUpdate="true" nodeId="da4b75b9a6114324a92f37d0fa5ea638">https://km.sankuai.com/collabpage/2767816201</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="ed4784c0b1a24f2c8485cd3c48ed55ef" nodeId="e798d8908ac144b290711b2c8afd6a45"><p nodeId="71cb4d34ce8d4e48bfbfd4ae995f0b64">工具输出：设计原则<a href="https://www.anthropic.com/engineering/writing-tools-for-agents" title="https://www.anthropic.com/engineering/writing-tools-for-agents" nodeId="474e89ff8d2c41789086d7d5eed91bd2">https://www.anthropic.com/engineering/writing-tools-for-agents</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="2aec4ef9afd84e48a7e240323f6fd5d6" nodeId="fe739e84893643edae3c9b2a264e600d"><p nodeId="3c5212d161a148baa208dd05c78ef204">工具搜索工具：<a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool" title="https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool" nodeId="f16a97f222524b98ac402c95a5f0de6a">https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool</a></p>
+<p nodeId="d9beade8ea3d47e7b9e6e0638ef5ccf6"><a href="https://www.anthropic.com/engineering/advanced-tool-use" title="https://www.anthropic.com/engineering/advanced-tool-use" nodeId="e308d1e61b1643b09eacb583bcd8e0d0">https://www.anthropic.com/engineering/advanced-tool-use</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="bbfac820f06a480293aa1f3565058a1d" nodeId="1e6a02b60dbd492aaecddbc89a642997"><p nodeId="862b004fb2a9442a856674d81d1dadb1">程序化工具调用：<a href="https://platform.claude.com/docs/zh-CN/agents-and-tools/tool-use/programmatic-tool-calling" title="https://platform.claude.com/docs/zh-CN/agents-and-tools/tool-use/programmatic-tool-calling" nodeId="4e306aa5b25a4ec1ae1f7395f7eecaad">https://platform.claude.com/docs/zh-CN/agents-and-tools/tool-use/programmatic-tool-calling</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="4b25a82bfa6a4cefb34d6b42fcbe30f6" nodeId="ea69bca0058642aeb9e7542ceab8a93c"><p nodeId="5eb23f852eb64275bb98a53a753773e1">加：往每条消息里加关键约束</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="8af2e09e34124ea68a9ac33103449996" nodeId="c138a759ca6d42189caa06c2890c3624"><p nodeId="851064f4e83846e9a8df159dc02279ff">拆：把长流程拆给多个独立上下文</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="b2337637694443e8915e986bb612689b" nodeId="c48d6b1bacad41988bc0b069ddc463ad"><p nodeId="f07dad50409a421ab617d7a7620569f3">减：把固定流程的任务从 Agent 自主执行中减掉</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="0552390248414ee598f52ebd20c7620c" nodeId="4614dc9ae07743e7b24bc6c3be57956b"><p nodeId="b93837f490ce4691a31199e50ff77106">换：整个会话换新，依靠交接工件衔接</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="7db9ae45691040bb88d2df58e79eea77" nodeId="81a9485c9955438faeef101acc75b2de"><p nodeId="446d7a6dc5fa40ccb4f6b5fce56badd6">搬：把状态存储搬到上下文之外</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="2c619291c0fe47c0bc6edcd8d73a576a" nodeId="eefb8227ba0345a696565b39d3d0c862"><p nodeId="cee1b3711a19403d80eb5fad6c464663">Anthropic：<a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" title="https://www.anthropic.com/engineering/harness-design-long-running-apps" nodeId="e390406eb3e1461ea8832078e7e4cdc6">https://www.anthropic.com/engineering/harness-design-long-running-apps</a>【随着上下文窗口逐渐填满，模型在执行长时间任务时往往会失去连贯性。一些模型还会表现出“上下文焦虑”，即当它们接近自身认为的上下文极限时，就会过早地结束工作。上下文重置——完全清除上下文窗口并启动一个新的智能体，同时配合结构化的交接机制（该机制会传递前一个智能体的状态和后续步骤）——可以解决这两个问题。这与压缩不同，压缩会将对话的早期部分进行原地概括，以便同一agent能够继续处理缩短后的历史记录。虽然压缩保持了连续性，但它并不能让agent从头开始，这意味着上下文焦虑仍然存在。重置可以提供一个全新的状态，但代价是交接工件会保留足够的状态，以便下一个agent能够顺利地接手工作。在之前的测试中，发现 Claude Sonnet 4.5 的上下文焦虑非常严重，仅靠压缩不足以实现出色的长时间任务性能，因此上下文重置成为框架设计中必不可少的环节。这解决了核心问题，但增加了编排的复杂性、令牌开销和每次框架运行的延迟。Opus 4.5 在很大程度上消除了这种行为。】</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="a9d1ca5d0e024b47aeb1ce96319983c8" nodeId="e0b10af162da4dbab2b49e0f2b64f12f"><p nodeId="33fa08ecb2eb47629f0bab17734280dc">Anthropic 给出的解法：<a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" title="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" nodeId="2f0e7844c22846c08f48b6306065ec73">https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="ca2a2ebc5ff0449d9560f387132eadc3" nodeId="451924e86b9e49b69c008592d4a53bef"><p nodeId="23b132fd329f4147bed934ef1ba51ab1">上下文焦虑：Anthropic 在一项研究中发现，当模型在接近自身感知的上下文极限时，会表现出「context anxiety」——过早地宣布任务完成、提前结束工作。仅靠压缩不足以支撑长任务性能，因此上下文重置成为 harness 设计的必要环节。</p>
+<p nodeId="aa6450737f6045f68fa67bab795600e2"><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" title="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" nodeId="f2d3227b3ad94764a948bb424b549855">https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="3179e0940f814414894e19c1dd48e22b" nodeId="abd2b118ae6f4e0a8663d8993c0a44fe"><p nodeId="6e170dcf0af74fae8dc43b6478439a1b">Langgraph的解法：<a href="https://docs.langchain.com/oss/python/langgraph/thinking-in-langgraph" title="https://docs.langchain.com/oss/python/langgraph/thinking-in-langgraph" nodeId="a0f698aa7d0744ad8c350137368b7e73">https://docs.langchain.com/oss/python/langgraph/thinking-in-langgraph</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="b9ed7004a2d3443498f44ad4100adf2f" nodeId="556c438c7b6d4863ad0449be63db5ee8"><p nodeId="3144e7097d7044afbec28c2f922d9f4d">这些规则的权重不断下降：skill 中定义的完整检索协议在长程对话中可能退化为部分执行，甚至被完全跳过。：Anthropic 在工程博客 《Effective context engineering for AI agents》中提出 context rot（上下文腐蚀）这一概念，并强调模型的注意力随上下文变长而摊薄。</p>
+<p nodeId="6e64aecdcfba4fad8623b2fc8680007b"><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" title="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" nodeId="de8e0095dcf346ffa94483ff600ef201">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="405f0600b9d34ce288dbb665588bae0d" nodeId="98007a367ea74b0ab05f2b3c174e4c9d"><p nodeId="a5a9e0b064934e7f9b76ae9781f569f4">“上一轮刚读过相关文档”的上下文暗示，跳过重新检索流程：《When Not to Trust Language Models》一文中系统对比了模型“凭记忆答”与“检索后答”的边界：对高频、流行的知识，模型倾向于直接用参数化记忆作答且效果不错；但记忆不可靠时模型并不会主动转向检索。换言之，模型对自己“知道什么”缺乏校准——上下文中上一轮刚出现过的文档内容会被当作“已掌握的知识”直接复用，而非触发重新检索。</p>
+<p nodeId="d715146d14454bccac9d92118c2da93a"><a href="https://arxiv.org/abs/2212.10511" title="https://arxiv.org/abs/2212.10511" nodeId="615eaf582a6440809ee85194c6328131">https://arxiv.org/abs/2212.10511</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="c4114bace93149cfae6701a583c8bcd3" nodeId="be581791868f4def916f38ec2bf57e3d"><p nodeId="049ae1b4de0b4612b5cfcbe23f17e560">上下文惯性：上下文稀释带来了任务惯性：微软的研究《LLMs Get Lost In Multi-Turn Conversation》做了这样一个实验，用 20 万+ 条模拟对话对比“单轮给全信息”与“多轮逐步给信息”两种形态，发现主流开源与闭源模型在多轮形态下性能平均下降 39%，且分解后主要不是能力下降，而是不可靠性（unreliability）显著上升—— 模型过早下结论、对早期轮次的错误假设不修正、后续轮次沿着错误方向越走越远。</p>
+<p nodeId="4eb62a3b26b74a639241f9de13b226a4">这表明，在没有外部干预的前提下，长程多轮会话中，模型的行为越来越被对话已经形成的轨迹决定。</p>
+<p nodeId="6c9c947ce4784fc5a96c2140da8a69f1"><a href="https://arxiv.org/abs/2505.06120" title="https://arxiv.org/abs/2505.06120" nodeId="45fb84d1fb694776801abd08cce746e8">https://arxiv.org/abs/2505.06120</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="06ba341193f14998943afa46a6789a03" nodeId="15929d2add7b49a780bef04917f349e7"><p nodeId="766e91efbfa3413f93b51d2c76e37a3e">历史结论污染新任务：《Adaptive Chameleon or Stubborn Sloth》该文在研究“上下文记忆与外部证据冲突时模型怎么办”时发现，当外部证据与模型已有记忆部分吻合时，模型会 cling to 与记忆一致的部分，同时无视冲突部分——即标题中的 “Stubborn Sloth”（固执的树懒）一面。</p>
+<p nodeId="17a322c46f42489f828d0bdf721e7f3a"><a href="https://arxiv.org/abs/2305.13300" title="https://arxiv.org/abs/2305.13300" nodeId="2b324d6bd7aa40fdbfe058ebc47ac969">https://arxiv.org/abs/2305.13300</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="3b96bf2a7f4a466d93edf46185e0c594" nodeId="1f1bc39984bb4c97a1dc4423d13c3afe"><p nodeId="f3bf67323a4a4489841811cc8c8ba0ac">主 Agent 把“一堆字段”打包交由脚本执行；脚本中以 LLM API 调用的形式给每个字段开一条五阶段小流水线并行跑，主 Agent 不感知字段加工和推理的过程，只接收返回结果。</p></km-footnote-item>
+<km-footnote-item footnoteNodeId="ef3e16a3d6284548b54ebe8f63e11339" nodeId="af2a22b6d2284d7e8e74b62499eb753b"><p nodeId="fa4062090fd44bf7949f20bdb14a86b5">Agent 如何理解上下文的内容：模型倾向于依赖最近几轮对话中的上下文线索来决定行为：《Lost in the Middle》一文中指出，在多文档问答和键值检索任务上系统改变关键信息在上下文中的位置，模型性能呈 U 型曲线。即是，关键信息放在上下文开头（primacy）或结尾（recency）时性能最好，放在中段时性能显著下降。</p>
+<p nodeId="5905311056e74e99b8a7f9add187c1cb">对照到我们的场景：会话初期注入的 system prompt、skills 文件、AGENTS.md，随着对话累积，逐渐从“开头高权重区”滑向“中段低权重区”——即使从未被截断，其被利用的概率也在下降。</p>
+<p nodeId="01f30ffc110e4feba9431ff39aaf0419"><a href="https://arxiv.org/abs/2307.03172" title="https://arxiv.org/abs/2307.03172" nodeId="25be8ffb41a34cb3b3c2d343d2b9cf6b">https://arxiv.org/abs/2307.03172</a></p></km-footnote-item>
+</km-footnote-list>
+</km-doc>

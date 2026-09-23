@@ -54,8 +54,15 @@
       "sha256": "ca1ac662693589d395f8bb608fae4903cf5481944bb52693c020b018a05bf706"
     },
     "README.md": {
-      "bytes": 24144,
-      "sha256": "089cbfc6009faa0c571a6aee56b67d83216fc888bc64cacb835be6425b4c5ec7"
+      "bytes": 24138,
+      "sha256": "a81b3570bcf2ef7aae23df54d766fc738e02bbd8d56e5329d46c5415d76d359f"
     }
-  }
+  },
+  "display_title": "从 DeepSeek Harness 看 Agent 自进化",
+  "reading_copy_revisions": [
+    {
+      "commit": "4b1ef6eee64759355211fa241533aea84987558f",
+      "description": "User updated reading-copy title on GitHub; raw source unchanged."
+    }
+  ]
 }
