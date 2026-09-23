@@ -1,0 +1,181 @@
+<km-doc>
+<km-title nodeId="9736def337814054be90ef8a9028f5c4">从 DeepSeek Harness 看 Agent 自进化-副本</km-title>
+<p nodeId="c8117f68631b4c37b45cacaea995a327">让 Agent 自己改进自己，最大的障碍往往不是“不知道怎么改”，而是“改了之后出问题怎么办”。</p>
+<p nodeId="b1fa54e6eab641e78f20466000a3589f">DeepSeek Harness（下文简称 dsh）用一套“插件化 + 可回滚”的架构，把修改自己的运行环境变成一件可控、可撤销、可验证的事。</p>
+<p nodeId="9d5167f826884eff965594a44fc3f7f0">下面先从自进化本身的困引入，再分析 dsh 如何通过插件化与热插拔做到“不污染上下文、不打断运行”。最后结合 Self-Harness 与 ACE 两篇论文，说明底座之上完整的自进化路线。</p>
+<h2 nodeId="94fcf3f8da98419892c7f1ffc6735d20">1. Agent 自进化难点</h2>
+<p nodeId="ebb3e817fabc4fb2bfd90bc20c4d29a9">所谓 Agent 自进化，指的是 Agent 改进自己的行为——调整提示词、增删工具、修改流程，乃至修改模型本身。这个方向听起来自然，但无论走哪条路，都会撞上具体的困难。可以从数据、离线、在线三个层面来看。</p>
+<h3 nodeId="2aad02553bee45a99764261b01257b69">1.1 数据层面：判断“改动有没有用”，本身就需要好数据</h3>
+<p nodeId="6e8c135cdd8c4ccc9ed07e44537595fd">自进化的每一步都要回答同一个问题：这次改动到底带来了什么影响？变好了、变坏了，还是只是波动？</p>
+<p nodeId="64e9124f739c49e19d37d53b3a44fa2b">要可靠地回答它，既需要量级足够大的任务集，也需要质量足够高的任务分布。在几十个任务上的“提升”很可能只是噪声；如果任务不能代表真实使用场景，优化的方向本身也可能是错的。</p>
+<p nodeId="24ab216ab86d45d6a3351e3922305f90">其中关键的一环是 query（任务请求）的筛选：哪些任务用来发现问题，哪些用来验证改进，哪些应该排除，例如太简单、太难，或者答案已经泄漏给模型的任务。</p>
+<p nodeId="c7208c2538bd4af583ee9acdd5234c4c">筛选不当，自进化就会退化成“针对练习题刷分”：指标在涨，真实能力没变。这一层数据门槛，离线自进化和在线自进化都绕不开。</p>
+<h3 nodeId="242040ddf33c49c899d7e40a563de389">1.2 离线自进化：</h3>
+<p nodeId="0b1d17c6e7ac44099de33eb6befa952b">离线场景，即部署之前批量优化，主要有两条路径，都有各自的难点。</p>
+<h4 nodeId="e53e209c760b426ba91c828c1791b0b2">路线一：训练——微调模型</h4>
+<p nodeId="4ba1085dcb3c4a66b3e084f6585612b4">用 Agent 的执行轨迹去训练模型，首先是成本高，需要大规模算力与数据；其次是流程长，从收集轨迹、标注、训练到评估，一轮下来周期往往以周计。更棘手的是 Reward 很难真正生效：Agent 任务的奖励信号稀疏、延迟，还容易被“钻空子”——模型学会迎合评分标准，而不是真正把任务做好。整体路径目前也还不够清晰。</p>
+<h4 nodeId="bf5711e1e1384729aed53bc182f0d1ce">路线二：分析——不训练，归纳经验</h4>
+<p nodeId="aa194441c1ca42649dc1a6e014ad3dd1">从执行轨迹中归纳出改进，例如改提示词、改工具说明、改流程规则。它的成本低、见效快，但归纳出的修改很难达到最优解：经验有限、归纳有偏差；更难保证每次改动都是正向优化——改动之间可能此消彼长。</p>
+<h4 nodeId="76e70199b4ba43b68ddc921312a7e36c">一个值得观察的中间方向</h4>
+<p nodeId="b6d58b3e36a24f7f86968fff180625cc">把 Agent 的脚手架配置参数化——将提示词、工具说明、流程参数统一编码成可优化的向量——再在向量空间中用训练或搜索的方法优化，最后解码回具体配置。</p>
+<p nodeId="7417d48b0592477dba3d1b0f6f4695b3">这相当于“训练的是配置，而不是权重”：有望把训练方法的系统性与分析方法的低成本结合起来。这个思路目前还是一个开放问题，值得持续关注。</p>
+<h3 nodeId="0a5a62df0bc84cf2afa0f8e16d05c175">1.3 在线自进化：最终目标，核心是可控性</h3>
+<p nodeId="6c0036fca9f14b95a30eb17d28ec6c74">在线场景：Agent 一边服务用户、一边持续改进自己，是自进化的最终形态。它在前两层困难之外，又多出一类全新的难题：怎么保证自我修改是可控的？具体是三件事。</p>
+<ol nodeId="0ed20e0d69ba45759af6279bfff2d61a">
+<li nodeId="6f68f00cb38949e6a2066a10b82fbd87"><strong>改坏了怎么恢复？</strong><br />Agent 给自己打了“补丁”，结果新补丁有缺陷。如果系统没有记录改动之前的状态，就没有退路。</li>
+<li nodeId="3920e0c1a50f4a9a994761ebfa50bad8"><strong>改动会不会影响别人？</strong><br />组件相互依赖：Agent 正在处理一个长任务，此时替换组件，会不会弄丢已经积累的对话和中间结果？</li>
+<li nodeId="fd0df19d4e474ba5a9999072e27339e3"><strong>改动会不会干扰正在运行的任务？</strong><br />Agent 正在处理一个长任务，此时替换组件，会不会弄丢已经积累的对话和中间结果？</li>
+</ol>
+<p nodeId="1e5509f43da94e13af1a1a559983425e">这正是 DeepSeek Harness 正在探索的问题——用插件化、可回滚、日志隔离来回应这三个可控性难题。需要说明的是，这套方案目前也并不完美，仍在快速演进之中；它给出的是一个有工程说服力的方向，而不是终点。</p>
+<p nodeId="fd738a415c904ddeb7dbe3f4a1e2fb0a">简单说，自进化的困难分成三层：</p>
+<p nodeId="88d0f3d7a89e43eca6ab34eb78cd86b7"><strong>数据层：</strong>判断改动效果需要量大质优的任务与筛选机制（对应第 5、6 节两篇论文的任务集设计），</p>
+<p nodeId="6c91ce6f647545c5bab58ab66c6a03f8"><strong>离线层：</strong>要在高成本训练与不够稳定的经验归纳之间取舍，在线层则要确保修改过程可控。后文会沿着这条线展开：dsh 回应在线可控性，Self-Harness 讨论“怎么改”，ACE 则讨论“改的素材从哪里来”。</p>
+<p nodeId="53975711c9e84920ae0439d04b7a1800"><strong>在线层</strong>：可控性，对应第 3、4 节的 DeepSeek Harness 底座</p>
+<h2 nodeId="dffb23bb04de403188a4b8c0185b0451">2. DeepSeek 对自进化的理解</h2>
+<p nodeId="e1188a75d301458e8c2dcd9674310cc2">DeepSeek先后开源了 DeepSeek-V2、V3 等大语言模型。2025 年 1 月发布的推理模型 R1，以明显更低的训练成本达到了当时第一梯队的推理能力，并采用 MIT 协议完全开源，在全球范围内引发了广泛关注——开发者可以自由地研究、部署和二次开发它的模型，公开的技术报告也把训练方法讲得很透。</p>
+<p nodeId="a656eac3af114e6ca630020f8f7f51c0">DeepSeek Harness（dsh）同样是开源项目，其背后的编程范式研究整理为 Cordis 论文<a href="https://arxiv.org/abs/2608.25512" title="A Programming Paradigm for Spatiotemporal Composability" nodeId="da993bb26873475482db3a13be723d07">A Programming Paradigm for Spatiotemporal Composability</a>（北京大学 + DeepSeek-AI）</p>
+<p nodeId="46744b1ad10f4aa0b7959ed87a2ac1b0">基于 Cordis 论文的工作，DeepSeek 对自进化有一个很清晰的基本判断。</p>
+<h3 nodeId="cb949856eeb441f5809ae7a31e3642fb">2.1 自进化不一定要改模型权重</h3>
+<p nodeId="538f0bddac88454e9c6d4408dde28871">一个 Agent 的表现，并不完全由模型权重决定。系统提示词怎么写、有哪些工具可用、工具说明是否清楚、执行流程怎么安排、结果怎么验证——这些“模型之外”的配置，同样深刻影响着 Agent 的能力。这一层通常被称为 <strong>harness（脚手架 / 运行环境）</strong>。</p>
+<p nodeId="97297fe2b91749dd8e325eda75de1b96">修改脚手架比修改模型权重有三个现实优势：不需要重新训练，成本低；改了什么一目了然，可解释；配置文件还能退回上一个版本，可撤销。</p>
+<p nodeId="f814f296a8254bd8aca82a91ab1f8b42">所以 DeepSeek 选择的路线是：把自进化的问题，转化为“如何安全地修改脚手架”的问题。</p>
+<p nodeId="f40ededb8c65481eae34dc598c96317c">Cordis 论文在动机部分（§1.2.2）明确讨论过“自进化的 Agent 脚手架”这一场景：未来的运行环境可能需要在服务请求的同时，生成并部署对自身组件的修改。</p>
+<p nodeId="4f46cd1003b64828aba7c53e6e78989e">要做到这一点，系统必须同时满足两个条件：</p>
+<ol nodeId="6f1385bab4224cf9aad56fa171c95382">
+<li nodeId="3cab3b35cbb04c3ebe1241bfadc9a7f2">改动可以完整撤销，即<strong>时间维度</strong>的可组合性。</li>
+<li nodeId="abfd3c4d8a774892812acd03606998d0">组件之间能感知并适应彼此的变化，即<strong>空间维度</strong>的可组合性。</li>
+</ol>
+<p nodeId="0a5ee6f6b38c4d438b185f2f17f94a9d">这两个条件正是 Cordis 全部设计的目标。</p>
+<h3 nodeId="1c1cf49ae56d46ddbb6db8adf7715118">2.2 前提：脚手架本身必须“可安全修改”</h3>
+<p nodeId="931081dbcd834b408950bafba7c9c01c">问题在于，传统 Agent 框架的脚手架是一团“硬编码”：工具列表写死在代码里，提示词散落在各处，组件之间在启动时绑定。想在运行中修改它，就回到了第 1 节的三个困难。</p>
+<p nodeId="2d2036b1c496448a8bc80af209b159e0">所以 DeepSeek Harness 的定位不是“又一个 Agent 框架”，而是一个为“被修改”而设计的运行底座。它把整个 Agent 拆成可以单独替换的零件，并为每次替换提供登记、撤销和验证的机制。</p>
+<p nodeId="66452a682aa94822b4276b95fb1820ea"><img src="https://km.sankuai.com/api/file/cdn/2784910653/253975934846?isNewContent=false&amp;contentType=1" name="image.png" width="743" height="261" nodeId="284cb8e922f4466baf51082e7de77bf0" /></p>
+<p nodeId="0b67a50f80a6415594fccf4dedb75b0a">这里其实有两个层次。底层是已经实现的 DeepSeek Harness：一切皆插件，每个零件都可以单独替换；每次修改都要登记撤销方法；会话内容则记录在独立日志中。它解决的是“改了之后能不能安全恢复”，相当于一套保险机制。</p>
+<p nodeId="09b1b5895f914199898cf5c46bbb4048">再上一层是 Self-Harness 所代表的研究方向：在任务中发现弱点，针对弱点提出尽量小的修改，再用回归测试确认没有变差。它解决的是“改什么、怎么改、值不值得改”，更像一套决策机制。底座保证“改了能回来”，闭环决定“改什么、怎么改”，两者合起来才是完整的自进化路径。</p>
+<h2 nodeId="0f5ea9f86634431f929b5700ae95d465">3. DeepSeek Harness 的三个精髓</h2>
+<p nodeId="661e486c625c4ca08412f0dcfadbda65">dsh 的仓库有 200 多个软件包，细节繁多。但对理解自进化而言，抓住三个核心设计就够了——它们分别回应第 1.3 节中在线可控性的三个难题。</p>
+<p nodeId="363b30987fa24af99256bb49af9245f0"><strong>1.一切皆插件。</strong> 模型调用、工具执行、文件系统、界面，甚至 Agent 的主循环本身，全部是插件。没有哪个部件拥有特权地位，任何零件都可以按名字替换、关闭或新增。从结构上看，修改自己=替换插件。</p>
+<p nodeId="8df01635147c45e3ab2bb39cfb3ee062"><strong>2.每次修改都登记撤销方法。</strong> 系统里修改状态只有一个入口：<code>ctx.effect()</code>。每次调用它做修改时，必须同时登记一个“撤销函数”（相当于存档点）。插件被卸载时，系统自动执行这些撤销函数，把环境恢复原状。</p>
+<p nodeId="ed76f7989b634cc89085d6ed3acc7288">这解决了“改坏了怎么恢复”。</p>
+<p nodeId="fceedb6739fe48c9859cb61fe5adeade"><strong>3.会话内容只记录、不篡改。</strong> Agent 与用户的所有交互——消息、工具调用、返回结果——都写入一本“只追加、不修改”的日志，像流水账本，写上就不能擦。模型看到的一切内容，都能从这本日志重建出来。</p>
+<p nodeId="f937c37c91e04b52821f6bc1906ee865">这解决了“改动会不会干扰运行中的任务”。</p>
+<p nodeId="6425be8cc875476086a1ec8b8f531b95"><strong>DeepSeek Harness = 一棵可替换的插件树 + 一个唯一的修改入口 + 一本不可篡改的会话日志。</strong></p>
+<p nodeId="8396a3705ccd4e17bc424e55afcc3901">新行为通过挂新插件实现，旧行为通过卸载插件撤销；正在进行的会话则由日志独立承载，不依赖任何具体插件。</p>
+<h3 nodeId="be2226de6b1a44ed9317db538835cae8">3.1 事件机制：组件之间怎么协作</h3>
+<p nodeId="6bca01ea4e2b45658d9f7bc6fd8517d4">插件之间不直接调用彼此，而是通过“事件”协作。dsh 里有四种事件分发方式，其中最常用的一种在源码里叫 <code>waterfall</code>中间件接力：</p>
+<ol nodeId="171c115f57104086925af6be35fb1b31">
+<li nodeId="0a21070a9816494db3950d90a9f05ee7">每个事件像一条接力跑道，跑道上按顺序站着若干个插件。</li>
+<li nodeId="e1741c3370b448219e1ab99cc63a79b3">参数从第一个传到最后一个，每个插件拿到参数后可以选择原样传下去、修改后传下去，或者直接打断，不再往后传。</li>
+<li nodeId="d5b4e9bace0c42e99e826828f02a1af3">最后一个插件处理完，结果就是这条事件的最终输出。</li>
+</ol>
+<p nodeId="09fad32e8a5b4c3a87a26b7f0f52e0f2">这个设计让“干预执行流程”变成了一件很平常的事：想给所有工具调用加一层权限检查？在跑道上插入一个新插件就行，不需要改动任何现有代码。</p>
+<p nodeId="018cea3179ad463a85edce524a5d4a92">另外三种分发方式分别是：<code>parallel</code>，多个插件同时收到事件，类似广播；<code>serial</code>，按顺序逐个等待处理；<code>emit</code>，只发送通知。思路：组件通过挂事件来参与系统，而不是写死在流程里。</p>
+<h2 nodeId="941aba27a2e046a3a0d21cebf4ff06a7">4. 插件化与热插拔的原理</h2>
+<p nodeId="df2c8681bc9a41839b30b44c05182eec">这一节回答两个具体的问题：替换插件时，为什么不会污染上下文？为什么不会影响正在运行的任务？</p>
+<h3 nodeId="32e437aff228489b8ade2fb6d4f4b54d">4.1 怎么不污染上下文：登记—撤销机制</h3>
+<p nodeId="5f4caecf2b5e4a0a8814402abee0ae17">污染上下文：指一个插件安装时，会往运行环境里添加服务、注册监听器、修改配置——都是它留下的“痕迹”。如果卸载时不清理干净，残留的痕迹就会影响后续运行。</p>
+<p nodeId="f6da76a136e04823b08cf6130b79da2d">dsh 的解法是让痕迹必然可清除。规则很简单：</p>
+<ol nodeId="072dd7a290d94b80870cd1061b13d78c">
+<li nodeId="3e065aae61344765b79855445d686c89"><strong>修改：</strong> 插件想改环境，只能调用 <code>ctx.effect()</code>。</li>
+<li nodeId="ff2fd718e4e84c5c9b673482e1e846b1"><strong>登记：</strong> 每次修改，同时登记一个对应的撤销函数。</li>
+<li nodeId="efdf089fadde4be5a10f8dbdf01b70c1"><strong>撤销栈：</strong> 撤销函数按顺序叠放，像一摞盘子。</li>
+<li nodeId="23c6ef2e585e446db62eb601ba0a0d25"><strong>卸载：</strong> 插件卸载时，系统自动执行撤销函数，逐个还原。</li>
+</ol>
+<p nodeId="a27a4bba99de43c2961f17e1d1e200d0">关键在撤销的顺序：<strong>后进先出（LIFO，Last In First Out）</strong>。</p>
+<p nodeId="37291b9e0da1438d8c1b07557afc1400">之所以必须这样，是因为后来的修改可能建立在早前修改的基础上。只有先撤销后面的，再撤销前面的，每一步才都能正确还原。</p>
+<p nodeId="03f7e42b993149038cbd872d52874f6b"><img src="https://km.sankuai.com/api/file/cdn/2784910653/253975934847?isNewContent=false&amp;contentType=1" name="image.png" width="847" height="368" nodeId="db472480e17344d9859b50b25d53b17b" /></p>
+<p nodeId="24b83c33d4544f3ea50666f7f817cd18">例如，初始撤销栈为空。安装插件 A 后，栈里记下“撤销 A”；再安装插件 B，“撤销 B”会压在上面。卸载时先执行撤销 B，再执行撤销 A，最后栈重新变空，环境也回到最初的干净状态。</p>
+<p nodeId="ff31446804254aa6b5129142f3b1a998">这套设计之所以能避免污染，是因为清理不是靠插件“自觉”，而是由系统强制完成：想改环境，就必须走唯一的修改入口；走了这个入口，撤销方法必然被登记；插件卸载时，它们又必然被逆序执行。污染的可能性因此在结构上被排除，而不是依赖开发者处处小心。</p>
+<h3 nodeId="f281c97e52a84069b01fa7acece959d8">4.2 怎么不影响运行：状态与组件分离</h3>
+<p nodeId="4cc3f58b9e884a7f8db0b0cc9c9924a4">第二个问题：替换组件时，Agent 可能正在处理一个长任务，上下文里已经积累了大量对话和工具结果。这些“正在进行的状态”放在哪里，决定了替换会不会弄丢它们。</p>
+<p nodeId="a6f9400ea0d347d68dfadbf919cc95da">dsh 的答案是把状态和组件彻底分开：</p>
+<ul nodeId="38dd265ca8904222aedc40f8ec6b315f">
+<li nodeId="c8a7d73f73a8491aa790ce71acf5c65a"><strong>会话状态</strong>：对话历史、工具结果全部写在日志里。日志是独立的一层，只追加、不修改，不隶属于任何插件。</li>
+<li nodeId="058977418ae148b4979edfa654e2e4cb"><strong>插件</strong>只提供“处理能力”，不持有“会话数据”。模型调用走插件 A 还是插件 B，日志本身没有任何变化。</li>
+<li nodeId="58a25c0c5a114145a394dd1a94113201">需要给模型发请求时，系统从日志重新推导出该发的内容。推导过程是确定性的，同样的日志必然得到同样的请求。</li>
+</ul>
+<p nodeId="4153cf167b5e483cb05b00ea5eaa4fd4">由此，热替换（在程序不重启的情况下更换零件）可以按四步安全进行：</p>
+<ol nodeId="afc64ed8e8424e0db3f5f0cc16ddc9f0">
+<li nodeId="be3267afdc9d43ee890e8ace566cd1d1"><strong>暂停接收新请求：</strong> 正在处理的任务继续跑完，新请求排队等待。</li>
+<li nodeId="0bc947f47c074c05bdf7abbe48fce38c"><strong>卸载旧插件：</strong> 自动执行它的撤销方法，清理它在环境中留下的痕迹。</li>
+<li nodeId="9d128bb6baeb47ab93e4583b51506919"><strong>安装新插件：</strong> 重新登记新一套撤销方法，对外接口保持不变。</li>
+<li nodeId="f25bdebd4ac541cc9b0e342a2f65f9c4"><strong>恢复接收：</strong> 后续请求走新插件，对话无缝继续。</li>
+</ol>
+<p nodeId="4648a8d71b79407bbfb75a9b7f08826f">四步全程，日志不用改，对话历史、工具结果原样保留，新插件从同一本日志继续推导后续请求。</p>
+<h3 nodeId="e1aef9f512844e2aa4ce5d0b6b85ac76">4.3 可替换带来的自由度</h3>
+<p nodeId="9b23a700fafe4a9883e7cd6d194a98a6">在这套机制下，“换零件”变得很日常。一个有代表性的例子：dsh 的命令行执行有三种实现——本机直接执行、沙箱隔离执行、远程虚拟机执行。</p>
+<p nodeId="ee5af41688314d3685b418c31f3334de">三种实现的接口完全相同，替换时只改一个配置项。模型看到的工具名称和使用方式不变，Agent 的其他部分也不需要任何改动。</p>
+<p nodeId="4737ff0a49864127920ef58298b8998d">这正是自进化需要的自由度：改进 Agent 的某个方面，可以精确到“只换那一个零件”，而不必重写整个系统。改动范围小，意味着风险小、验证容易、出问题时回滚也快。这些性质加在一起，才让“Agent 自己动手改自己”从危险操作变成可控操作。</p>
+<h2 nodeId="852534430c0740e4a16af589467d424d">5. 自进化闭环：从底座到自动改进</h2>
+<p nodeId="7d2fa60931c54ea88ab6203a40d9141c">底座解决了“改了能安全恢复”，但还有一半问题没回答：Agent 应该改什么？怎么知道改了之后真的变好了？</p>
+<p nodeId="abc2b40591b9497d8bccd465f700a963">参考Self-Harness 论文<a href="https://arxiv.org/abs/2606.09498" title="arXiv:2606.09498" nodeId="18dbe83e347444d4b736238b0a6b8ff6">arXiv:2606.09498</a>（上海人工智能实验室，v2，2026-08）解释这部分</p>
+<h3 nodeId="3cf1813122f4433e856c428bc467e9ea">5.1 实验设定：只改脚手架，不改模型</h3>
+<p nodeId="e1629b64ce9c47acb006dd95e65fe234">Self-Harness 做了一个很干净的实验：把模型权重完全冻结——选了 MiniMax M2.5、Qwen3.5、GLM-5 三个基座，参数都冻结——只允许修改脚手架的配置，包括系统提示词、工具说明、验证规则。</p>
+<p nodeId="084af353e50f4fcbbfa909d7f2c25b5b">然后，让 Agent 自己完成“发现弱点 → 提出修改 → 验证效果”的完整循环。</p>
+<p nodeId="15a6985f9ee54590acddc7763a34046d">为了公平地评估改进是否真实，实验用了两套互不重叠的任务集。一套是练习任务，用来发现问题、总结弱点，Agent 在这些任务上的失败案例是提出修改建议的依据；另一套是考试任务，只用来验证修改效果，从不展示给提建议的环节。这就像把模拟考和高考分开出题，可以防止“针对考题刷分”式的虚假进步。</p>
+<h3 nodeId="6acbdaaeb118415d8f09dcd2477c358a">5.2 三阶段循环</h3>
+<p nodeId="a3df8d387a4f4b03b2c59080c7166aab">整个闭环由三个阶段组成，而且全部由同一个被冻结的模型完成。</p>
+<p nodeId="61fdc6dd1e834b478209ec16d03ad5a0"><img src="https://km.sankuai.com/api/file/cdn/2784910653/253981092230?isNewContent=false&amp;contentType=1" name="image.png" width="756" height="318" nodeId="71410a8240054f548ecc9ec7ce572da0" /></p>
+<p nodeId="928bfd854df04374ae257d28513fc36e">第一步是找弱点。Agent 先在练习任务上运行，收集失败案例，再按模式归类，比如“总忘记检查文件是否存在”，最后得到一份弱点清单。</p>
+<p nodeId="7007869bfcdf47e493ddf8cc8413f264">第二步是提修改。针对每个弱点，模型提出若干条尽量小的改动：加一条提示词、改一段工具说明，或者补一条规则。这些改动先进入候选清单，并不会立刻生效。</p>
+<p nodeId="bbfcf6e9051f41c6ae2dc50f3f25721c">第三步才是验证。在考试任务上对比修改前后的结果，只有“有进步且无退化”的改动才会保留，其余全部丢弃。</p>
+<p nodeId="9910524aede44f3ab5d3f8a71d04a38d">通过验证的修改会合并成新一版脚手架——提示词更完整、工具说明更清晰、验证规则更严格——再用新脚手架开始下一轮循环。</p>
+<p nodeId="7f927d9306564cb591566a22cce564a1">实验结果：9 个模型 × 5 个基准，改进全部无退化；AppWorld 上最高相对提升 132%。不改一行模型权重，仅靠迭代脚手架配置就达到这一结果，印证了“脚手架决定能力上限的一大部分”这个判断。</p>
+<p nodeId="a12c1e801a8e48c0a8151b52c7670c17">自动修改最大的风险是自我感觉良好：模型提出一条修改，很可能在它自己看来是合理的，但实际效果可能变差，也可能只是“恰好适应了练习任务”。</p>
+<p nodeId="d28f17fc108e4682a848e7d0b03ef481">所以第三阶段的两套任务集设计很重要：考试任务从不给提案环节看，验证标准是“有进步且无退化”。把“觉得有用”换成“测过有用”，这是整个闭环里最朴素也最有效的安全措施。</p>
+<h3 nodeId="8a3ff6ecd0104afdac52c17a65a86c6c">5.3 底座与闭环如何配合</h3>
+<p nodeId="f495c153ad374e3798ce3191337d4427">Self-Harness 的论文实验是在自己的环境里运行的。但设想把它放到 dsh 这样的底座上，整套流程会衔接得很自然。</p>
+<p nodeId="1362bf6ff7384db09beb38d5c991dd03">找弱点的阶段，Agent 的所有行为都已经记录在会话日志里，所以失败分析可以直接基于日志回放，不需要额外埋点。</p>
+<p nodeId="64ae03db03234f1a9cc15373a3c64344">提出修改的阶段，因为一切皆插件，“补一条提示词”“换一个工具实现”“加一层检查”都对应明确的插件操作，改动可以精确到单个零件。</p>
+<p nodeId="7540fb6e898842ae9697d62ab8ab3d3c">验证通过，新插件就继续生效；验证不通过，则卸载新插件，之前登记的撤销方法自动执行，环境回到改动以前。回滚不需要额外操作，正在服务的其他会话也由日志独立承载，因此自进化循环可以在不打断用户任务的情况下持续进行。</p>
+<p nodeId="e8c75568dc3e42c195c6e1bc8c57f0ad">这两个部分的分工很清楚：底座解决“怎么改才安全”，闭环解决“改什么、值不值得改”。前者已经在 dsh 中实现，后者仍是正在验证的研究方向。</p>
+<h2 nodeId="4edad64fbddb4be8ae49dd6c7327606c">6. 经验路线：ACE 论文</h2>
+<p nodeId="3403ea969c2345d2b6183f2f8b241537">Self-Harness 回答了“怎么改”，但改动需要的素材——从哪里发现弱点、归纳经验——同样重要。ACE 展示了一条“规模化经验挖掘”的路线，正是第 1 节所说分析路线的代表性实践。</p>
+<p nodeId="df8edab206b44e87a651124167b19176">ACE 的论文题目是 <a href="https://arxiv.org/abs/2510.04618" title="Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models" nodeId="372ec9978fcd4f9582a8b007b8f4bcac">Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models</a>由斯坦福大学、SambaNova 和西蒙弗雷泽大学合作完成，发表于 2025 年 10 月。它的核心主张是：除了训练权重，语言模型还有一条便宜的改进通道——让上下文自己进化。</p>
+<h3 nodeId="d36920d7db8347bfa070f0e3a1dd11bc">6.1 核心思想：改进通道不止权重一条</h3>
+<p nodeId="772b9c34337840e8a4022097c3e1315b">一个 Agent 的“聪明程度”由两部分共同决定：</p>
+<ol nodeId="0b796ace23b04a91b714115e301d68fd">
+<li nodeId="128af5fed5ed48a89de99dc247466380"><strong>模型权重：</strong> 靠训练改进。</li>
+<li nodeId="30991aca8fb64e3bb2b4bf26c6366e8b"><strong>上下文：</strong> 提示词、记忆、工具说明等，靠工程改进。</li>
+</ol>
+<p nodeId="5a20f92299924dcdb69039e3cefabbf4">上下文通道的优势与第 2 节的判断一致：改动成本低、即时生效、可以撤销。ACE 在此基础上更进一步：上下文里的经验不必依赖人工编写，可以从 Agent 自己的执行轨迹中批量挖掘。</p>
+<h3 nodeId="cd677860e23f4de08ddbff1f6ef98c56">6.2 工作机制：从轨迹到经验的流水线</h3>
+<p nodeId="71486e1662244dd099895d7d7fe1abd3">ACE 的核心组件叫 <strong>Context Rover</strong>——一条由 LLM 驱动的分析流水线，分四步运转：</p>
+<ol nodeId="9e1321e5476d485b840f088f04a4d418">
+<li nodeId="ea34efee7fa14bf0950f67c534f2e33c"><strong>收集轨迹：</strong> 收集 Agent 在任务集上的完整执行记录，包括成功与失败。</li>
+<li nodeId="0781f18c387147a8b2dea76523a8d277"><strong>批量挖掘：</strong> Context Rover 从中归纳出“可执行的经验条目”。</li>
+<li nodeId="05b5ca68245d411fb4041c3d67936123"><strong>验证：</strong> 在独立测试任务上验证，通过才保留，思路与第 5 节相同。</li>
+<li nodeId="bdb58ac62e6b4629b6692150848b1252"><strong>沉淀：</strong> 写入记忆、工具说明或提示词，并随使用持续更新。</li>
+</ol>
+<p nodeId="2d0bd70fd2f3433e836a54acbbc5aa0f">挖掘出的经验沉淀在三个位置：</p>
+<ul nodeId="b9d4b21bf8c7496d88c5f3588e1eace4">
+<li nodeId="78a7e3bf14db4aa2abec76fa551ff84e"><strong>结构化记忆：</strong> 按需检索的笔记，例如“处理大型仓库时先看目录结构”。</li>
+<li nodeId="a1cd2ab1f7834218a945d7d29e2d42d5"><strong>工具说明：</strong> 越用越准的“使用手册”。</li>
+<li nodeId="5b8596dfcc4943e184cf6c09acb6550f"><strong>系统提示词：</strong> 批量进化后的规则与指导。</li>
+</ul>
+<p nodeId="752ef844482e434e81e7e37da46c7d8d">三者合起来，构成一个不训练也能持续变聪明的 Agent。</p>
+<h3 nodeId="c610e57cb5454cd288724cf0d2a53922">6.3 结果与本文主线的呼应</h3>
+<p nodeId="93d6c59061734dafbfd324cf39e9822e">在不做任何模型微调的前提下，ACE 把一个开源模型在 SWE-bench Verified——真实软件修复基准——上的通过率提升到 54.6%，超过当时所有同类方法；上下文的有效利用率约提升一倍，单任务成本约 0.5 美元。</p>
+<p nodeId="32d127e53ed44d398656eeb4f048549a">这个结果建立在大量执行轨迹之上。轨迹的收集与筛选、验证任务的隔离，正是第 1 节所说的数据层问题。没有干净的任务数据，经验挖掘同样会“挖偏”。</p>
+<p nodeId="27b3dc6912394d6b81c0da73198f53ce">它也证明了“不训练、靠归纳”这条路能走多远——比很多人预期的更远；但论文同时承认，归纳质量受限于模型自身的理解能力，离最优解仍有距离。</p>
+<p nodeId="a1f8647b1af44b69bce99f95f343fbaa">这正好印证了第 1 节的判断：分析路线性价比高，但天花板取决于基座模型。</p>
+<p nodeId="51f31efddad64a619f23ab9dbbb23812">把 Self-Harness 与 ACE 放在一起看，分析路线的两个环节都有了代表工作：Self-Harness 管决策，从发现弱点一路走到回归验证；ACE 管素材，从大量轨迹中稳定地产出可复用的经验。两者都绕开了训练权重，也都依赖第 1 节所说的数据基建。</p>
+<h2 nodeId="c8a3d0451f2a417690ee1b25e559e65d">7. 总结</h2>
+<p nodeId="7832ac3fa87e43bdbc2df845a7003422">回顾全文，DeepSeek 对 Agent 自进化给出了一条清晰的路线。</p>
+<p nodeId="7cbe5e4dcc4d4c07bba02e88c30d8e4a">自进化不等于改模型权重。提示词、工具、流程这些“脚手架”层面的配置，同样决定 Agent 的能力，而且改起来成本低、可解释、可撤销。先把这一层做好，是务实的第一步。</p>
+<p nodeId="7edf4b4fc0cf4796ad8d208d1b69f7f6">要让脚手架能被安全修改，运行环境本身要先被改造。一切皆插件，让结构可以替换；修改时登记撤销方法，让改动可以回滚；会话写入独立日志，让正在运行的任务不受干扰。dsh 把这三点做成了工程现实。</p>
+<p nodeId="69e73a3b654040beb0f841d598132877">在底座之上，Self-Harness 用“找弱点 → 提最小修改 → 独立任务集验证”决定改什么；ACE 从执行轨迹中批量挖掘可复用经验。</p>
+<p nodeId="6c4bd66ba4814aa5a08c422188055414">两者都表明：不动权重、只迭代脚手架与上下文，就能获得可观且可验证的提升。</p>
+<p nodeId="7b7a2d0f4e194701af6536c462011b9d">这条路线对初学者也有一点启发性的观察：自进化听起来像科幻，但拆开看，每一步都是朴素的工程问题——怎么存档（撤销方法）、怎么隔离（插件边界）、怎么验货（回归测试）。把这些基础问题一个个解决掉，复杂的愿景自然就站住了。</p>
+<p nodeId="8bc5ae81dcb8407eb986a32137b590a5">这大概也是 DeepSeek Harness 最值得参考的地方：它没有发明玄妙的概念，而是把“让系统能承受修改”这件基本的事，认真做到了底。</p>
+<p nodeId="5924b5c95e3c460e81338b623538aa24">不过，这条路远没有完成。数据层的任务筛选与验证集设计还没有成熟的方法论；离线层的训练路线和分析路线各有硬天花板，“参数化脚手架再训练”这类中间方向仍在探索；在线层的可控性方案，包括 DeepSeek Harness 本身，也还不完美。</p>
+<p nodeId="4c66aee5f69e47c9aa322e28ac37d077">自进化是一个仍在快速演进的方向。本文描述的是当下最有工程说服力的一段路线，而不是终点。</p>
+<h2 nodeId="e0e7dbf468874225b2b2939723722575">参考资料</h2>
+<ol nodeId="2ddbd67c05e142f291e08e24c008e280">
+<li nodeId="fb7717e6be954587bb6a90a425602001"><strong>Cordis:</strong> <a href="https://arxiv.org/abs/2608.25512" title="A Programming Paradigm for Spatiotemporal Composability" nodeId="ff8f188e3a4a4720b92894ca3a0aebc0">A Programming Paradigm for Spatiotemporal Composability</a>（北京大学 + DeepSeek-AI）</li>
+<li nodeId="8cbd2be0515b4f9a9b9d3e391eb406ef"><strong>Self-Harness:</strong> <a href="https://arxiv.org/abs/2606.09498" title="arXiv:2606.09498" nodeId="62b7781c3c3f4bf8b98464e6e7bc9c8b">arXiv:2606.09498</a>（上海人工智能实验室，v2，2026-08）</li>
+<li nodeId="0480f418f9714f0791a6a59e98aaa893"><strong>ACE:</strong> <a href="https://arxiv.org/abs/2510.04618" title="Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models" nodeId="0b2433af3b6e4b8e82014885f6456fdd">Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models</a>（斯坦福大学、SambaNova、西蒙弗雷泽大学）</li>
+<li nodeId="dfdcb1f14a884bb482d806086e923ebe"><strong>DeepSeek Harness:</strong> <a href="https://github.com/deepseek-ai/deepseek-harness" title="官方源码仓库" nodeId="4023810b1d7845c6af55b6689f722bab">官方源码仓库</a>；源码研究与内部报告为本文架构描述依据</li>
+</ol>
+<p nodeId="7ca74ed9ae744f88a5e4aadc0df172c1" />
+</km-doc>

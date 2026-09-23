@@ -1,0 +1,61 @@
+{
+  "title": "从 DeepSeek Harness 看 Agent 自进化-副本",
+  "source_url": "https://km.sankuai.com/collabpage/2784910653",
+  "content_id": "2784910653",
+  "step_version": 1,
+  "archived_at": "2026-09-23T16:11:28+08:00",
+  "source_created_at": "2026-09-01T20:09:54+08:00",
+  "source_modified_at": "2026-09-01T20:09:55+08:00",
+  "export_tool": "oa-skills citadel",
+  "raw_exports": [
+    "source.md",
+    "source.xml"
+  ],
+  "reading_copy": "README.md",
+  "transformations": [
+    "Removed CLI export notice from reading copy only",
+    "Added archive provenance to reading copy",
+    "Replaced exactly three image URLs with repository-relative paths in reading copy"
+  ],
+  "scope": "Current document body and all three embedded images; linked references not recursively archived; original claims not independently verified.",
+  "assets": [
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2784910653/253975934846?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2784910653/01-harness-layers.png",
+      "bytes": 177746,
+      "width": 1698,
+      "height": 576,
+      "sha256": "1e868bc031d366367c041e2497380b8f92569d31631553ac94061d8fba724e20"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2784910653/253975934847?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2784910653/02-rollback-stack.png",
+      "bytes": 243601,
+      "width": 1782,
+      "height": 780,
+      "sha256": "43969ca2ef6ab2aae0e188232db28b8486a69d6ea8b669b1bf57bf742c3e21e7"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2784910653/253981092230?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2784910653/03-self-harness-loop.png",
+      "bytes": 223627,
+      "width": 1744,
+      "height": 738,
+      "sha256": "5f3eb11d100dc5b0a973a01252a75216e7d63a9363a2f338ebde83b1959a29c3"
+    }
+  ],
+  "files": {
+    "source.md": {
+      "bytes": 24191,
+      "sha256": "7629c8caf007ef2685d776edab65e45ef567e5b68c68647488fcfe969ceb28fa"
+    },
+    "source.xml": {
+      "bytes": 33494,
+      "sha256": "ca1ac662693589d395f8bb608fae4903cf5481944bb52693c020b018a05bf706"
+    },
+    "README.md": {
+      "bytes": 24144,
+      "sha256": "089cbfc6009faa0c571a6aee56b67d83216fc888bc64cacb835be6425b4c5ec7"
+    }
+  }
+}
