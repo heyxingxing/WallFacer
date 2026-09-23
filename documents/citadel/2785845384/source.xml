@@ -1,0 +1,1693 @@
+<km-doc>
+<km-title nodeId="36a7721ed209447c9539fc9a41f24356">算法领域元进化(Meta Learning)实践</km-title>
+<h1 nodeId="0665648a8e46436994140cb6b55c502f">一、背景</h1>
+<p nodeId="bad278efbd0f4be7b922c05f16b32f67"><strong>元进化（Meta-evolution）是将“Agent 如何进化”本身作为持续优化对象的过程，目标是从多轮改进过程中优化更有效的进化方法。</strong> 自进化主要利用任务经验更新 Prompt、Skill、Memory、工作流或模型参数；元进化则进一步根据历史改进结果，调整“应该优化什么、采用什么策略，以及何时改变方向”，提高后续进化的质量与效率。</p>
+<p nodeId="773fa3599b654570a4d3df8267c3a6e2">两者的核心区别在于优化对象：<strong>自进化改善任务能力，元进化改善进化的机制。</strong> 类比元学习的“学习如何学习”，元进化可以理解为“学习如何更有效地进化”。</p>
+<p nodeId="bbfcbfa149094829b3b89c46e62bcfa8">以 EvoX<km-footnote id="23ff4a82-a52a-4ac5-9306-951cfcd8d1a8" annotate="EvoX：https://openreview.net/pdf?id=puRQNPwKs1" nodeId="efcb22a304ab463681d76a5dce68a234" /> 为例，元进化通常通过两个相互反馈的循环实现。</p>
+<ul nodeId="309233bfd3d74a21b0f210f5d820acc7">
+<li nodeId="2b683397cd81475cb8a5764a1ae707a7"><strong>任务进化内环</strong>：按照当前搜索策略选择父代与参考解，生成并执行新方案，将结果与反馈写回候选库，持续优化任务解法。</li>
+<li nodeId="971582dbc3734247975a7be426b0e281"><strong>元进化外环</strong>：根据一段搜索过程的进展与历史经验，调整父代选择、参考解组合和进化方式等策略，再用新策略指导后续搜索。</li>
+</ul>
+<p nodeId="25f1ca3850244987b42eeb1c7b58c932"><strong>内环产生进化经验，外环利用经验更新进化机制，更新后的机制再推动内环迭代。</strong> 两者协同，使系统在积累更优任务方案的同时，也能够提高每次进化的效果。</p>
+<p nodeId="fe9ff589168843f8af10b1ba56770051"><img src="https://km.sankuai.com/api/file/cdn/2785845384/255170211822?isNewContent=false&amp;contentType=1" name="" width="658" height="311" nodeId="1953edb5f81a4271895183cab7286358" /></p>
+<h1 nodeId="90f3fd0225be41c2a0dab3d9619428d4">二、OpenRSI介绍</h1>
+<h2 nodeId="e0cdc0b37d66472cbb826db420745383">2.1 项目摘要</h2>
+<p nodeId="e492de67922c4231abd2da0419399750">OpenRSI <km-footnote id="95baa8fb-300a-4987-89b7-51fdc74621f2" annotate="OpenRSI ：https://arxiv.org/abs/2607.28568" nodeId="2f43f5a9fe73435ab2b8de4d9e513422" />是由清华大学研究者提出的一个元进化框架<strong>，</strong>提出了面向机器学习算法任务的元进化模型 <strong>Frontis-MA1</strong> 及其完整技术框架 <strong>OpenMLE</strong><km-footnote id="05d0faf6-c927-4925-84c5-3825b6dddcb1" annotate="OpenMLE：https://github.com/FrontisAI/OpenRSI" nodeId="41134977594847b2afb59d26f67c92eb" />，目标是探索 <strong>AI 如何通过执行反馈持续改进 AI 系统，并进一步走向递归自我改进(RSI，recursive self-improvement)</strong>。</p>
+<h2 nodeId="09fbdbf650a74192bfc53d3458673795">2.2 算法流程</h2>
+<p nodeId="37376e68b75b439ea30f6e4a3563f095">OpenRSI 通过 <strong>OpenMLE-Gym、OpenMLE-Evo 和 OpenMLE-ERL</strong> 三个模块，将任务执行、方案搜索与模型学习连接起来：Gym 提供可信反馈，Evo 利用反馈寻找更优方案，ERL 将改进经验转化为模型能力，形成“<strong>搜索积累经验—经验训练模型—模型驱动后续搜索</strong>”的元进化路径。</p>
+<p nodeId="d98b9b76388a4d3b9a3857c9f401c005">整体流程包含两个相互连接的循环：<strong>任务级快环优化当前方案，模型级慢环提升Agent LLM能力</strong><strong>。</strong> 图中蓝色回路表示方案搜索与迭代，橙色回路表示经验学习与模型更新。</p>
+<km-html nodeId="5a8922bf572546b2ae0f4a985fa9257c"><![CDATA[<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;background:white}svg{display:block;width:66.6667%;height:auto;max-width:800px;margin:auto}</style></head><body><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc"><title id="title">OpenRSI元进化框架</title><desc id="desc">基础模型经监督冷启动形成改进器。左侧选择父节点、选择进化操作、生成候选并经 Gym 评测。反馈一方面回写搜索树，另一方面形成在线训练轨迹，经强化学习更新改进器参数。</desc><defs>
+<marker id="dark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#3A495E" /></marker>
+<marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#3478F6" /></marker>
+<marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#EF7C2C" /></marker>
+<filter id="softShadow" x="-20%" y="-30%" width="140%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#443D80" flood-opacity="0.15" /></filter></defs><text x="600" y="53" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, Arial, sans-serif" font-size="34" font-weight="700" fill="#233349">OpenRSI元进化框架</text><g transform="translate(0 80)" font-family="PingFang SC, Microsoft YaHei, Arial, sans-serif">
+<rect x="1" y="1" width="1198" height="1118" rx="28" fill="#FAFBFD" stroke="#E1E6ED" stroke-width="1.6" />
+<rect x="230" y="28" width="280" height="98" rx="17" fill="#F4F0FF" stroke="#A692F1" stroke-width="1.6" />
+<text x="370" y="68" text-anchor="middle" font-size="25" fill="#233349" font-weight="600">Qwen3.6-35B-A3B</text>
+<text x="370" y="99" text-anchor="middle" font-size="18" fill="#6B7B90" font-weight="400">基础模型</text>
+<rect x="48" y="220" width="630" height="844" rx="28" fill="#EDF5FF" stroke="#75A7ED" stroke-width="2.3" />
+<rect x="725" y="220" width="430" height="844" rx="28" fill="#FFF3EA" stroke="#F0A46B" stroke-width="2.3" />
+<text x="245" y="258" text-anchor="middle" font-size="24" fill="#1F5CB8" font-weight="700">OpenMLE-Evo</text>
+<text x="960" y="258" text-anchor="middle" font-size="26" fill="#B75518" font-weight="700">OpenMLE-ERL</text>
+<path d="M370 126 V284" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="252" y="158" width="236" height="34" rx="4" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.6" />
+<text x="370" y="182" text-anchor="middle" font-size="17" fill="#233349" font-weight="400">清洗后的轨迹数据 · SFT 冷启动</text>
+<rect x="230" y="290" width="280" height="104" rx="21" fill="#6D5BD0" stroke="#6D5BD0" stroke-width="1.6" filter="url(#softShadow)" />
+<text x="370" y="331" text-anchor="middle" font-size="26" fill="#FFFFFF" font-weight="650">Agent LLM</text>
+<text x="370" y="365" text-anchor="middle" font-size="22" fill="#FFFFFF" font-weight="600">（Frontis-MA1）</text>
+<path d="M370 394 V444" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="190" y="450" width="360" height="92" rx="17" fill="#FFFFFF" stroke="#A5C4EE" stroke-width="1.6" />
+<text x="370" y="489" text-anchor="middle" font-size="24" fill="#233349" font-weight="600">从候选池选择父节点</text>
+<text x="370" y="519" text-anchor="middle" font-size="18" fill="#6A788B" font-weight="400">综合质量、增益与新颖性</text>
+<path d="M370 542 V587" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="145" y="594" width="450" height="108" rx="17" fill="#FFFFFF" stroke="#A5C4EE" stroke-width="1.6" />
+<text x="370" y="634" text-anchor="middle" font-size="24" fill="#233349" font-weight="600">选择进化操作</text>
+<rect x="164" y="650" width="83" height="33" rx="10" fill="#DCEBFF" /><text x="205.5" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Draft</text><rect x="256" y="650" width="100" height="33" rx="10" fill="#DCEBFF" /><text x="306.0" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Improve</text><rect x="365" y="650" width="85" height="33" rx="10" fill="#DCEBFF" /><text x="407.5" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Debug</text><rect x="459" y="650" width="117" height="33" rx="10" fill="#DCEBFF" /><text x="517.5" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Crossover</text><path d="M370 702 V749" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="230" y="756" width="280" height="84" rx="17" fill="#FFFFFF" stroke="#A5C4EE" stroke-width="1.6" />
+<text x="370" y="791" text-anchor="middle" font-size="24" fill="#233349" font-weight="600">生成候选方案</text>
+<text x="370" y="819" text-anchor="middle" font-size="18" fill="#6A788B" font-weight="400">输出可执行程序</text>
+<path d="M370 840 V891" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="165" y="898" width="430" height="108" rx="17" fill="#EAF8F0" stroke="#4CB67A" stroke-width="1.6" />
+<text x="380" y="936" text-anchor="middle" font-size="25" fill="#247149" font-weight="650">OpenMLE-Gym</text>
+<text x="380" y="968" text-anchor="middle" font-size="20" fill="#4A7660" font-weight="400">执行与评测：返回分数、状态与错误</text>
+<path d="M380 1006 V1035 H92 V496 H183" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="60" y="735" width="65" height="168" rx="0" fill="#EDF5FF" stroke="#EDF5FF" stroke-width="1.6" />
+<text x="92" y="763" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">回写</text>
+<text x="92" y="794" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">搜索树</text>
+<text x="92" y="840" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">更新</text>
+<text x="92" y="871" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">候选池</text>
+<path d="M595 952 H768" fill="none" stroke="#EF7C2C" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#orange)" />
+<rect x="613" y="905" width="142" height="32" rx="5" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.6" />
+<text x="684" y="927" text-anchor="middle" font-size="16" fill="#B66329" font-weight="400">轨迹与执行反馈</text>
+<rect x="775" y="898" width="330" height="108" rx="17" fill="#FFFFFF" stroke="#F0B081" stroke-width="1.6" />
+<text x="940" y="936" text-anchor="middle" font-size="23" fill="#8B4319" font-weight="600">形成在线训练轨迹</text>
+<text x="940" y="968" text-anchor="middle" font-size="18" fill="#765C49" font-weight="400">生成 → 执行 → 反馈：Rollout</text>
+<path d="M940 898 V740" fill="none" stroke="#EF7C2C" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#orange)" />
+<text x="1031" y="817" text-anchor="middle" font-size="18" fill="#B66329" font-weight="400">执行结果</text>
+<text x="1031" y="845" text-anchor="middle" font-size="18" fill="#B66329" font-weight="400">构造 Reward</text>
+<rect x="775" y="588" width="330" height="145" rx="20" fill="#EF7C2C" stroke="#EF7C2C" stroke-width="1.6" />
+<text x="940" y="628" text-anchor="middle" font-size="24" fill="#FFFFFF" font-weight="650">Online RL 更新</text>
+<text x="940" y="667" text-anchor="middle" font-size="20" fill="#FFFFFF" font-weight="400">依据执行奖励优化生成策略</text>
+<text x="940" y="701" text-anchor="middle" font-size="20" fill="#FFFFFF" font-weight="400">将进化经验内化至模型参数</text>
+<path d="M940 588 V342 H517" fill="none" stroke="#EF7C2C" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#orange)" />
+<rect x="748" y="320" width="157" height="36" rx="0" fill="#FFF3EA" stroke="#FFF3EA" stroke-width="1.6" />
+<text x="827" y="346" text-anchor="middle" font-size="20" fill="#BF5B1B" font-weight="650">更新模型参数 θ</text>
+<rect x="792" y="387" width="298" height="70" rx="6" fill="#FFF3EA" stroke="#FFF3EA" stroke-width="1.6" />
+<text x="940" y="414" text-anchor="middle" font-size="18" fill="#8A6145" font-weight="400">新版改进器通过独立验证后</text>
+<text x="940" y="443" text-anchor="middle" font-size="18" fill="#8A6145" font-weight="400">用于后续任务搜索</text>
+<text x="369" y="1098" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">任务内：改进方案，模型参数固定</text>
+<text x="941" y="1098" text-anchor="middle" font-size="18" fill="#BF5B1B" font-weight="600">跨轮次：学习经验，更新改进能力</text>
+<circle cx="100" cy="250" r="18" fill="#3478F6" /><text x="100" y="257" text-anchor="middle" font-size="21" font-weight="700" fill="white">1</text><circle cx="780" cy="250" r="18" fill="#EF7C2C" /><text x="780" y="257" text-anchor="middle" font-size="21" font-weight="700" fill="white">2</text></g></svg></body></html>]]></km-html>
+<p nodeId="720db1af6f184507a3abdd80fc0a1be7"><strong>（1）OpenMLE-Gym：执行方案，提供方案反馈</strong></p>
+<p nodeId="1a700978e9d6497d96477b790100be3a">Gym 将机器学习任务封装为标准任务包，提供统一的任务接口和隔离执行环境。Agent 生成可执行的候选程序后，由 Gym 完成运行与评测，并返回任务得分、日志和异常信息，为方案改进提供依据。</p>
+<p nodeId="0366f89bfe65463f964c7ad5a4e4a794"><strong>（2）OpenMLE-Evo：组织搜索，持续改进方案</strong></p>
+<p nodeId="e3ad710eb05447ebba96660e0394180d">Evo 通过搜索树记录候选方案、执行结果及父子关系，并维护候选池，为后续迭代选择父方案和参考经验。父节点选择综合考虑<strong>当前质量、相对增益与方法多样性</strong>，兼顾高价值方案的深化和新方向的探索。</p>
+<p nodeId="4c04475d5ad74ca5b4e8833e0d36a161">搜索由四类操作组成：<strong>Draft</strong> 生成初始方案或探索新路线，<strong>Improve</strong> 改进已有方案，<strong>Crossover</strong> 组合不同方案的有效部分，<strong>Debug</strong> 修复执行错误。候选经 Gym 执行后，反馈重新进入搜索树，驱动下一轮迭代。</p>
+<p nodeId="d85f70fb9b83430baf0c499dd7cab200"><strong>（3）OpenMLE-ERL：学习改进经验，更新模型能力</strong></p>
+<p nodeId="31f4f6323c68423b97e972ad65611c7e">ERL 将经过筛选的候选方案、修改过程与执行反馈转化为训练信号，通过 <strong>Online RL</strong> 更新 Agent LLM，使模型逐步掌握更有效的生成、改进、组合与修复策略。搜索经验由此从外部记录转化为模型参数中的改进能力，再用于后续任务。</p>
+<p nodeId="a4b69bc76ef0491f81664b12b09def6a"><strong>三个模块共同形成双层闭环：</strong></p>
+<ul nodeId="d3a14a9f04654a1fa9ea9137ac65d7ff">
+<li nodeId="55e0ae050d4748dfb296a514b9e93beb"><strong>任务级快环：</strong> Agent LLM 参数保持固定，Evo 组织候选生成，Gym 执行并返回反馈，在给定预算内持续寻找更优方案。</li>
+<li nodeId="e826fadfb3694f9c94984889e08a52b2"><strong>模型级慢环：</strong> ERL 汇集跨任务的改进轨迹，训练新的 Agent LLM，再将其用于后续搜索，提升产生有效改进的能力。</li>
+</ul>
+<p nodeId="f37491c4d0d84ddcbf977b7a015195bd"><strong>快环产出更好的任务方案和改进经验，慢环利用这些经验训练更强的改进器，两者通过执行轨迹与模型更新连接起来。</strong></p>
+<h2 nodeId="dde3fcb1635544bfb16cb98231c2a5bf">2.3 实验结果</h2>
+<p nodeId="fc77eb560d014e6aa49ff09a45a819fa">论文的主实验结果如图所示：</p>
+<p nodeId="f9a13b1005bd43749d2a5ae6fe4b0c94"><img src="https://km.sankuai.com/api/file/cdn/2785845384/255168021246?isNewContent=false&amp;contentType=1" name="" width="969" height="500" nodeId="97759c4ab08b417186d319193f55e7b4" /></p>
+<p nodeId="7666c816f22e467f9f9ff7737c35ef1d">在 MLE-Bench Lite 上，Frontis-MA1-35B + OpenMLE-Evo-Max 已超越部分顶尖模型与工业级 Harness 的组合，并接近领先闭源系统的表现。</p>
+<h1 nodeId="a84a78cc27694418959b3942758afa29">三、业务场景实践</h1>
+<km-note type="info" hiddenTitle="true" nodeId="dd3c9dc4f0f842ab9e64303ca56dd8a7">
+<km-title></km-title>
+<km-content>
+<p nodeId="878878c0036a4372a36cb8041e239482">本次实践将OpenRSI框架应用于匹配算法场景，将框架从“传统ML模型进化”改造为“LLM后训练模型进化”，可以自动进行LLM模型训练方案的候选生成、训练、评测，并以树搜索的形式迭代进化。在酒旅房型匹配场景中展开初步实验，对比了不同api大模型、人工baseline、Autoresearch的结果，并取得了初步的实验效果。 </p>
+</km-content>
+</km-note>
+<h2 nodeId="3443b203851942fdb5e97a722e61a655">3.1 业务场景：酒旅住宿境内竞对房型匹配</h2>
+<p nodeId="0a69826716f24a2983ff3f545159f7c1"><strong>数据：</strong>训练集共21913条，测试集共2903条，数据样例为：</p>
+<table responsive="false" nodeId="44f357afde5f46bfb17264080f8d4fcc">
+<tr nodeId="741f8646966e4abb902c7339c20e1abe">
+<th colwidth="[50]" nodeId="5fa14ea913f34127a92e9020c0810cf8">
+<p nodeId="b3031f2329d1440ab886cd35fe1e360b" />
+</th>
+<th colwidth="[526]" nodeId="8b22a4187dd448e58dacd5820cb07a1b">
+<p nodeId="83e5af26192a4b168778e6ad7a9523b6">outer_room_name</p>
+</th>
+<th colwidth="[320]" nodeId="03c6c6471d114800b5f30cb02893848e">
+<p nodeId="bb3c0135a9b14d8e8efb32bc54f040ba">mt_room_name</p>
+</th>
+<th colwidth="[101]" nodeId="4009b0217d11457d8de211c341e65313">
+<p nodeId="8adb751da2754ae7a1e0ccab196accb3">label</p>
+</th>
+</tr>
+<tr nodeId="a4d3fcb0c2e04c70af8e4204eb26cd98">
+<td colwidth="[50]" numCell="true" nodeId="b3e884c37d284edab8b84ceda227329e">
+<p nodeId="53adb3b4f87a40c7865cad426c6a1d18" />
+</td>
+<td colwidth="[526]" nodeId="705592ebb08645ccad19ffb39293f14a">
+<p nodeId="797cb17fc52942589fe94c5028c951cf">园景·两室一厅套房（私享浴缸+阳台+厨具齐全）</p>
+</td>
+<td colwidth="[320]" nodeId="78844b6ded714e2f88b985149729f077">
+<p nodeId="464b3d32c8aa4605aaa8435b84c710fb">中式观海.两室一厅（私人浴缸+开放式厨房）</p>
+</td>
+<td colwidth="[101]" nodeId="b728cc48cbe348638f66b9bb083355b2">
+<p nodeId="75835f8e1e594b3bbf2905b7043e3cea">否</p>
+</td>
+</tr>
+<tr nodeId="d5feaafffaee40fc806614d16b685f95">
+<td colwidth="[50]" numCell="true" nodeId="9975897a45fe4e408c7e28b29fb96b80">
+<p nodeId="2a680841ca6d43998028e7be3f3fac97" />
+</td>
+<td colwidth="[526]" nodeId="7488075e674c47dc8c882dbe1320f4f1">
+<p nodeId="7d72afc5c9c94d9fb93f67c43d2228d6">ZOWEI电竞观影双人套房（卓威400HZ显示器+4070S显卡+32G内存+65寸观竞电视+网吧特权）</p>
+</td>
+<td colwidth="[320]" nodeId="fe8f9f372eba44a3b7fd8290500f5824">
+<p nodeId="8f04a56cd62a4e47b9d6433ca23f2441">电竞观影双床套房</p>
+</td>
+<td colwidth="[101]" nodeId="2dedd86b16b847dea2e11faa8638d15d">
+<p nodeId="7eab3ba70d1b4b6987d7b99ab27afc5d">是</p>
+</td>
+</tr>
+<tr nodeId="f668ce7647a043bdbc66a1ec90865906">
+<td colwidth="[50]" numCell="true" nodeId="f751bf77d7844f72bfce61af23d416b6">
+<p nodeId="e2ace25a1c884af9a7ee19c82c2a948d" />
+</td>
+<td colwidth="[526]" nodeId="98cb513275634eda90db3f783d8e9d5b">
+<p nodeId="bb5a8abbf1034d678368e0a4cf3de180">归谧|静谧双床房|私人庭院|巨幕投影|零压床垫|mini冰箱|智能马桶</p>
+</td>
+<td colwidth="[320]" nodeId="551f255966494eca9a5a1878f6365bc6">
+<p nodeId="a443dc3f8e5c4ef99f91973db7b88d0e">慢岛丨海景静谧双床房</p>
+</td>
+<td colwidth="[101]" nodeId="778cd3943c754d7a87698d42cc85a2c7">
+<p nodeId="cc1ff722d6834d7490c39207343a3e38">否</p>
+</td>
+</tr>
+</table>
+<p nodeId="bbd35eab22b54e0dae2b96e60ac7f930"><strong>评价指标：</strong>BadCase率</p>
+<p nodeId="c62e7d60a8c64a0da792b781ec9e2ad0"><strong>对比基线：</strong>人+agent的线上方案BadCase率6.27%</p>
+<h2 nodeId="afd6c7047e984d2dad9f1989e81186c9">3.2 业务场景的改造适配</h2>
+<p nodeId="352dace9c63b414eb4a9bcd81799eda4"><strong>适配的核心是将 OpenRSI 的搜索对象，从通用机器学习程序扩展为大模型后训练方案。</strong> 结合 ms-swift 封装统一的训练与推理接口，让 Agent 聚焦影响效果的数据处理逻辑与训练配置，降低生成代码的复杂度。主要改造包括：</p>
+<p nodeId="c73e03f0e2e44c02be8ac40c0e126a89"><strong>（1）规范候选方案，打通后训练执行链路</strong></p>
+<p nodeId="5c664bcf4c284e1fa6916a6daab419a6">每个候选方案仍是 Python 文件，但无需自行实现完整的模型加载、训练与推理流程，只需提供四部分内容：数据预处理函数、训练配置、推理配置和数据后处理函数。同时扩展 Gym 任务包，串联“<strong>数据准备 → Swift 训练 → 模型选择 → Swift 推理 → 后处理 → Gym 评分</strong>”。各阶段记录运行结果与异常，使 Agent 既能调整方案，也能根据失败阶段定位问题。</p>
+<p nodeId="8e62178685d44ca1bf9207a5d1c4abd0"><strong>（2）优化面向后训练的operator提示词</strong></p>
+<p nodeId="1ce49a2aef2a420b9ddcba70e523f4ff">重写 Improve、Crossover 提示词，覆盖数据处理、Prompt、监督形式、训练策略。<strong>Improve</strong> 强调基于case分析和上一轮反馈、围绕几个算法优化策略提出改动；<strong>Crossover</strong> 强调以较优方案为主体，整合另一方案中的有效机制。同时可以复现已有人工最优方案，成功后作为初始节点，继续通过 Improve、Crossover 优化。</p>
+<p nodeId="adf5a91b619943349628482d1eb7797e"><strong>（3）将执行日志转化为结构化反馈</strong></p>
+<p nodeId="4c90415af8474cb9b2209a73f38ebd96">从日志中提炼<strong>执行状态、训练动态、评测表现和资源消耗</strong>，并记录相对父方案的修改及效果变化。在有限上下文预算内保留关键信息和代表性错误，帮助模型定位问题、形成假设并优化下一轮方案。</p>
+<km-html nodeId="6592fb871b384062824ec0e888281a30"><![CDATA[<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>html,body{margin:0;background:white}svg{display:block;width:150%;max-width:800px;height:auto;margin:auto}</style></head><body><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1596" role="img" aria-label="OpenRSI 与外部 Harness 双层实验流程"><defs>
+<marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#3478F6" /></marker>
+<marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#EF7C2C" /></marker>
+<marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#459C72" /></marker><marker id="status-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#D44B4B" /></marker><marker id="status-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#D9B84D" /></marker><marker id="status-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#000000" /></marker></defs><g font-family="PingFang SC, Microsoft YaHei, Arial, sans-serif"><rect x="2" y="2" width="1436" height="1592" rx="28" fill="#FFFFFF" stroke="#000000" stroke-width="2" /><text x="720" y="55" font-size="32" fill="#000000" font-weight="700" text-anchor="middle">OpenRSI 后训练改造</text><text x="720" y="88" font-size="19" fill="#000000" font-weight="400" text-anchor="middle">外层统筹跨运行实验 · 内层搜索任务方案 · 两类入口共用执行链路</text><rect x="70" y="115" width="1300" height="345" rx="24" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="100" y="152" font-size="24" fill="#B63333" font-weight="650" text-anchor="start">外部 Harness｜Claude Code / HarnessX 等</text><rect x="100" y="180" width="265" height="150" rx="14" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="116" y="214" font-size="21" fill="#B63333" font-weight="650" text-anchor="start">① 梳理历史经验</text><text x="116" y="248" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">读取多次进化实验结果</text><text x="116" y="277" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">区分结论、待验假设，保留配置</text><rect x="425" y="180" width="265" height="150" rx="14" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="441" y="214" font-size="21" fill="#B63333" font-weight="650" text-anchor="start">② 制定实验假设</text><text x="441" y="248" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">拆分数据、训练与 Prompt </text><text x="441" y="277" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">明确可变因素与固定条件</text><text x="441" y="306" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">设定初始优化方案路线</text><rect x="750" y="180" width="265" height="150" rx="14" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="766" y="214" font-size="21" fill="#B63333" font-weight="650" text-anchor="start">③ 开展搜索与对照</text><text x="766" y="248" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">定向搜索：探索具体方案</text><text x="766" y="277" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">单方案对照：验证关键改动</text><text x="766" y="306" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">必要时复现基线</text><rect x="1075" y="180" width="265" height="150" rx="14" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="1091" y="214" font-size="21" fill="#B63333" font-weight="650" text-anchor="start">④ 汇总、经验总结</text><text x="1091" y="248" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">复核得分、曲线、结果与耗时</text><text x="1091" y="277" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">决定路线继续、调整或停止</text><text x="1091" y="306" font-size="16" fill="#B63333" font-weight="400" text-anchor="start">形成下一轮起点与提示</text><path d="M365 255 H418" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><path d="M690 255 H743" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><path d="M1015 255 H1068" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><rect x="515" y="363" width="410" height="33" rx="0" fill="#FFF0F0" stroke="#FFF0F0" stroke-width="2" /><text x="390" y="386" font-size="17" fill="#B63333" font-weight="600" text-anchor="middle">④ → ①：经验指导下一轮探索</text><text x="100" y="433" font-size="18" fill="#B63333" font-weight="500" text-anchor="start">实验循环：历史经验 → 实验假设 → 搜索与对照 → 总结与调整</text><path d="M815 330 V350 H715 V480 H365 V493" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><path d="M950 330 V350 H1045 V480 H1130 V493" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><rect x="155" y="495" width="420" height="62" rx="12" fill="#FFF8D9" stroke="#D9B84D" stroke-width="2" /><text x="365" y="521" font-size="21" fill="#856512" font-weight="650" text-anchor="middle">入口 A｜定向搜索</text><text x="365" y="544" font-size="16" fill="#856512" font-weight="400" text-anchor="middle">seed · 搜索提示 · 固定变量 · 预算</text><rect x="920" y="495" width="420" height="62" rx="12" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="1130" y="521" font-size="21" fill="#B63333" font-weight="650" text-anchor="middle">入口 B｜单方案对照</text><text x="1130" y="544" font-size="16" fill="#B63333" font-weight="400" text-anchor="middle">直接执行候选，复现基线或验证关键变量</text><path d="M365 557 V586" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><g transform="translate(0 160)"><rect x="70" y="434" width="1300" height="914" rx="26" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+<text x="107" y="479" text-anchor="start" font-size="25" fill="#000000" font-weight="650">OpenMLE-Evo · 候选生成—执行评测—节点迭代</text>
+<text x="107" y="514" text-anchor="start" font-size="19" fill="#856512" font-weight="400">定向搜索起点：先执行指定 seed；成功后入池，失败留档并停止。</text>
+<rect x="110" y="555" width="510" height="155" rx="18" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+<text x="134" y="594" text-anchor="start" font-size="25" fill="#000000" font-weight="650">① 新增节点 / 更新候选池</text>
+<text x="134" y="631" text-anchor="start" font-size="18" fill="#000000" font-weight="400">记录候选方案、得分、父子关系与修改摘要</text>
+<text x="134" y="661" text-anchor="start" font-size="18" fill="#000000" font-weight="400">保留符合条件的节点，维护可复用历史经验</text>
+<rect x="810" y="555" width="510" height="155" rx="18" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+<text x="834" y="594" text-anchor="start" font-size="25" fill="#000000" font-weight="650">② 选择父节点与改进上下文</text>
+<text x="834" y="631" text-anchor="start" font-size="18" fill="#000000" font-weight="400">综合候选节点的性能、正向提升幅度与方法创新性抽样</text>
+<text x="834" y="661" text-anchor="start" font-size="18" fill="#856512" font-weight="400">输入：父方案计划、代码、结构化反馈</text>
+<text x="834" y="689" text-anchor="start" font-size="18" fill="#856512" font-weight="400">任务上下文：业务定义、规则与使用的数据信息</text>
+<rect x="110" y="785" width="510" height="233" rx="18" fill="#FFF8D9" stroke="#D9B84D" stroke-width="2" />
+<text x="134" y="824" text-anchor="start" font-size="25" fill="#856512" font-weight="650">⑥ 汇总结构化反馈</text>
+<text x="134" y="862" text-anchor="start" font-size="19" fill="#856512" font-weight="650">执行状态</text>
+<text x="230" y="862" text-anchor="start" font-size="17" fill="#856512" font-weight="400">出现异常错误：必要上下文 → Debug</text>
+<text x="134" y="897" text-anchor="start" font-size="19" fill="#856512" font-weight="650">训练动态</text>
+<text x="230" y="897" text-anchor="start" font-size="17" fill="#856512" font-weight="400">train / val loss、收敛趋势</text>
+<text x="134" y="932" text-anchor="start" font-size="19" fill="#856512" font-weight="650">评测表现</text>
+<text x="230" y="932" text-anchor="start" font-size="17" fill="#856512" font-weight="400">准确率、混淆矩阵及代表性错误样例</text>
+<text x="134" y="967" text-anchor="start" font-size="19" fill="#856512" font-weight="650">资源消耗</text>
+<text x="230" y="967" text-anchor="start" font-size="17" fill="#856512" font-weight="400">耗时、吞吐量与GPU峰值显存</text>
+<text x="134" y="998" text-anchor="start" font-size="17" fill="#856512" font-weight="400">记录修改效果、证据与适用条件</text>
+<rect x="810" y="785" width="510" height="233" rx="18" fill="#FFF8D9" stroke="#FFF8D9" stroke-width="2" />
+<text x="834" y="824" text-anchor="start" font-size="25" fill="#856512" font-weight="650">③ 后训练改进算子</text>
+<text x="834" y="862" text-anchor="start" font-size="20" fill="#856512" font-weight="700">Improve</text>
+<text x="834" y="891" text-anchor="start" font-size="18" fill="#856512" font-weight="400">围绕一个主要的算法改动方向展开优化</text>
+<text x="834" y="929" text-anchor="start" font-size="20" fill="#856512" font-weight="700">Crossover</text>
+<text x="834" y="958" text-anchor="start" font-size="18" fill="#856512" font-weight="400">以更优父方案为主体，整合两个较优方案得到最优组合</text>
+<text x="834" y="995" text-anchor="start" font-size="16" fill="#856512" font-weight="400">异常时由 Debug 修复；禁止针对单条数据做针对性优化</text>
+<rect x="110" y="1090" width="510" height="203" rx="18" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" />
+<text x="134" y="1130" text-anchor="start" font-size="22" fill="#B63333" font-weight="650">⑤ 共享执行环境 · <tspan fill="#B63333">SwiftRunner</tspan> / Gym环境</text>
+<text x="134" y="1168" text-anchor="start" font-size="18" fill="#B63333" font-weight="400">接口 / 配置校验 → 预处理与 JSONL数据格式 检查</text>
+<text x="134" y="1202" text-anchor="start" font-size="18" fill="#B63333" font-weight="400">Swift 训练：按方案配置发起训练</text>
+<text x="134" y="1236" text-anchor="start" font-size="18" fill="#B63333" font-weight="400">Swift 推理：推理并按后处理方案得到结果，得到Gym 评分</text>
+<text x="134" y="1273" text-anchor="start" font-size="18" fill="#B63333" font-weight="400">搜索反馈回写；对照结果归档并交由后续汇总</text>
+<rect x="810" y="1090" width="510" height="203" rx="18" fill="#FFF8D9" stroke="#D9B84D" stroke-width="2" />
+<text x="834" y="1130" text-anchor="start" font-size="25" fill="#856512" font-weight="650">④ 生成候选方案 · 一个 Python 文件</text>
+<rect x="831" y="1151" width="229" height="56" rx="10" fill="#FFF8D9" stroke="#FFF8D9" stroke-width="2" />
+<text x="945" y="1174" text-anchor="middle" font-size="19" fill="#856512" font-weight="650">预处理函数</text>
+<text x="945" y="1196" text-anchor="middle" font-size="14" fill="#856512" font-weight="400">清洗 / 采样 / 增强 / Prompt</text>
+<rect x="1070" y="1151" width="229" height="56" rx="10" fill="#FFF8D9" stroke="#FFF8D9" stroke-width="2" />
+<text x="1184" y="1174" text-anchor="middle" font-size="19" fill="#856512" font-weight="650">训练配置</text>
+<text x="1184" y="1196" text-anchor="middle" font-size="14" fill="#856512" font-weight="400">LoRA / Full 与训练参数</text>
+<rect x="831" y="1218" width="229" height="56" rx="10" fill="#FFF8D9" stroke="#FFF8D9" stroke-width="2" />
+<text x="945" y="1241" text-anchor="middle" font-size="19" fill="#856512" font-weight="650">推理配置</text>
+<text x="945" y="1263" text-anchor="middle" font-size="14" fill="#856512" font-weight="400">推理参数 / 长度 / thinking</text>
+<rect x="1070" y="1218" width="229" height="56" rx="10" fill="#FFF8D9" stroke="#FFF8D9" stroke-width="2" />
+<text x="1184" y="1241" text-anchor="middle" font-size="19" fill="#856512" font-weight="650">后处理函数</text>
+<text x="1184" y="1263" text-anchor="middle" font-size="14" fill="#856512" font-weight="400">提取标签并生成提交文件</text>
+<path d="M620 631 H802" fill="none" stroke="#000000" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#status-gray)" />
+<path d="M1065 710 V777" fill="none" stroke="#000000" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#status-gray)" />
+<path d="M1065 1018 V1082" fill="none" stroke="#000000" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#status-gray)" />
+<path d="M810 1192 H628" fill="none" stroke="#000000" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#status-gray)" />
+<path d="M365 1090 V1026" fill="none" stroke="#000000" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#status-gray)" />
+<path d="M365 785 V718" fill="none" stroke="#000000" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#status-gray)" />
+<text x="715" y="885" text-anchor="middle" font-size="21" fill="#000000" font-weight="650">任务内</text>
+<text x="715" y="920" text-anchor="middle" font-size="21" fill="#000000" font-weight="650">持续迭代</text>
+<text x="720" y="1325" text-anchor="middle" font-size="18" fill="#856512" font-weight="400">搜索执行失败仍保留节点与阶段反馈；单方案对照独立归档。</text>
+</g><path d="M1340 526 H1403 V1530 H365 V1461" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" marker-end="url(#status-red)" /><text x="1391" y="1080" font-size="16" fill="#000000" font-weight="400" text-anchor="start" /><text x="1424" y="1040" transform="rotate(-90 1424 1040)" text-anchor="middle" font-size="17" font-weight="600" fill="#B63333">单方案对照：绕过树搜索，复用 Swift / Gym 链路</text><path d="M110 1060 H32 V255 H92" fill="none" stroke="#D44B4B" stroke-width="3" stroke-linejoin="round" stroke-dasharray="8 6" marker-end="url(#status-red)" /><text x="22" y="695" transform="rotate(-90 22 695)" text-anchor="middle" font-size="17" font-weight="600" fill="#B63333">跨运行汇总：结果、训练曲线、错误分析与资源消耗</text><text x="720" y="1575" font-size="20" fill="#000000" font-weight="500" text-anchor="middle">外层调整实验计划、搜索配置与经验使用；Evo 在给定方向和约束下寻找更优方案。</text><g aria-label="改造类型图例"><rect x="76" y="17" width="18" height="18" rx="4" fill="#FFF0F0" stroke="#D44B4B" stroke-width="2" /><text x="105" y="31" font-size="17" font-weight="600" fill="#B63333">新增</text><rect x="76" y="44" width="18" height="18" rx="4" fill="#FFF8D9" stroke="#D9B84D" stroke-width="2" /><text x="105" y="58" font-size="17" font-weight="600" fill="#856512">有修改</text><rect x="76" y="71" width="18" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="2" /><text x="105" y="85" font-size="17" font-weight="600" fill="#000000">无修改</text></g></g></svg></body></html>]]></km-html>
+<h2 nodeId="1bbf0ed259674250b7647834bf367cdd">3.3 OpenRSI+外部harness</h2>
+<p nodeId="85e17efd34c14fe7afb078fa64b0d2d1">在当前使用方式下，OpenRSI 主要围绕单次运行的搜索树进化。这种机制存在三方面局限：</p>
+<ul nodeId="7e1c130f732146ffa495d8890a0a6bc2">
+<li nodeId="eb0e312d96694d548a55f430ee0a1378"><strong>跨搜索经验不共享。</strong> 不同运行的搜索记录相互独立，已尝试的方向和失败方案难以被后续运行直接复用，容易产生重复探索。</li>
+<li nodeId="e9da436b801c4d11bf01cc22b8aeb64c"><strong>树内搜索容易停留在局部调整。</strong> 同一次搜索可能持续围绕同类策略修改，得分虽有波动，却缺少新的突破方向。</li>
+<li nodeId="73f4f779ea9447bc93f8a1acd113840c"><strong>节点反馈难以支撑跨实验决策。</strong> 单次后训练成本较高，需要判断收益来自算法改动还是执行条件，哪些变量需要单独验证、哪些路线值得继续，这些判断依赖多轮结果，超出了父代选择和搜索树的作用范围。</li>
+</ul>
+<p nodeId="c7ad642694834aa6b28e246cb5c1b248">外部 Harness 负责统筹多轮实验，决定探索什么；OpenRSI 负责在给定方向与约束下搜索更优方案。外层Harness的三个主要功能：</p>
+<table responsive="false" nodeId="7b1d942ac2ea4431b5f920d6f7a2146c">
+<tr nodeId="efdfb7b5b74e496596e4bd74f5adc97c">
+<th colwidth="[126]" nodeId="65fa808c8c6a46eab113257a3589c7f9">
+<p nodeId="430af5ecf7934d229d0265c75ffd8aed">环节</p>
+</th>
+<th colwidth="[576]" nodeId="ab407a5f2bcf41ff9a9a55a4a4dd6ac6">
+<p nodeId="38a413245ea74054b1c6b557e4184393">功能</p>
+</th>
+</tr>
+<tr nodeId="a5c50027d90f4468b43c2c3516e93b1b">
+<td colwidth="[126]" nodeId="fbd5d6f94f344026898615b56a1cdfea">
+<p nodeId="46f51b940eb545549f3c3998c4324176">定向搜索</p>
+</td>
+<td colwidth="[576]" nodeId="a2d50ce424b74f23830eefcb9fdedd7b">
+<p nodeId="326f4602ae96417e92a456e3fd7bd7aa">设置初始方案、搜索提示、固定变量与资源预算，调用 OpenRSI 探索具体解法</p>
+</td>
+</tr>
+<tr nodeId="ada9ed8059ce4cb6b1cb8fb145ecce67">
+<td colwidth="[126]" nodeId="8c5ef61182d84e6bb00a4ad5583bfafe">
+<p nodeId="668cf39c5b98498bbea2074ef8e8eb5d">单方案对照</p>
+</td>
+<td colwidth="[576]" nodeId="2553e666a26248b4b68b9440d51af1f0">
+<p nodeId="17105cdd60164fd88455bc44497b0dd1">直接运行候选，验证关键假设或复现基线，与OpenRSI共用 Swift / Gym 验证环境</p>
+</td>
+</tr>
+<tr nodeId="fbd4dd09b44644ffbcb5e5e1f55e4dbe">
+<td colwidth="[126]" nodeId="cf800608b9414abd977003f7c67e1415">
+<p nodeId="ecf5617333ee4f17b598a8f2af1702cb">汇总、经验总结</p>
+</td>
+<td colwidth="[576]" nodeId="efa63bb4ad8f4af6bf53401f28351435">
+<p nodeId="f677e790d4c54edba803bea7d4a75390">整合实验结果与错误分析，沉淀有效策略、负结果及适用条件，指导后续搜索</p>
+</td>
+</tr>
+</table>
+<p nodeId="b303a9cda8fe47408c6af78f4882421d">每轮按照“<strong>梳理经验 → 制定假设 → 搜索与对照 → 总结与调整</strong>”推进：从历史记录中确定待验证方向，明确变量与预算，开展搜索和必要对照，再结合效果与成本决定继续、调整或停止，并更新下一轮的起点、提示与约束。</p>
+<p nodeId="b044967bcb0f4430b8a10864f17a31cf">外部 Harness 由此承担类似元层的作用，调整的是<strong>实验计划、搜索配置与经验使用方式</strong>，使多次独立运行形成可积累、可调整的持续探索过程。</p>
+<h2 nodeId="aeb46a4cd466454ebb7ec973393c9e81">3.4 实验结果</h2>
+<p nodeId="cc4d8305653e40d1807e417b05314f51">基于Qwen3.5-4B模型，在使用不同的API作为Agent LLM下，在酒旅境内竞对房型匹配场景进行试验，实验结果及结论如下：</p>
+<p nodeId="4882b6388cc34b1480ef27ae8e2eaef6"><strong>结论1：元进化探索（RSI）范式整体优于人工调优与 AutoResearch 自动探索，能获得更优的模型效果</strong>（实验2/实验3/实验4/实验5 vs 实验0/实验1）</p>
+<p nodeId="7f33b9cebc6e456f9697ee94dfac2a1b"><strong>结论2：对业务知识的理解深度决定探索收敛的方向与上限，“</strong><strong>知识注入</strong><strong>”是探索效果的增益项</strong>（实验2 vs 实验3/实验4）</p>
+<p nodeId="ec3a09ba17984f8bbe3bafbf92e9d4ea"><strong>结论3：引入“专家”模型承担探索的全局调度与指导，能够帮助探索跳出局部最优</strong>（实验5 vs 实验4）</p>
+<table responsive="false" nodeId="e0f21e3461254ce09609c7c34420895f">
+<tr nodeId="89b1f03b169140f1a3da125251bb8c0e">
+<th colwidth="[69]" nodeId="549e9caef55a4e21b3a5832a875eb405">
+<p nodeId="1e0c5eb2a0204d3298507b547ba3924f">序号</p>
+</th>
+<th colwidth="[142]" nodeId="68099db1adbd4574ac9dac0d139c1d43">
+<p nodeId="1ada1f7a54474181997c80b67b8193a2">实验名称</p>
+</th>
+<th colwidth="[120]" nodeId="5ef355fe9f9341ef921cd7295d2836ee">
+<p nodeId="966bd6d89a61465994cd2a09f9475c69">模型名称</p>
+</th>
+<th colwidth="[578]" nodeId="713e537be6f74a62ad8b2b39c77f2100">
+<p nodeId="085d43ef99e5427c92cedf3a1cbd5b88">实验方案描述</p>
+</th>
+<th colwidth="[115]" nodeId="50dd5e4d5a4c4bd08ff0d3b79d547fbd">
+<p nodeId="a81167ad0d104d45a5f7528f7f91203b">BadCase率</p>
+</th>
+<th colwidth="[367]" nodeId="0d1f95267587483ab95363866ce28a63">
+<p nodeId="0eaa524706734a2795aa40dce928c813">备注</p>
+</th>
+</tr>
+<tr nodeId="e481208f8474413ab061a7394eea9b0e">
+<th colwidth="[69]" nodeId="8b6d4747c7f04811ad066b9317137760">
+<p nodeId="edc11cd0e602475a8bf2776aac024197">实验0</p>
+</th>
+<td colwidth="[142]" bgColor="#E0E0E0" nodeId="dbd8f38e70bc47ea8dbe0b8d78bc4917">
+<p nodeId="46ca615152624ea4bd90d2ee65a67a74">人工</p>
+</td>
+<td colwidth="[120]" bgColor="#E0E0E0" nodeId="2c7609e442364084bb5c0b0a33867867">
+<p nodeId="75866f741bb94e50956df1d5b4f140e8">Qwen3.5-4B</p>
+</td>
+<td colwidth="[578]" bgColor="#E0E0E0" nodeId="8f172cb744be4b228dd845875794f415">
+<p nodeId="cd2f5583601644dfab3e2390e4a020c7">全参微调，使用与线上模型相同的prompt模版，在codelab中训练。</p>
+</td>
+<td colwidth="[115]" bgColor="#E0E0E0" nodeId="b45fe8a042494d3e9318ba57694dcca1">
+<p nodeId="f15bf20bf3b949f1ace0c878760ad864">6.27%</p>
+</td>
+<td colwidth="[367]" bgColor="#E0E0E0" nodeId="798f8acca27043108905909b0649ff49">
+<p nodeId="57708666a75b4aa0ad9def7703632c9a" />
+</td>
+</tr>
+<tr nodeId="5ccd23aa704445aca1b8270f88c55b8f">
+<th colwidth="[69]" nodeId="d4cac4da06154f63b04fbbe950f8f755">
+<p nodeId="899368c3ac6c42e48baeb73776d10d87">实验1</p>
+</th>
+<td colwidth="[142]" nodeId="1b3f5920404944a1acc3435d0401e137">
+<p nodeId="2708adfb50424da4b6bcc27b0378d56d">AutoResearch</p>
+</td>
+<td colwidth="[120]" nodeId="c0fcffb9e2c24e4b9f4d13f6eabfeb53">
+<p nodeId="e3e30f5acd8349f59bf5ab8745b7371e">Qwen3.5-4B</p>
+</td>
+<td colwidth="[578]" nodeId="ddd107b15df046af9187b6830ab0b3f5">
+<p nodeId="a6c50432225b46bcbb36930d493a683b">Autoresearch生成的实验记录：<a href="https://km.sankuai.com/collabpage/2781933082" title="Autoresearch实验记录" autoUpdate="true" nodeId="cb6bfb95477f445d8aa29adc44423efa">Autoresearch实验记录</a></p>
+</td>
+<td colwidth="[115]" nodeId="aafb6d9e07274f4db5751261d69ecc76">
+<p nodeId="4573f346f35e41719243091a7b4190db">6.65%</p>
+</td>
+<td colwidth="[367]" nodeId="724acf0ad26a4d17a43f0a6db6ddce6a">
+<p nodeId="fc9cb52d431c4feb903d539445974ba4" />
+</td>
+</tr>
+<tr nodeId="5b755e7bcbfa46cf83a78057b9df4317">
+<th colwidth="[69]" nodeId="83c3b287d4c94a739689f6694bdf6927">
+<p nodeId="54a3289bab5f4b2cab9bd0a81ae573f7">实验2</p>
+</th>
+<td colwidth="[142]" bgColor="rgb(237, 250, 244)" nodeId="d08920d14eb64ca9ad36631bd83eb5ed">
+<p nodeId="d9e8a1a0eca74bae9f6ab848d186c55c">RSI-LongCat2.0</p>
+</td>
+<td colwidth="[120]" bgColor="rgb(237, 250, 244)" nodeId="8a16c3d881df4631a77b8b735d6d56d1">
+<p nodeId="856c9baae13641c79a8637debe54353e">Qwen3.5-4B</p>
+</td>
+<td colwidth="[578]" bgColor="rgb(237, 250, 244)" nodeId="47cef8a811ec4517851b022d4a7d683c">
+<p nodeId="7db946d8a30a47249ba710e09a63fea4">全参微调，prompt优化重写，prompt中加入few-shot样例。</p>
+<pre language="Python" title="具体方案内容" isExpand="false" nodeId="8384da15-cf94-4431-b213-59a4691e8557"><code>TRAIN_CONFIG = {
+    "tuner_type": "full",
+    "torch_dtype": "bfloat16",
+    "max_length": 4096,
+    "train_epoch": 2,
+    "per_device_train_batch_size": 8,
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 1e-5,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.05,
+    "lr_scheduler_type": "cosine",
+    "gradient_checkpointing": True,
+    "logging_steps": 10,
+}
+INFER_CONFIG = {
+    "max_new_tokens": 64,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "repetition_penalty": 1.0,
+    "batch_size": 8,
+    "enable_thinking": False,
+}
+
+PROMPT_TEMPLATE = """你是一个酒店房型识别专家，请你通过两个酒店房型的房型名称来判断它们是不是同一个房型，并给出判断结果。
+
+## 任务
+根据以下规则判断房型是否相同。判断为相同房型输出"是"，不是相同房型输出"否"。
+
+## 直接判定规则（满足任一即直接返回结果，无需继续判断）
+
+1."套房"只能与"套房"认为相同，"特价房"只能与"特价房"认为相同，与其他的房型都不相同。
+2.如果两个房间都标明了房间号，房间号不同，那么房型不相同；房间号相同，且其余部分没有明显冲突，可以直接认为房型相同。例如："103-简约大床房（智能门锁+私密空间+精品卫浴）"和"海之爱103"是相同房型，其中房间号都是"103"。
+3.部分房型名称中带有酒店特色的房型描述词用于区分不同类型的房间。如果两个房型名称中有明显不同的描述词，可以直接认为房型不相同，例如："筑影·大床房"和"筑梦·大床房"中的"筑梦"与"筑影"为不同描述，则这两个是不同房型。当只有一个房型名称中有描述词，则描述词可忽略，例如："单人间"和"筑影·大床房"是相同房型。如果两个房型名称中包含相同的描述词，则可以直接认为是相同房型，不考虑后面的规则中的限制，例如"筑影·大床房"和"筑影·舒适大床房"为相同房型。
+4.如果两个房间同时包含主题，主题不同，可以直接认为房型不相同；主题相同，可以直接认为房型相同。主题一般有"太空主题""小黄鸭"这类描述，例如："主题小黄人"和"主题亲子小黄人"是相同房型。
+5.如果两个房型同时出现床型信息，比较床信息是否存在矛盾，例如："单人间""大床房"为一张床，"双床房""标准间"为两张床，床数量不同时，可直接认为房型不相同。"双人房"可同时与"单间""标准间"认为房型不矛盾。
+6.房型默认等级为"标准"，如果两个房型等级冲突可直接认为房型不相同，例如："大床房"和"普通大床房"不是相同房型。
+7.如果两个房型同时提及某些信息，并且这些信息存在明显冲突，可以直接认为房型不相同。这些信息包括：人数量、床数量、床尺寸、床类型。
+8.房型名称中可能出现景观类、性别等描述，如果两个房型等描述存在明显矛盾，可以直接认为房型不相同，否则可以忽略这些描述。
+
+## 辅助判断规则（用于辅助判断）
+
+1.意思相近的词语可以进行替换，认为含义相同，例如：棋牌=麻将，亲子=家庭，大床房=单人房，标间=标准间=双床房，loft=复式，投影=观影，特价=特惠，舒享=舒适，轻奢=轻雅，山景=观山景，塌塌米=榻榻米。可能有一些词语同音不同字，但可以明显判断出是想表达相同的含义，也认为意思相同可以相互替换。
+2.有一些信息不需要考虑，不作为判断房型是否相同的依据：a.与房间无关的形容词，如"智能""日出""大吉大利"等，一般出现在在房型名称前面；b.房型内的设施信息，如"床垫""暖气""冰箱"等；c.住宿时间，如"连住3小时"等；d.房间内容的说明，如"手机投屏""零压床垫""i7+4070显卡+2k260hz屏+游戏特权+UU加速器+智能客控"，一般出现在房型名称末尾的括号中。
+3.对于简单房型，例如"大床房""豪华标准间"，无法通过前缀房间号等信息进行定位，需要对用于直接描述房型的部分词语需要进行判断，如果一个房型名称中出现这类词语，那么另一个房型名称中需要出现相同含义的描述才能判断为房型相同。强维度词包括："商旅""超豪华""特级""豪华""行政""商务""高级""经济""尊享""至尊""精致""精选""精品""优选""舒适""温馨""电动""投影""娱乐""棋牌""高层""低层""贵宾楼""主楼""副楼""别墅""loft""上床""下床""特惠""亲子"等。有些不用于房型描述的强维度词可能出现在房型名称中，如"单人间（舒适床垫）"，这里的"舒适"描述的不是房型，所以不做考虑。对于复杂房型，如果可以通过其他信息直接确认房型相同，则不需要对这些强维度词进行严格判断，例如"繁花·落叶风榻榻米舒适双床房"和"繁花"是相同房型。
+4.除上述需要判断的内容外，如果两个房型名称中没有明显冲突的表述，认为房型相同。
+
+## 典型示例
+
+示例1：
+房型1：浅云·舒适观景大床房（品质床品+智能马桶+干湿分离）
+房型2：浅云
+判断结果：是
+判断理由：两个房型都包含描述词"浅云"，根据直接判定规则3，描述词相同可直接判断为相同房型，忽略括号内的设施说明
+
+示例2：
+房型1：觉·云卷（俯瞰城市夜景）
+房型2：觉云境
+判断结果：否
+判断理由：描述词"觉·云卷"与"觉云境"明显不同，根据直接判定规则3，描述词不同可直接判断为不同房型
+
+示例3：
+房型1：轻奢零压房（巨幕投影+手机投屏+零压床垫）
+房型2：轻雅零压双床房
+判断结果：是
+判断理由："轻奢"与"轻雅"为同义词（辅助判断规则1），括号内的设施说明可忽略（辅助判断规则2），核心房型描述一致
+
+示例4：
+房型1：电竞床位房（仅男生）
+房型2：同享快乐电竞床位房
+判断结果：是
+判断理由：只有一个房型有描述词"同享快乐"，根据直接判定规则3可忽略，其余部分"电竞床位房"相同
+
+示例5：
+房型1：慕思好梦商务江景大床房（长白山偏硅酸型饮用水4瓶）
+房型2：慕思好梦商务市景大床房
+判断结果：否
+判断理由："江景"与"市景"为不同的景观描述，根据直接判定规则8，景观描述存在明显矛盾可直接判断为不同房型
+
+## 判断要点
+- 优先检查描述词是否冲突（直接判定规则3），这是最常见的错误来源
+- 注意同义词替换（辅助判断规则1），不要因表述不同误判为不同房型
+- 括号内的设施说明可忽略（辅助判断规则2），不要因此误判
+- 只有一个房型有时，描述词可忽略（直接判定规则3）
+
+需要你理解和判断的房型名称如下：
+房型1：{outer_room_name}
+房型2：{mt_room_name}"""
+
+
+def _read_csv(path):
+    with Path(path).open("r", encoding="utf-8-sig", newline="") as file:
+        return list(csv.DictReader(file))
+
+
+def _prompt(row):
+    return PROMPT_TEMPLATE.format(
+        outer_room_name=str(row["outer_room_name"]).strip(),
+        mt_room_name=str(row["mt_room_name"]).strip(),
+    )
+
+
+def _write_supervised(rows, path, *, keep_id):
+    with Path(path).open("w", encoding="utf-8") as file:
+        for row in rows:
+            record = {
+                "messages": [
+                    {"role": "user", "content": _prompt(row)},
+                    {"role": "assistant", "content": str(row["label"]).strip()},
+                ]
+            }
+            if keep_id:
+                record["id"] = str(row["id"])
+            file.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def preprocess(train_csv, val_csv, test_csv, output_dir):
+    output = Path(output_dir)
+    train_rows = _read_csv(train_csv)
+    val_rows = _read_csv(val_csv)
+    test_rows = _read_csv(test_csv)
+    _write_supervised(train_rows, output / "train.jsonl", keep_id=False)
+    _write_supervised(val_rows, output / "val.jsonl", keep_id=True)
+    with (output / "infer.jsonl").open("w", encoding="utf-8") as file:
+        for row in test_rows:
+            record = {
+                "id": str(row["id"]),
+                "messages": [{"role": "user", "content": _prompt(row)}],
+            }
+            file.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _extract_label(prediction):
+    text = re.sub(
+        r"&lt;think&gt;.*?&lt;/think&gt;", "", str(prediction or ""), flags=re.DOTALL
+    ).strip()
+    final = re.search(r"(?:^|[\s：:。；;，,])([是否])\s*[。！!？?]*\s*$", text)
+    if final:
+        return final.group(1)
+    matches = re.findall(
+        r"(?:判断|答案|结果)(?:为)?\s*[：:]?\s*([是否])(?=\s*$|[。！!？?])",
+        text,
+    )
+    return matches[-1] if matches else "否"
+
+
+def postprocess(predictions_jsonl, test_csv, submission_path):
+    predictions = {}
+    with Path(predictions_jsonl).open("r", encoding="utf-8") as file:
+        for line in file:
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            predictions[str(item["id"])] = _extract_label(item.get("prediction"))
+    test_rows = _read_csv(test_csv)
+    with Path(submission_path).open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=["id", "label"])
+        writer.writeheader()
+        for row in test_rows:
+            row_id = str(row["id"])
+            writer.writerow({"id": row_id, "label": predictions.get(row_id, "否")})</code></pre>
+</td>
+<td colwidth="[115]" bgColor="rgb(237, 250, 244)" nodeId="e494fb3fc73240bfaf6d66c34b15fb4d">
+<p nodeId="6111e690fefe4dfbbc0b2d82ba4fbce0">5.61%</p>
+</td>
+<td colwidth="[367]" bgColor="rgb(237, 250, 244)" nodeId="123fc92bbe09427184ef018be658d8ef">
+<p nodeId="119f36ff64314fccb128ffbf27c8b0db" />
+</td>
+</tr>
+<tr nodeId="2b3c553a238547e8a8af564273a737ad">
+<th colwidth="[69]" nodeId="dd53723e75484acdbb54ec8fb80ac42f">
+<p nodeId="57277211148b42e394a6d5bcace3326d">实验3</p>
+</th>
+<td colwidth="[142]" nodeId="89c33638ea5f403595a4c93b52af11a5">
+<p nodeId="d746fb36baeb4efeae0742b12bfd8151">RSI-kimi-k3</p>
+</td>
+<td colwidth="[120]" nodeId="faaaf3cce3524f68ade04824ae3d3c60">
+<p nodeId="02f0ce0039694d64a4023caf7701431e">Qwen3.5-4B</p>
+</td>
+<td colwidth="[578]" nodeId="eae66f1cfa174d53bea7ce7741c0bf1e">
+<p nodeId="c5c2fba7161f4b0b88ed4baead15670b">全参微调，使用数据增强：根据匹配规则通过关键词替代构造样本1w条。</p>
+</td>
+<td colwidth="[115]" nodeId="a2b17f9125a64fe1989e82deea1623ca">
+<p nodeId="f7c449fe272647679ae215c1ba37ac37">6.10%</p>
+</td>
+<td colwidth="[367]" nodeId="c86219aa86d64035866e529de86b97fb">
+<p nodeId="a723592d06614f279af9103e09cd7a2a" />
+</td>
+</tr>
+<tr nodeId="69b6431acd6c40558bc8cc6147bd3923">
+<th colwidth="[69]" nodeId="35b7f4e5dc4e4f11a187c07abf9efbad">
+<p nodeId="ed0decea557840e686cd2873035e0bee">实验4</p>
+</th>
+<td colwidth="[142]" nodeId="a931e0d111604c32b5affd76e9c60be4">
+<p nodeId="ded241f86ba64200830179931a2ece7d">RSI-GLM5.2</p>
+</td>
+<td colwidth="[120]" nodeId="364df24ddef44223a2a32b9ffaa33cbf">
+<p nodeId="2d6235c3ff864644bbdf8e16e8e569fc">Qwen3.5-4B</p>
+</td>
+<td colwidth="[578]" nodeId="8f17bf8f6efc4cf691e7ed8c906277c5">
+<p nodeId="85ced9315bdd49a4aadfdfd4581fe0a3">全参微调，关键词匹配判定困难样本，并做上采样数据增强。</p>
+</td>
+<td colwidth="[115]" nodeId="a7c87b71747e4c27bb6f7d2bb9065233">
+<p nodeId="a81f7d2e22e7464d8ca1457471dea3a1">6.20%</p>
+</td>
+<td colwidth="[367]" nodeId="0e3c1f656e5a49af8e77e7cabfe60f9b">
+<p nodeId="507cff0e215b4b56aa56e889940a6a27" />
+</td>
+</tr>
+<tr nodeId="a9e52937b1b743d28c3fb29aa169e024">
+<th colwidth="[69]" nodeId="b75a7de2c94b4887bdf3fee2d6b540a1">
+<p nodeId="867a1338cfbf479f8868a3f395caf061">实验5</p>
+</th>
+<td colwidth="[142]" nodeId="fbbdd9e811c34bc79ad896b4b6d36aa1">
+<p nodeId="5f127dadf8474516934ef36c0d7aa4d0">Claudecode+RSI-GLM5.2</p>
+</td>
+<td colwidth="[120]" nodeId="24fef24f5a674c6d9e893c7a68e4d59b">
+<p nodeId="c68f3fc3ea364e12858883f403ed7957">Qwen3.5-4B</p>
+</td>
+<td colwidth="[578]" nodeId="457740dc3bc14433970a88537d5ed8c6">
+<p nodeId="da2e957b60d24558a559c70588f4a842">数据上采样+LoRA微调</p>
+<pre language="Python" title="具体方案内容" isExpand="false" nodeId="3d9b4ea9-da04-4eb6-9cf3-6c46b8e84e22"><code>USER_TEMPLATE = """你是一个酒店房型识别专家，请你通过两个酒店房型的房型名称来判断它们是不是同一个房型，并给出判断结果。
+
+## 任务
+根据以下规则按顺序判断房型是否相同，部分规则可直接返回判断结果，无需继续判断。判断为相同房型输出"是"，不是相同房型输出"否"。
+
+## 相同房型判断规则
+1.意思相近的词语可以进行替换，认为含义相同，例如：棋牌=麻将，亲子=家庭，大床房=单人房，标间=标准间=双床房，loft=复式，投影=观影，特价=特惠。可能有一些词语同音不同字，但可以明显判断出是想表达相同的含义，例如"榻榻米"和"塌塌米"，这种情况下认为意思相同可以相互替换。
+2.有一些信息不需要考虑，不作为判断房型是否相同的依据：a.与房间无关的形容词，如"智能""日出""大吉大利"等，一般出现在在房型名称前面；b.房型内的设施信息，如"床垫""暖气""冰箱"等；c.住宿时间，如"连住3小时"等；d.房间内容的说明，如"手机投屏""零压床垫""i7+4070显卡+2k260hz屏+游戏特权+UU加速器+智能客控"，一般出现在房型名称末尾的括号中。
+3.如果两个房型同时出现床型信息，比较床信息是否存在矛盾，例如："单人间""大床房"为一张床，"双床房""标准间"为两张床，床数量不同时，可直接认为房型不相同。"双人房"可同时与"单间""标准间"认为房型不矛盾。
+4."套房"只能与"套房"认为相同，"特价房"只能与"特价房"认为相同，与其他的房型都不相同。
+5.如果两个房间都标明了房间号，房间号不同，那么房型不相同；房间号相同，且其余部分没有明显冲突，可以直接认为房型相同。例如："103-简约大床房（智能门锁+私密空间+精品卫浴）"和"海之爱103"是相同房型，其中房间号都是"103"。
+6.部分房型名称中带有酒店特色的房型描述词用于区分不同类型的房间。如果两个房型名称中有明显不同的描述词，可以直接认为房型不相同，例如："筑影·大床房"和"筑梦·大床房"中的"筑梦"与"筑影"为不同描述，则这两个是不同房型。当只有一个房型名称中有描述词，则描述词可忽略，例如："单人间"和"筑影·大床房"是相同房型。如果两个房型名称中包含相同的描述词，则可以直接认为是相同房型，不考虑后面的规则中的限制，例如"筑影·大床房"和"筑影·舒适大床房"为相同房型。
+7.如果两个房间同时包含主题，主题不同，可以直接认为房型不相同；主题相同，可以直接认为房型相同。主题一般有"太空主题""小黄鸭"这类描述，例如："主题小黄人"和"主题亲子小黄人"是相同房型。
+8.房型名称中可能出现景观类、性别等描述，如果两个房型等描述存在明显矛盾，可以直接认为房型不相同，否则可以忽略这些描述。
+9.对于简单房型，例如"大床房""豪华标准间"，无法通过前缀房间号等信息进行定位，需要对用于直接描述房型的部分词语需要进行判断，如果一个房型名称中出现这类词语，那么另一个房型名称中需要出现相同含义的描述才能判断为房型相同。强维度词包括："商旅""超豪华""特级""豪华""行政""商务""高级""经济""尊享""至尊""精致""精选""精品""优选""舒适""温馨""电动""投影""娱乐""棋牌""高层""低层""贵宾楼""主楼""副楼""别墅""loft""上床""下床""特惠""亲子"等。有些不用于房型描述的强维度词可能出现在房型名称中，如"单人间（舒适床垫）"，这里的"舒适"描述的不是房型，所以不做考虑。对于复杂房型，如果可以通过其他信息直接确认房型相同，则不需要对这些强维度词进行严格判断，例如"繁花·落叶风榻榻米舒适双床房"和"繁花"是相同房型。
+10.如果两个房型同时提起某些信息，并且这些信息存在明显冲突，可以直接认为房型不相同。这些信息包括：人数量、床数量、床尺寸、床类型。
+11.房型默认等级为"标准"，如果两个房型等级冲突可直接认为房型不相同，例如："大床房"和"普通大床房"不是相同房型。
+12.除上述需要判断的内容外，如果两个房型名称中没有明显冲突的表述，认为房型相同。
+
+需要你理解和判断的房型名称如下：
+房型1：{outer_room_name}
+房型2：{mt_room_name}"""
+
+VALID_LABELS = {"是", "否"}
+DEFAULT_LABEL = "是"
+TRAIN_SAMPLE_N = 0
+
+TRAIN_CONFIG = {
+    "tuner_type": "lora",
+    "use_dora": False,
+    "use_rslora": False,
+    "torch_dtype": "bfloat16",
+    "max_steps": 620,
+    "per_device_train_batch_size": 32,
+    "gradient_accumulation_steps": 1,
+    "learning_rate": 2e-4,
+    "max_length": 2048,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "logging_steps": 20,
+    "lora_rank": 32,
+    "lora_alpha": 64,
+    "lora_dropout": 0.05,
+    "target_modules": "all-linear",
+}
+
+INFER_CONFIG = {
+    "max_new_tokens": 4,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "repetition_penalty": 1.0,
+    "batch_size": 64,
+    "enable_thinking": False,
+}
+
+
+def _build_user_message(outer_room_name, mt_room_name):
+    return USER_TEMPLATE.replace("{outer_room_name}", outer_room_name).replace(
+        "{mt_room_name}", mt_room_name
+    )
+
+
+def _read_rows(csv_path):
+    with open(csv_path, newline="", encoding="utf-8-sig") as f:
+        return list(csv.DictReader(f))
+
+
+def _cell(row, key):
+    value = row.get(key)
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _sample(rows, n):
+    if n &lt;= 0 or n &gt;= len(rows):
+        return rows
+    step = len(rows) // n
+    return rows[::step][:n]
+
+
+def preprocess(train_csv, val_csv, test_csv, output_dir):
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    train_rows = _sample(_read_rows(train_csv), TRAIN_SAMPLE_N)
+    with open(out_dir / "train.jsonl", "w", encoding="utf-8") as f:
+        for row in train_rows:
+            outer = _cell(row, "outer_room_name")
+            mt = _cell(row, "mt_room_name")
+            label = _cell(row, "label")
+            if label not in VALID_LABELS:
+                continue
+            record = {"messages": [
+                {"role": "user", "content": _build_user_message(outer, mt)},
+                {"role": "assistant", "content": label},
+            ]}
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            if label == "是":
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    if val_csv is not None:
+        with open(out_dir / "val.jsonl", "w", encoding="utf-8") as f:
+            for row in _read_rows(val_csv):
+                outer = _cell(row, "outer_room_name")
+                mt = _cell(row, "mt_room_name")
+                label = _cell(row, "label")
+                f.write(json.dumps({"id": _cell(row, "id"), "messages": [
+                    {"role": "user", "content": _build_user_message(outer, mt)},
+                    {"role": "assistant", "content": label if label in VALID_LABELS else DEFAULT_LABEL},
+                ]}, ensure_ascii=False) + "\n")
+    with open(out_dir / "infer.jsonl", "w", encoding="utf-8") as f:
+        for row in _read_rows(test_csv):
+            outer = _cell(row, "outer_room_name")
+            mt = _cell(row, "mt_room_name")
+            f.write(json.dumps({"id": _cell(row, "id"), "messages": [
+                {"role": "user", "content": _build_user_message(outer, mt)},
+            ]}, ensure_ascii=False) + "\n")
+    return {"train_jsonl": str(out_dir / "train.jsonl"), "infer_jsonl": str(out_dir / "infer.jsonl")}
+
+
+def _extract_label(prediction):
+    if prediction is None:
+        return DEFAULT_LABEL
+    text = str(prediction).strip()
+    if not text:
+        return DEFAULT_LABEL
+    if text in VALID_LABELS:
+        return text
+    for ch in text:
+        if ch in VALID_LABELS:
+            return ch
+    return DEFAULT_LABEL
+
+
+def postprocess(predictions_jsonl, test_csv, submission_path):
+    pred_map = {}
+    with open(predictions_jsonl, "r", encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            pid = obj.get("id")
+            if pid is None:
+                continue
+            pred_map[str(pid).strip()] = _extract_label(obj.get("prediction"))
+    test_rows = _read_rows(test_csv)
+    submission_path = Path(submission_path)
+    submission_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(submission_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["id", "label"])
+        for row in test_rows:
+            tid = _cell(row, "id")
+            label = pred_map.get(tid, DEFAULT_LABEL)
+            if label not in VALID_LABELS:
+                label = DEFAULT_LABEL
+            writer.writerow([tid, label])
+</code></pre>
+<p nodeId="e28d3403ddc5456487dd1c84ce8e5427" />
+</td>
+<td colwidth="[115]" nodeId="198105aea260436381d8286d6692bd64">
+<p nodeId="cbbe7e29f3fe4b28b20d1610599d0e8e">5.99%</p>
+</td>
+<td colwidth="[367]" nodeId="f627060fa3484e159e4cb6e46888475d">
+<p nodeId="8e33b0934d75458ea4c571ebaa33df0e">实验记录：<a href="https://km.sankuai.com/collabpage/2783251887" title="cc+RSI实验记录" autoUpdate="true" nodeId="457ebecc58bc4d0090955256028be764">cc+RSI实验记录</a>，使用Claudecode掌握全局视野调度OpenRSI进行探索，进行实验36次，效果最好的Badcase率5.99%。</p>
+</td>
+</tr>
+</table>
+<p nodeId="cfbd48abdd344b5e948e631ac94c4e56">如表所示，当前元进化探索已获得优于现有人工方案的候选解法，初步验证了其在后训练方案优化中的效果。</p>
+<p nodeId="61602ccbe8814dad9e1202f8811b36ff">其中，不同的模型可能使用了同样的策略，但是具体实现方式不同，结果也不同，这与模型在搜索过程中的自主决策有关。比如同样做数据增强的几个方案：</p>
+<table responsive="false" nodeId="85180d2cd53642cab3113a67b252bc5c">
+<tr nodeId="105b9188e61347fb9cb65678743db72e">
+<th colwidth="[140]" nodeId="0f5bd0f926214a8ab5b7caf36e8ff2ec">
+<p nodeId="4e64dd8341644aa2af3d8438e83221c8">模型</p>
+</th>
+<th colwidth="[120]" nodeId="b42f4b44bceb4a20b1c579125aca91e8">
+<p nodeId="ee400a40ef844cf3b642c23ca9c0e67b">模型名称</p>
+</th>
+<th colwidth="[686]" nodeId="0013429527cb46ce858b02cfe0e7de02">
+<p nodeId="e619f692583349698738d6ff2593225b">实验方案</p>
+</th>
+<th colwidth="[115]" nodeId="21b6f20f6f8b43878debeb69a6e5f343">
+<p nodeId="9aaa3667a1b5413c86a7295ca1e904e5">Badcase率</p>
+</th>
+</tr>
+<tr nodeId="a4e51ef66f374f2a8b86afef7b499443">
+<td colwidth="[140]" nodeId="a1bff469cfa44a7492c4fa7dbd797c60">
+<p nodeId="5b21127a905b44ba89cc4a2b4b807782">RSI-GLM5.2</p>
+</td>
+<td colwidth="[120]" nodeId="e4deb1d3b65b41e4955dd2bd443538ec">
+<p nodeId="a646646819bb46e086b02733cf0024d9">Qwen3.5-4B</p>
+</td>
+<td colwidth="[686]" nodeId="2fa0a3812a464a338a1b5847fb682b41">
+<p nodeId="f1384d8839e24a4488ad7e0b50952513">全参微调，对所有正样本进行 2 倍过采样，同时根据规则关键词筛选困难负样本并进行 2 倍上采样。</p>
+<pre language="Python" title="具体方案内容：" isExpand="false" nodeId="a5c6d237-1da3-4d06-934d-f674c9d44b43"><code>TRAIN_CONFIG = {
+    "tuner_type": "full",
+    "torch_dtype": "bfloat16",
+    "max_length": 4096,
+    "train_epoch": 3,
+    "per_device_train_batch_size": 16,
+    "gradient_accumulation_steps": 2,
+    "learning_rate": 1e-05,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "lr_scheduler_type": "cosine",
+    "gradient_checkpointing": True,
+    "logging_steps": 10,
+}
+INFER_CONFIG = {
+    "max_new_tokens": 4,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "repetition_penalty": 1.0,
+    "batch_size": 64,
+    "enable_thinking": False,
+}
+
+PROMPT_TEMPLATE = """你是一个酒店房型识别专家，请你通过两个酒店房型的房型名称来判断它们是不是同一个房型，并给出判断结果。
+
+## 任务
+根据以下规则按顺序判断房型是否相同，部分规则可直接返回判断结果，无需继续判断。判断为相同房型输出"是"，不是相同房型输出"否"。
+
+## 相同房型判断规则
+1.意思相近的词语可以进行替换，认为含义相同，例如：棋牌=麻将，亲子=家庭，大床房=单人房，标间=标准间=双床房，loft=复式，投影=观影，特价=特惠。可能有一些词语同音不同字，但可以明显判断出是想表达相同的含义，例如"榻榻米"和"塌塌米"，这种情况下认为意思相同可以相互替换。
+2.有一些信息不需要考虑，不作为判断房型是否相同的依据：a.与房间无关的形容词，如"智能""日出""大吉大利"等，一般出现在在房型名称前面；b.房型内的设施信息，如"床垫""暖气""冰箱"等；c.住宿时间，如"连住3小时"等；d.房间内容的说明，如"手机投屏""零压床垫""i7+4070显卡+2k260hz屏+游戏特权+UU加速器+智能客控"，一般出现在房型名称末尾的括号中。
+3.如果两个房型同时出现床型信息，比较床信息是否存在矛盾，例如："单人间""大床房"为一张床，"双床房""标准间"为两张床，床数量不同时，可直接认为房型不相同。"双人房"可同时与"单间""标准间"认为房型不矛盾。
+4."套房"只能与"套房"认为相同，"特价房"只能与"特价房"认为相同，与其他的房型都不相同。
+5.如果两个房间都标明了房间号，房间号不同，那么房型不相同；房间号相同，且其余部分没有明显冲突，可以直接认为房型相同。例如："103-简约大床房（智能门锁+私密空间+精品卫浴）"和"海之爱103"是相同房型，其中房间号都是"103"。
+6.部分房型名称中带有酒店特色的房型描述词用于区分不同类型的房间。如果两个房型名称中有明显不同的描述词，可以直接认为房型不相同，例如："筑影·大床房"和"筑梦·大床房"中的"筑梦"与"筑影"为不同描述，则这两个是不同房型。当只有一个房型名称中有描述词，则描述词可忽略，例如："单人间"和"筑影·大床房"是相同房型。如果两个房型名称中包含相同的描述词，则可以直接认为是相同房型，不考虑后面的规则中的限制，例如"筑影·大床房"和"筑影·舒适大床房"为相同房型。
+7.如果两个房间同时包含主题，主题不同，可以直接认为房型不相同；主题相同，可以直接认为房型相同。主题一般有"太空主题""小黄鸭"这类描述，例如："主题小黄人"和"主题亲子小黄人"是相同房型。
+8.房型名称中可能出现景观类、性别等描述，如果两个房型等描述存在明显矛盾，可以直接认为房型不相同，否则可以忽略这些描述。
+9.对于简单房型，例如"大床房""豪华标准间"，无法通过前缀房间号等信息进行定位，需要对用于直接描述房型的部分词语需要进行判断，如果一个房型名称中出现这类词语，那么另一个房型名称中需要出现相同含义的描述才能判断为房型相同。强维度词包括："商旅""超豪华""特级""豪华""行政""商务""高级""经济""尊享""至尊""精致""精选""精品""优选""舒适""温馨""电动""投影""娱乐""棋牌""高层""低层""贵宾楼""主楼""副楼""别墅""loft""上床""下床""特惠""亲子"等。有些不用于房型描述的强维度词可能出现在房型名称中，如"单人间（舒适床垫）"，这里的"舒适"描述的不是房型，所以不做考虑。对于复杂房型，如果可以通过其他信息直接确认房型相同，则不需要对这些强维度词进行严格判断，例如"繁花·落叶风榻榻米舒适双床房"和"繁花"是相同房型。
+10.如果两个房型同时提起某些信息，并且这些信息存在明显冲突，可以直接认为房型不相同。这些信息包括：人数量、床数量、床尺寸、床类型。
+11.房型默认等级为"标准"，如果两个房型等级冲突可直接认为房型不相同，例如："大床房"和"普通大床房"不是相同房型。
+12.除上述需要判断的内容外，如果两个房型名称中没有明显冲突的表述，认为房型相同。
+
+需要你理解和判断的房型名称如下：
+房型1：{outer_room_name}
+房型2：{mt_room_name}"""
+
+DIFFICULT_NEG_KEYWORDS = [
+    "套房",
+    "特价",
+    "别墅",
+    "温泉",
+    "商旅",
+    "超豪华",
+    "特级",
+    "豪华",
+    "行政",
+    "商务",
+    "高级",
+    "经济",
+    "尊享",
+    "至尊",
+    "精致",
+    "精选",
+    "精品",
+    "优选",
+    "舒适",
+    "温馨",
+    "电动",
+    "投影",
+    "娱乐",
+    "棋牌",
+    "高层",
+    "低层",
+    "贵宾",
+    "主楼",
+    "副楼",
+    "loft",
+    "上床",
+    "下床",
+    "特惠",
+    "亲子",
+    "高低床",
+    "上下铺",
+    "普通",
+]
+
+
+def _read_csv(path):
+    with Path(path).open("r", encoding="utf-8-sig", newline="") as file:
+        return list(csv.DictReader(file))
+
+
+def _prompt(row):
+    return PROMPT_TEMPLATE.format(
+        outer_room_name=str(row["outer_room_name"]).strip(),
+        mt_room_name=str(row["mt_room_name"]).strip(),
+    )
+
+
+def _is_difficult_neg(row):
+    text = (
+        str(row.get("outer_room_name", "")) + str(row.get("mt_room_name", ""))
+    ).lower()
+    return any(kw in text for kw in DIFFICULT_NEG_KEYWORDS)
+
+
+def preprocess(train_csv, val_csv, test_csv, output_dir):
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    train_rows = _read_csv(train_csv)
+    rng = random.Random(42)
+    rng.shuffle(train_rows)
+    with (out / "train.jsonl").open("w", encoding="utf-8") as f:
+        for row in train_rows:
+            label = row["label"].strip()
+            if label not in ("是", "否"):
+                continue
+            record = {
+                "messages": [
+                    {"role": "user", "content": _prompt(row)},
+                    {"role": "assistant", "content": label},
+                ]
+            }
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            if label == "是":
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            elif label == "否" and _is_difficult_neg(row):
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    val_rows = _read_csv(val_csv)
+    with (out / "val.jsonl").open("w", encoding="utf-8") as f:
+        for row in val_rows:
+            record = {
+                "id": str(row["id"]).strip(),
+                "messages": [
+                    {"role": "user", "content": _prompt(row)},
+                    {"role": "assistant", "content": str(row["label"]).strip()},
+                ],
+            }
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    test_rows = _read_csv(test_csv)
+    with (out / "infer.jsonl").open("w", encoding="utf-8") as f:
+        for row in test_rows:
+            record = {
+                "id": str(row["id"]).strip(),
+                "messages": [{"role": "user", "content": _prompt(row)}],
+            }
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _extract_label(prediction):
+    text = str(prediction or "")
+    answer = text.rsplit("\n\n", 1)[-1]
+    labels = re.findall(r"[是否]", answer)
+    if not labels:
+        labels = re.findall(r"[是否]", text)
+    return labels[-1] if labels else "否"
+
+
+def postprocess(predictions_jsonl, test_csv, submission_path):
+    predictions = {}
+    with Path(predictions_jsonl).open("r", encoding="utf-8") as file:
+        for line in file:
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            predictions[str(item["id"])] = _extract_label(item.get("prediction"))
+    test_rows = _read_csv(test_csv)
+    with Path(submission_path).open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=["id", "label"])
+        writer.writeheader()
+        for row in test_rows:
+            row_id = str(row["id"])
+            writer.writerow({"id": row_id, "label": predictions.get(row_id, "否")})
+</code></pre>
+</td>
+<td colwidth="[115]" nodeId="9a2ffd610fda420eacb465ed7dd7c5ee">
+<p nodeId="8ea37e2228d04e768bbae3d99fc884bc">6.20%</p>
+</td>
+</tr>
+<tr nodeId="12549d7f339a4ce5b83e0958d30bfb96">
+<td colwidth="[140]" nodeId="64ebf14267294010ac924675a5353a15">
+<p nodeId="c55f630df53d427bacff15f5c5d3f184">RSI-LongCat2.0</p>
+</td>
+<td colwidth="[120]" nodeId="f1b0a72ec93c44aa858f079d9b99201b">
+<p nodeId="c0e5e6b5b25b4b3f8f4e035761b01f40">Qwen3.5-4B</p>
+</td>
+<td colwidth="[686]" nodeId="e22c50cb91a442f8ad0cfc9b93535677">
+<p nodeId="2cfbe9ae45c742bab28b1698b6c97c8c">全参微调；prompt 压缩，对所有正样本进行 2 倍过采样。</p>
+<pre language="Python" title="具体方案内容：" isExpand="false" nodeId="a1058490-2b21-452f-af8e-1c44b8b6bbef"><code>TRAIN_CONFIG = {
+    "tuner_type": "full",
+    "torch_dtype": "bfloat16",
+    "max_steps": 350,
+    "per_device_train_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 2e-5,
+    "max_length": 2048,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "logging_steps": 10,
+}
+
+INFER_CONFIG = {
+    "max_new_tokens": 8,
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "top_k": 50,
+    "repetition_penalty": 1.0,
+    "batch_size": 16,
+}
+
+SYSTEM_PROMPT = """你是酒店房型匹配专家。根据以下规则判断两个房型名称是否指同一房型，只回答"是"或"否"。
+
+规则：
+1. 同义归一：棋牌=麻将，亲子=家庭，大床房=单人房，标间=标准间=双床房，loft=复式，投影=观影，特价=特惠。
+2. 忽略营销词、设施描述、住宿时长及括号内说明。
+3. 专属类型一致：套房只匹配套房，特价/特惠只匹配同类。
+4. 硬冲突判否：入住人数、床数量、床尺寸、床型、房型等级（未标默认标准）、景观、性别限制矛盾时判否。单人间/大床房通常一张床，双床房/标准间通常两张床；"双人房"仅表人数不限床数。
+5. 房间号是强锚点：两侧都有房间号且不同判否；相同且无更高冲突判是。
+6. 酒店特色名/主题是强锚点：两侧都有且相同判是，不同判否；仅一侧出现可忽略。
+7. 简单房型看修饰维度词：豪华、商务、行政、经济、舒适、投影、棋牌、亲子、楼层、楼栋、别墅、复式等需语义一致；仅修饰括号内设施的忽略。
+8. 无冲突默认判是。"""
+
+
+def preprocess(train_csv: str, test_csv: str, output_dir: str) -&gt; None:
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    # 读取训练数据并过采样"是"类
+    yes_rows = []
+    no_rows = []
+    with open(train_csv, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row["label"] == "是":
+                yes_rows.append(row)
+            else:
+                no_rows.append(row)
+
+    # 过采样：每个"是"样本重复一次
+    train_rows = no_rows + yes_rows + yes_rows
+    random.seed(42)
+    random.shuffle(train_rows)
+
+    # 动态调整max_steps以保持约2个epoch
+    total_rows = len(train_rows)
+    global_batch = (
+        TRAIN_CONFIG["per_device_train_batch_size"]
+        * TRAIN_CONFIG["gradient_accumulation_steps"]
+        * 8  # world_size=8
+    )
+    max_steps = round(2 * total_rows / global_batch)
+    TRAIN_CONFIG["max_steps"] = max_steps
+
+    # 写入训练数据
+    train_lines = []
+    for row in train_rows:
+        msg = {
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"房型A：{row['outer_room_name']}\n房型B：{row['mt_room_name']}",
+                },
+                {"role": "assistant", "content": row["label"]},
+            ]
+        }
+        train_lines.append(json.dumps(msg, ensure_ascii=False))
+
+    with open(out_path / "train.jsonl", "w", encoding="utf-8") as f:
+        f.write("\n".join(train_lines))
+
+    # 推理数据
+    infer_lines = []
+    with open(test_csv, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            msg = {
+                "id": row["id"],
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": f"房型A：{row['outer_room_name']}\n房型B：{row['mt_room_name']}",
+                    },
+                ],
+            }
+            infer_lines.append(json.dumps(msg, ensure_ascii=False))
+
+    with open(out_path / "infer.jsonl", "w", encoding="utf-8") as f:
+        f.write("\n".join(infer_lines))
+
+
+def _extract_label(text: str) -&gt; str:
+    if not text:
+        return "是"
+    text = text.strip()
+    m = re.search(r"(是|否)", text)
+    if m:
+        return m.group(1)
+    if text.startswith("是"):
+        return "是"
+    if text.startswith("否"):
+        return "否"
+    return "是"
+
+
+def postprocess(predictions_jsonl: str, test_csv: str, submission_path: str) -&gt; None:
+    preds = {}
+    with open(predictions_jsonl, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            obj = json.loads(line)
+            preds[obj["id"]] = _extract_label(obj.get("prediction", ""))
+
+    ids = []
+    with open(test_csv, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            ids.append(row["id"])
+
+    with open(submission_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["id", "label"])
+        for id_ in ids:
+            writer.writerow([id_, preds.get(id_, "是")])</code></pre>
+</td>
+<td colwidth="[115]" nodeId="9b7ade83b8304743b415b9d2e299fb03">
+<p nodeId="b51e2ddcf50f4c2cb387a79a6244a63d">7.85%</p>
+</td>
+</tr>
+<tr nodeId="4f51f6b92a824624b73319b4dff8cbe1">
+<td colwidth="[140]" nodeId="c92e010529fc43db92d5c95ebec03292">
+<p nodeId="3e25123fa0624d07995c925a0db5d9d0">RSI-kimi-k3</p>
+</td>
+<td colwidth="[120]" nodeId="e57e05b23f384a9382ae2beb6992cb63">
+<p nodeId="938676ab0d704164a7edc109f4d5b03e">Qwen3.5-4B</p>
+</td>
+<td colwidth="[686]" nodeId="9f019dcea57943c2b373d6c8564d2c35">
+<p nodeId="30e5fddd46d447c681b13ac02e759a95">全参微调，使用规则驱动的数据增强：根据房型匹配规则构造最多约 1.2 万条增强样本。</p>
+<pre language="Python" title="具体方案内容：" isExpand="false" nodeId="ce3a088a-21d7-482f-bbd5-4cfb3413b5ca"><code>TRAIN_CONFIG = {
+    "tuner_type": "full",
+    "torch_dtype": "bfloat16",
+    "max_length": 4096,
+    "train_epoch": 3,
+    "per_device_train_batch_size": 8,
+    # 4 GPUs x batch 8 x accumulation 4 = global batch 128 (same as parent).
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 1e-5,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "lr_scheduler_type": "cosine",
+    "gradient_checkpointing": True,
+    "logging_steps": 10,
+}
+INFER_CONFIG = {
+    "max_new_tokens": 64,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "repetition_penalty": 1.0,
+    "batch_size": 8,
+}
+
+PROMPT_TEMPLATE = """你是一个酒店房型识别专家，请你通过两个酒店房型的房型名称来判断它们是不是同一个房型，并给出判断结果。
+
+## 任务
+根据以下规则按顺序判断房型是否相同，部分规则可直接返回判断结果，无需继续判断。判断为相同房型输出"是"，不是相同房型输出"否"。
+
+## 相同房型判断规则
+1.意思相近的词语可以进行替换，认为含义相同，例如：棋牌=麻将，亲子=家庭，大床房=单人房，标间=标准间=双床房，loft=复式，投影=观影，特价=特惠。可能有一些词语同音不同字，但可以明显判断出是想表达相同的含义，例如"榻榻米"和"塌塌米"，这种情况下认为意思相同可以相互替换。
+2.有一些信息不需要考虑，不作为判断房型是否相同的依据：a.与房间无关的形容词，如"智能""日出""大吉大利"等，一般出现在在房型名称前面；b.房型内的设施信息，如"床垫""暖气""冰箱"等；c.住宿时间，如"连住3小时"等；d.房间内容的说明，如"手机投屏""零压床垫""i7+4070显卡+2k260hz屏+游戏特权+UU加速器+智能客控"，一般出现在房型名称末尾的括号中。
+3.如果两个房型同时出现床型信息，比较床信息是否存在矛盾，例如："单人间""大床房"为一张床，"双床房""标准间"为两张床，床数量不同时，可直接认为房型不相同。"双人房"可同时与"单间""标准间"认为房型不矛盾。
+4."套房"只能与"套房"认为相同，"特价房"只能与"特价房"认为相同，与其他的房型都不相同。
+5.如果两个房间都标明了房间号，房间号不同，那么房型不相同；房间号相同，且其余部分没有明显冲突，可以直接认为房型相同。例如："103-简约大床房（智能门锁+私密空间+精品卫浴）"和"海之爱103"是相同房型，其中房间号都是"103"。
+6.部分房型名称中带有酒店特色的房型描述词用于区分不同类型的房间。如果两个房型名称中有明显不同的描述词，可以直接认为房型不相同，例如："筑影·大床房"和"筑梦·大床房"中的"筑梦"与"筑影"为不同描述，则这两个是不同房型。当只有一个房型名称中有描述词，则描述词可忽略，例如："单人间"和"筑影·大床房"是相同房型。如果两个房型名称中包含相同的描述词，则可以直接认为是相同房型，不考虑后面的规则中的限制，例如"筑影·大床房"和"筑影·舒适大床房"为相同房型。
+7.如果两个房间同时包含主题，主题不同，可以直接认为房型不相同；主题相同，可以直接认为房型相同。主题一般有"太空主题""小黄鸭"这类描述，例如："主题小黄人"和"主题亲子小黄人"是相同房型。
+8.房型名称中可能出现景观类、性别等描述，如果两个房型等描述存在明显矛盾，可以直接认为房型不相同，否则可以忽略这些描述。
+9.对于简单房型，例如"大床房""豪华标准间"，无法通过前缀房间号等信息进行定位，需要对用于直接描述房型的部分词语需要进行判断，如果一个房型名称中出现这类词语，那么另一个房型名称中需要出现相同含义的描述才能判断为房型相同。强维度词包括："商旅""超豪华""特级""豪华""行政""商务""高级""经济""尊享""至尊""精致""精选""精品""优选""舒适""温馨""电动""投影""娱乐""棋牌""高层""低层""贵宾楼""主楼""副楼""别墅""loft""上床""下床""特惠""亲子"等。有些不用于房型描述的强维度词可能出现在房型名称中，如"单人间（舒适床垫）"，这里的"舒适"描述的不是房型，所以不做考虑。对于复杂房型，如果可以通过其他信息直接确认房型相同，则不需要对这些强维度词进行严格判断，例如"繁花·落叶风榻榻米舒适双床房"和"繁花"是相同房型。
+10.如果两个房型同时提起某些信息，并且这些信息存在明显冲突，可以直接认为房型不相同。这些信息包括：人数量、床数量、床尺寸、床类型。
+11.房型默认等级为"标准"，如果两个房型等级冲突可直接认为房型不相同，例如："大床房"和"普通大床房"不是相同房型。
+12.除上述需要判断的内容外，如果两个房型名称中没有明显冲突的表述，认为房型相同。
+
+需要你理解和判断的房型名称如下：
+房型1：{outer_room_name}
+房型2：{mt_room_name}"""
+
+# ---------------------------------------------------------------------------
+# Rule-derived, label-safe augmentation settings (train split only).
+# ---------------------------------------------------------------------------
+_AUG_SEED = 20240501
+_MAX_FACILITY_AUG = 3000
+_MAX_SYNONYM_AUG = 3000
+_MAX_DESC_POS_AUG = 2500
+_MAX_DESC_NEG_AUG = 1500
+_MAX_ASYM_NEG_AUG = 2000
+
+# Facility descriptions that rule 2b/2d explicitly declares irrelevant.
+_FACILITIES = [
+    "零压床垫",
+    "乳胶床垫",
+    "品牌床垫",
+    "智能客控",
+    "智能马桶",
+    "手机投屏",
+    "免费WiFi",
+    "中央空调",
+    "暖气",
+    "冰箱",
+    "洗衣机",
+    "智能门锁",
+    "干湿分离",
+    "24小时热水",
+    "空气净化器",
+    "加湿器",
+    "保险箱",
+    "迷你吧",
+    "遮光窗帘",
+    "品牌洗护",
+    "高速宽带",
+    "吹风机",
+    "热水壶",
+    "液晶电视",
+    "新风系统",
+    "一次性用品",
+]
+
+# Rule-1 synonym equivalences (bidirectional, meaning preserving).
+_SYNONYMS = [
+    ("标准间", "标间"),
+    ("标间", "标准间"),
+    ("双床房", "标准间"),
+    ("标准间", "双床房"),
+    ("复式", "LOFT"),
+    ("LOFT", "复式"),
+    ("loft", "复式"),
+    ("Loft", "复式"),
+    ("投影", "观影"),
+    ("观影", "投影"),
+    ("亲子", "家庭"),
+    ("家庭", "亲子"),
+    ("麻将", "棋牌"),
+    ("棋牌", "麻将"),
+    ("榻榻米", "塌塌米"),
+    ("塌塌米", "榻榻米"),
+    ("大床房", "单人房"),
+    ("单人房", "大床房"),
+    ("特惠", "特价"),
+    ("特价", "特惠"),
+]
+
+_DESCRIPTOR_SEPARATORS = "·丨｜|"
+_ROOM_TOKENS = (
+    "房",
+    "间",
+    "床",
+    "套房",
+    "标间",
+    "公寓",
+    "别墅",
+    "LOFT",
+    "loft",
+    "Loft",
+    "复式",
+    "榻榻米",
+    "胶囊",
+    "床位",
+)
+# A valid "descriptor prefix" must not contain strong-dimension words,
+# room-type words, landscape/theme words, digits or letters.
+_PREFIX_BLOCK_WORDS = (
+    "房",
+    "间",
+    "床",
+    "套房",
+    "标间",
+    "公寓",
+    "别墅",
+    "酒店",
+    "宾馆",
+    "民宿",
+    "客栈",
+    "主题",
+    "电竞",
+    "影音",
+    "景观",
+    "海景",
+    "山景",
+    "湖景",
+    "江景",
+    "城景",
+    "园景",
+    "榻榻米",
+    "胶囊",
+    "床位",
+    "标准",
+    "普通",
+    "智能",
+    "大床",
+    "双床",
+    "单人",
+    "双人",
+    "商旅",
+    "超豪华",
+    "特级",
+    "豪华",
+    "行政",
+    "商务",
+    "高级",
+    "经济",
+    "尊享",
+    "至尊",
+    "精致",
+    "精选",
+    "精品",
+    "优选",
+    "舒适",
+    "温馨",
+    "电动",
+    "投影",
+    "观影",
+    "娱乐",
+    "棋牌",
+    "麻将",
+    "高层",
+    "低层",
+    "贵宾楼",
+    "主楼",
+    "副楼",
+    "特惠",
+    "特价",
+    "亲子",
+    "家庭",
+    "LOFT",
+    "loft",
+    "Loft",
+    "复式",
+    "上床",
+    "下床",
+)
+
+# Adjectival strong-dimension words from rule 9 plus the rule-11 level word
+# "普通". A single-side occurrence as a leading room modifier in a simple
+# room name implies "否" unless the gold labels say otherwise (conflict
+# check below). Sorted longest-first so "超豪华" wins over "豪华".
+_ASYM_NEG_WORDS = sorted(
+    [
+        "超豪华",
+        "豪华",
+        "特级",
+        "行政",
+        "商务",
+        "高级",
+        "经济",
+        "尊享",
+        "至尊",
+        "精致",
+        "精选",
+        "精品",
+        "优选",
+        "舒适",
+        "温馨",
+        "商旅",
+        "普通",
+    ],
+    key=len,
+    reverse=True,
+)
+
+
+def _read_csv(path):
+    with Path(path).open("r", encoding="utf-8-sig", newline="") as file:
+        return list(csv.DictReader(file))
+
+
+def _prompt_pair(outer_room_name, mt_room_name):
+    return PROMPT_TEMPLATE.format(
+        outer_room_name=outer_room_name, mt_room_name=mt_room_name
+    )
+
+
+def _prompt(row):
+    return _prompt_pair(
+        str(row["outer_room_name"]).strip(), str(row["mt_room_name"]).strip()
+    )
+
+
+def _strip_parens(text):
+    text = re.sub(r"（[^（）]*）", "", text)
+    text = re.sub(r"\([^()]*\)", "", text)
+    return text.strip()
+
+
+def _valid_descriptor(prefix, rest):
+    if not 2 &lt;= len(prefix) &lt;= 8:
+        return False
+    if re.search(r"[0-9A-Za-z]", prefix):
+        return False
+    if not re.search(r"[\u4e00-\u9fff]", prefix):
+        return False
+    if any(word in prefix for word in _PREFIX_BLOCK_WORDS):
+        return False
+    if len(_strip_parens(rest)) &lt; 2:
+        return False
+    if not any(token in rest for token in _ROOM_TOKENS):
+        return False
+    return True
+
+
+def _split_descriptor(name):
+    positions = [
+        idx for idx in (name.find(sep) for sep in _DESCRIPTOR_SEPARATORS) if idx &gt; 0
+    ]
+    if not positions:
+        return None
+    idx = min(positions)
+    prefix = name[:idx].strip()
+    rest = name[idx + 1 :].strip()
+    if not _valid_descriptor(prefix, rest):
+        return None
+    return prefix, rest
+
+
+def _add_facility(name, rng):
+    addition = "+".join(rng.sample(_FACILITIES, rng.randint(1, 2)))
+    match_cn = re.search(r"（[^（）]*）\s*$", name)
+    if match_cn:
+        return name[: match_cn.end() - 1] + "+" + addition + "）"
+    match_en = re.search(r"\([^()]*\)\s*$", name)
+    if match_en:
+        return name[: match_en.end() - 1] + "+" + addition + ")"
+    return name + "（" + addition + "）"
+
+
+def _synonym_variant(name, rng):
+    candidates = [(src, dst) for src, dst in _SYNONYMS if src in name]
+    if not candidates:
+        return None
+    src, dst = rng.choice(candidates)
+    return name.replace(src, dst, 1)
+
+
+def _asym_negative_candidates(train_pairs):
+    # Map paren-stripped room names back to a real surface form so that the
+    # negative partner is always a name that genuinely occurs in the corpus.
+    stripped_to_original = {}
+    for name_a, name_b, _ in train_pairs:
+        for name in (name_a, name_b):
+            key = _strip_parens(name)
+            if key and key not in stripped_to_original:
+                stripped_to_original[key] = name
+
+    candidates = []
+    for base_key, original in stripped_to_original.items():
+        lead = base_key.lstrip("【[（( ")
+        if not lead:
+            continue
+        matched = False
+        # Mode 2: a strong-dimension word used as the whole descriptor
+        # prefix, e.g. "尊享·投影电竞大床房" -&gt; "投影电竞大床房" is "否".
+        for word in _ASYM_NEG_WORDS:
+            hit = False
+            for sep in _DESCRIPTOR_SEPARATORS:
+                if not lead.startswith(word + sep):
+                    continue
+                hit = True
+                rest = lead[len(word) + 1 :].strip()
+                partner = stripped_to_original.get(_strip_parens(rest))
+                if partner is None:
+                    # Drop trailing spec segments such as "｜i7+4070显卡...".
+                    cut = len(rest)
+                    for sep2 in _DESCRIPTOR_SEPARATORS:
+                        pos = rest.find(sep2)
+                        if pos &gt; 0:
+                            cut = min(cut, pos)
+                    partner = stripped_to_original.get(_strip_parens(rest[:cut]))
+                if partner is not None and partner != original:
+                    candidates.append((original, partner))
+                    matched = True
+                break
+            if hit:
+                break
+        if matched:
+            continue
+        # Mode 1: leading strong-dimension adjective on a simple name,
+        # e.g. "温馨三人间" -&gt; "三人间" is "否". Skip names with separator
+        # or digits to avoid descriptor and room-number interference.
+        if any(sep in lead for sep in _DESCRIPTOR_SEPARATORS):
+            continue
+        if re.search(r"[0-9]", lead):
+            continue
+        for word in _ASYM_NEG_WORDS:
+            if lead.startswith(word) and len(lead) - len(word) &gt;= 2:
+                partner = stripped_to_original.get(lead[len(word) :])
+                if partner is not None and partner != original:
+                    candidates.append((original, partner))
+                break
+    return candidates
+
+
+def _build_augmented_pairs(train_pairs, rng):
+    known = {}
+    for name_a, name_b, label in train_pairs:
+        known.setdefault((name_a, name_b), label)
+        known.setdefault((name_b, name_a), label)
+
+    augmented = []
+    seen = set()
+
+    def add_pair(name_a, name_b, label):
+        if not name_a or not name_b or name_a == name_b:
+            return False
+        key = (name_a, name_b)
+        if key in seen or key in known:
+            return False
+        seen.add(key)
+        augmented.append((name_a, name_b, label))
+        return True
+
+    # (a) Descriptor positives: (full, prefix) and (full, rest) -&gt; "是".
+    desc_pos_candidates = []
+    rest_groups = {}
+    for name_a, name_b, _ in train_pairs:
+        for name in (name_a, name_b):
+            parsed = _split_descriptor(name)
+            if parsed is None:
+                continue
+            prefix, rest = parsed
+            desc_pos_candidates.append((name, prefix))
+            desc_pos_candidates.append((name, rest))
+            group_key = _strip_parens(rest)
+            if group_key:
+                rest_groups.setdefault(group_key, {})[prefix] = name
+    desc_pos_candidates = list(dict.fromkeys(desc_pos_candidates))
+    rng.shuffle(desc_pos_candidates)
+    added = 0
+    for full_name, other in desc_pos_candidates:
+        if added &gt;= _MAX_DESC_POS_AUG:
+            break
+        if add_pair(full_name, other, "是"):
+            added += 1
+
+    # (b) Descriptor-swap negatives: same remainder, different prefix -&gt; "否".
+    neg_candidates = []
+    for prefix_map in rest_groups.values():
+        names = sorted(prefix_map.values())
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                neg_candidates.append((names[i], names[j]))
+    rng.shuffle(neg_candidates)
+    added = 0
+    for name_a, name_b in neg_candidates:
+        if added &gt;= _MAX_DESC_NEG_AUG:
+            break
+        if add_pair(name_a, name_b, "否"):
+            added += 1
+
+    # (c) Facility-injection pairs: label preserved (rule 2b/2d).
+    indices = list(range(len(train_pairs)))
+    rng.shuffle(indices)
+    added = 0
+    for idx in indices:
+        if added &gt;= _MAX_FACILITY_AUG:
+            break
+        name_a, name_b, label = train_pairs[idx]
+        if rng.random() &lt; 0.5:
+            name_a, name_b = _add_facility(name_a, rng), name_b
+        else:
+            name_a, name_b = name_a, _add_facility(name_b, rng)
+        if add_pair(name_a, name_b, label):
+            added += 1
+
+    # (d) Synonym-substitution pairs: label preserved (rule 1).
+    rng.shuffle(indices)
+    added = 0
+    for idx in indices:
+        if added &gt;= _MAX_SYNONYM_AUG:
+            break
+        name_a, name_b, label = train_pairs[idx]
+        if rng.random() &lt; 0.5:
+            variant = _synonym_variant(name_a, rng)
+            if variant is None:
+                continue
+            name_a = variant
+        else:
+            variant = _synonym_variant(name_b, rng)
+            if variant is None:
+                continue
+            name_b = variant
+        if add_pair(name_a, name_b, label):
+            added += 1
+
+    # (e) Rule-9/11 asymmetric negatives: one side carries an extra
+    # strong-dimension modifier, the other side is a real corpus name
+    # without it -&gt; "否". Gold pairs win: any pair conflicting with a known
+    # label is dropped by add_pair's conflict/duplicate check.
+    asym_candidates = _asym_negative_candidates(train_pairs)
+    rng.shuffle(asym_candidates)
+    added = 0
+    for name_a, name_b in asym_candidates:
+        if added &gt;= _MAX_ASYM_NEG_AUG:
+            break
+        if add_pair(name_a, name_b, "否"):
+            added += 1
+
+    return augmented
+
+
+def preprocess(train_csv, val_csv, test_csv, output_dir):
+    output = Path(output_dir)
+    rng = random.Random(_AUG_SEED)
+    train_rows = _read_csv(train_csv)
+    val_rows = _read_csv(val_csv)
+    test_rows = _read_csv(test_csv)
+
+    train_pairs = [
+        (
+            str(row["outer_room_name"]).strip(),
+            str(row["mt_room_name"]).strip(),
+            str(row["label"]).strip(),
+        )
+        for row in train_rows
+    ]
+    augmented = _build_augmented_pairs(train_pairs, rng)
+    all_train = train_pairs + augmented
+    assert len(all_train) == len(train_pairs) + len(augmented)
+    rng.shuffle(all_train)
+
+    with (output / "train.jsonl").open("w", encoding="utf-8") as file:
+        for name_a, name_b, label in all_train:
+            record = {
+                "messages": [
+                    {"role": "user", "content": _prompt_pair(name_a, name_b)},
+                    {"role": "assistant", "content": label},
+                ]
+            }
+            file.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    # val.jsonl: every val.csv row, id and order preserved, assistant last.
+    with (output / "val.jsonl").open("w", encoding="utf-8") as file:
+        for row in val_rows:
+            record = {
+                "id": str(row["id"]),
+                "messages": [
+                    {"role": "user", "content": _prompt(row)},
+                    {"role": "assistant", "content": str(row["label"]).strip()},
+                ],
+            }
+            file.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    # infer.jsonl: every test.csv row, id and order preserved, user last.
+    with (output / "infer.jsonl").open("w", encoding="utf-8") as file:
+        for row in test_rows:
+            record = {
+                "id": str(row["id"]),
+                "messages": [{"role": "user", "content": _prompt(row)}],
+            }
+            file.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    assert len(all_train) &gt;= len(train_rows)
+    assert len(val_rows) == 2903 or val_rows
+    assert len(test_rows) == 2903 or test_rows
+
+
+def _extract_label(prediction):
+    # Keep label extraction aligned with the parent plan / evaluator script.
+    text = re.sub(
+        r"&lt;think&gt;.*?&lt;/think&gt;", "", str(prediction or ""), flags=re.DOTALL
+    ).strip()
+    final = re.search(r"(?:^|[\s：:。；;，,])([是否])\s*[。！!？?]*\s*$", text)
+    if final:
+        return final.group(1)
+    matches = re.findall(
+        r"(?:判断|答案|结果)(?:为)?\s*[：:]?\s*([是否])(?=\s*$|[。！!？?])",
+        text,
+    )
+    return matches[-1] if matches else "否"
+
+
+def postprocess(predictions_jsonl, test_csv, submission_path):
+    predictions = {}
+    with Path(predictions_jsonl).open("r", encoding="utf-8") as file:
+        for line in file:
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            predictions[str(item["id"])] = _extract_label(item.get("prediction"))
+    test_rows = _read_csv(test_csv)
+    with Path(submission_path).open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=["id", "label"])
+        writer.writeheader()
+        for row in test_rows:
+            row_id = str(row["id"])
+            writer.writerow({"id": row_id, "label": predictions.get(row_id, "否")})</code></pre>
+</td>
+<td colwidth="[115]" nodeId="79d73d96041447d5ab5fd78c3e7f5003">
+<p nodeId="8b6bb07a224e438a8e7879a6bd1c3e0b">6.10%</p>
+</td>
+</tr>
+</table>
+<h1 nodeId="63f2f114cd7e44cb969aff17e3902e1b">四、后续规划</h1>
+<p nodeId="b92f006f7820495b98e1c58a1277390c"><strong>1.  扩展搜索空间，优化算子调度</strong></p>
+<p nodeId="e8eead047ac44193aa832e9d642ad5ff">在超参数与数据采样优化的基础上，拓展长尾难例重采样、负样本挖掘、多阶段训练，以及 DPO、GRPO、OPD 和大小模型协同等优化方向，推动搜索从局部配置调整扩展到训练方法与模型协作方式。同时，结合节点反馈和搜索进展，动态调整 Draft、Improve、Debug、Crossover 等算子的选择概率，兼顾新方向探索与高价值方案深化，减少无效尝试。</p>
+<p nodeId="25744852ab5a4ff88c205c7bf60d237a"><strong>2. 推动跨场景复用与自动化运行</strong></p>
+<p nodeId="ad4d663b0b7a46fda65150770fcd67c2">将房型匹配实践中的任务定义、数据处理、训练配置与反馈内容标准化，形成可配置、可复用的实验模板，逐步推广至其他匹配业务场景。打通任务调度、训练、评测与结果归档流程，完善预算控制和异常恢复机制，降低人工干预成本，支持后训练实验的常态化无人值守运行。</p>
+<p nodeId="fd33579bd0ee41de87ab1e9669425308"><strong>3.构建领域 ERL 闭环，提升模型自主改进能力</strong></p>
+<p nodeId="500fba25dba44cb9b6e6196d05310a38">汇集树搜索与外部 Harness 的实验记录，筛选高质量的“假设—实验—诊断—修复”轨迹，形成可复用的改进器训练数据。基于这些轨迹开展 Agent LLM 的 SFT 与 Online RL，将有效的调优经验和 Debug 策略内化到模型参数中，并将训练后的改进器用于后续搜索，逐步减少对外部引导的依赖，提高方案生成有效率与单位预算收益。</p>
+<km-footnote-list nodeId="283affc717a041b79c3d3e3b7179686c">
+<km-footnote-item footnoteNodeId="efcb22a304ab463681d76a5dce68a234" nodeId="f99e0dc26ab84114ab34a237b412989e"><p nodeId="b2f2366f38ae4f1f994b9636f44b520e">EvoX：EvoX: Meta-Evolution for Automated Discovery<a href="https://openreview.net/pdf?id=puRQNPwKs1" title="https://openreview.net/pdf?id=puRQNPwKs1" nodeId="b03234f5a8e24ad7a994c4cc568ca213">https://openreview.net/pdf?id=puRQNPwKs1</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="2f43f5a9fe73435ab2b8de4d9e513422" nodeId="447a2c3fe4834fd58f4d8988b9d60343"><p nodeId="98cac023fd1147e089ebd7e45eb01bbc">OpenRSI ：<a href="https://arxiv.org/abs/2607.28568" title="https://arxiv.org/abs/2607.28568" nodeId="e6edd2bf3c9a498b9c2078cc7bfdbd7b">https://arxiv.org/abs/2607.28568</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="41134977594847b2afb59d26f67c92eb" nodeId="8d69b282360849518e9c9e5af7660aa2"><p nodeId="401f9c520e10435fa169c67f36e7e658">OpenMLE：<a href="https://github.com/FrontisAI/OpenRSI" title="https://github.com/FrontisAI/OpenRSI" nodeId="345bf29237bf487286402d2b560196b9">https://github.com/FrontisAI/OpenRSI</a></p></km-footnote-item>
+</km-footnote-list>
+</km-doc>

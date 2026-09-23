@@ -1,0 +1,161 @@
+{
+  "title": "算法领域元进化(Meta Learning)实践",
+  "source_url": "https://km.sankuai.com/collabpage/2785845384",
+  "content_id": "2785845384",
+  "step_version": 1,
+  "archived_at": "2026-09-23T16:46:53+08:00",
+  "source_created_at": "2026-09-09T16:35:42+08:00",
+  "source_modified_at": "2026-09-09T16:35:43+08:00",
+  "export_tool": "oa-skills citadel",
+  "raw_exports": [
+    "source.md",
+    "source.xml"
+  ],
+  "reading_copy": "README.md",
+  "transformations": [
+    "Removed CLI notice and added provenance in reading copy",
+    "Replaced two authenticated image URLs with local references",
+    "Extracted two embedded SVGs verbatim and retained their original HTML wrappers",
+    "Reconstructed two code-bearing tables from XML with links to five exact code extracts; other prose unchanged",
+    "Normalized three exported footnote markers into GitHub Markdown footnotes without changing their source URLs",
+    "Trimmed trailing whitespace in reading copy only"
+  ],
+  "scope": "Current document body, two PNG images, two embedded HTML/SVG diagrams, and five code blocks; linked references not recursively archived; original claims not independently verified.",
+  "assets": [
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785845384/255170211822?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785845384/01-meta-evolution.png",
+      "bytes": 477623,
+      "width": 1728,
+      "height": 810,
+      "sha256": "6b57bece2ceedf0adf7e83b73bd26f0073be53997e6434a9982b9fe24a645134"
+    },
+    {
+      "source_url": "https://km.sankuai.com/api/file/cdn/2785845384/255168021246?isNewContent=false&contentType=1",
+      "path": "assets/citadel/2785845384/02-openrsi-results.png",
+      "bytes": 366480,
+      "width": 1944,
+      "height": 918,
+      "sha256": "b404a01039c0867ed394ac0b5d896340253468242b65cc742b4acceae27d46df"
+    },
+    {
+      "source": "embedded HTML block 1",
+      "path": "assets/citadel/2785845384/03-openrsi-framework.svg",
+      "original_html": "assets/citadel/2785845384/03-openrsi-framework.html",
+      "bytes": 8993,
+      "sha256": "1b2054cc1ca3d375d3997c1845348a11c6fab1238e19e06893859090f9b285f0"
+    },
+    {
+      "source": "embedded HTML block 2",
+      "path": "assets/citadel/2785845384/04-openrsi-external-harness.svg",
+      "original_html": "assets/citadel/2785845384/04-openrsi-external-harness.html",
+      "bytes": 15560,
+      "sha256": "cd3b889fedaee4a05e9925fbe05c404fe7c9f268bc78238845642c2ad427da60"
+    }
+  ],
+  "code_blocks": [
+    {
+      "path": "documents/citadel/2785845384/code/01-experiment.py",
+      "source_node_id": "8384da15-cf94-4431-b213-59a4691e8557",
+      "language": "Python",
+      "title": "具体方案内容",
+      "bytes": 9632,
+      "sha256": "47f3bce553f27319eae490d58c3b44ec66dfe0d4d251100c45571e7cffc1a810"
+    },
+    {
+      "path": "documents/citadel/2785845384/code/02-experiment.py",
+      "source_node_id": "3d9b4ea9-da04-4eb6-9cf3-6c46b8e84e22",
+      "language": "Python",
+      "title": "具体方案内容",
+      "bytes": 9224,
+      "sha256": "f484aa13aaea78527d7599e7850eaafd0186faa16998dd8ee2d122207d91b2f8"
+    },
+    {
+      "path": "documents/citadel/2785845384/code/03-experiment.py",
+      "source_node_id": "a5c6d237-1da3-4d06-934d-f674c9d44b43",
+      "language": "Python",
+      "title": "具体方案内容：",
+      "bytes": 8985,
+      "sha256": "091fc1ae3f33a991fd5919f4d3e7db7fe26501f825b2dad509d47d67b7f82989"
+    },
+    {
+      "path": "documents/citadel/2785845384/code/04-experiment.py",
+      "source_node_id": "a1058490-2b21-452f-af8e-1c44b8b6bbef",
+      "language": "Python",
+      "title": "具体方案内容：",
+      "bytes": 4969,
+      "sha256": "cddec6fdeaa0ab413535bdcc8594686fb1c111fd3c213d36b43320bc0379c8fe"
+    },
+    {
+      "path": "documents/citadel/2785845384/code/05-experiment.py",
+      "source_node_id": "ce3a088a-21d7-482f-bbd5-4cfb3413b5ca",
+      "language": "Python",
+      "title": "具体方案内容：",
+      "bytes": 20459,
+      "sha256": "49351b3f290c58a14f2cc5cceaa2b680ca322d956dd979a6eb2091a389f4c2ef"
+    }
+  ],
+  "validation": {
+    "prose_and_nontransformed_content_preserved": true,
+    "code_extracts_match_xml": true,
+    "svg_xml_valid": true
+  },
+  "files": {
+    "documents/citadel/2785845384/source.md": {
+      "bytes": 92774,
+      "sha256": "e4c772eef5aa40e09c81f595eb2b76b56ece7335ca1db530a546d49e321ac6a6"
+    },
+    "documents/citadel/2785845384/README.md": {
+      "bytes": 14849,
+      "sha256": "647914de56aa55017b0ef26009e7c112a1ba14ba706893c28ff31de46876913d"
+    },
+    "documents/citadel/2785845384/source.xml": {
+      "bytes": 109767,
+      "sha256": "e9d69fc3cdd00298985d5a43062e17a88d8e618d5788cc1f97c79f463d73e4f1"
+    },
+    "documents/citadel/2785845384/code/04-experiment.py": {
+      "bytes": 4969,
+      "sha256": "cddec6fdeaa0ab413535bdcc8594686fb1c111fd3c213d36b43320bc0379c8fe"
+    },
+    "documents/citadel/2785845384/code/03-experiment.py": {
+      "bytes": 8985,
+      "sha256": "091fc1ae3f33a991fd5919f4d3e7db7fe26501f825b2dad509d47d67b7f82989"
+    },
+    "documents/citadel/2785845384/code/02-experiment.py": {
+      "bytes": 9224,
+      "sha256": "f484aa13aaea78527d7599e7850eaafd0186faa16998dd8ee2d122207d91b2f8"
+    },
+    "documents/citadel/2785845384/code/01-experiment.py": {
+      "bytes": 9632,
+      "sha256": "47f3bce553f27319eae490d58c3b44ec66dfe0d4d251100c45571e7cffc1a810"
+    },
+    "documents/citadel/2785845384/code/05-experiment.py": {
+      "bytes": 20459,
+      "sha256": "49351b3f290c58a14f2cc5cceaa2b680ca322d956dd979a6eb2091a389f4c2ef"
+    },
+    "assets/citadel/2785845384/04-openrsi-external-harness.html": {
+      "bytes": 15768,
+      "sha256": "6cd310ec80e7ab766625fee8cacb8a0bd44ab12e484b906b33567a414c23205f"
+    },
+    "assets/citadel/2785845384/03-openrsi-framework.svg": {
+      "bytes": 8993,
+      "sha256": "1b2054cc1ca3d375d3997c1845348a11c6fab1238e19e06893859090f9b285f0"
+    },
+    "assets/citadel/2785845384/03-openrsi-framework.html": {
+      "bytes": 9273,
+      "sha256": "4927cd97b72c65b672c70e823156f86755dfe64b9f98080be0bb67cf2affc8ec"
+    },
+    "assets/citadel/2785845384/04-openrsi-external-harness.svg": {
+      "bytes": 15560,
+      "sha256": "cd3b889fedaee4a05e9925fbe05c404fe7c9f268bc78238845642c2ad427da60"
+    },
+    "assets/citadel/2785845384/02-openrsi-results.png": {
+      "bytes": 366480,
+      "sha256": "b404a01039c0867ed394ac0b5d896340253468242b65cc742b4acceae27d46df"
+    },
+    "assets/citadel/2785845384/01-meta-evolution.png": {
+      "bytes": 477623,
+      "sha256": "6b57bece2ceedf0adf7e83b73bd26f0073be53997e6434a9982b9fe24a645134"
+    }
+  }
+}

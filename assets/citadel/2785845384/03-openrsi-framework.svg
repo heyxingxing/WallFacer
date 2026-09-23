@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc"><title id="title">OpenRSI元进化框架</title><desc id="desc">基础模型经监督冷启动形成改进器。左侧选择父节点、选择进化操作、生成候选并经 Gym 评测。反馈一方面回写搜索树，另一方面形成在线训练轨迹，经强化学习更新改进器参数。</desc><defs>
+<marker id="dark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#3A495E" /></marker>
+<marker id="blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#3478F6" /></marker>
+<marker id="orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#EF7C2C" /></marker>
+<filter id="softShadow" x="-20%" y="-30%" width="140%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#443D80" flood-opacity="0.15" /></filter></defs><text x="600" y="53" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, Arial, sans-serif" font-size="34" font-weight="700" fill="#233349">OpenRSI元进化框架</text><g transform="translate(0 80)" font-family="PingFang SC, Microsoft YaHei, Arial, sans-serif">
+<rect x="1" y="1" width="1198" height="1118" rx="28" fill="#FAFBFD" stroke="#E1E6ED" stroke-width="1.6" />
+<rect x="230" y="28" width="280" height="98" rx="17" fill="#F4F0FF" stroke="#A692F1" stroke-width="1.6" />
+<text x="370" y="68" text-anchor="middle" font-size="25" fill="#233349" font-weight="600">Qwen3.6-35B-A3B</text>
+<text x="370" y="99" text-anchor="middle" font-size="18" fill="#6B7B90" font-weight="400">基础模型</text>
+<rect x="48" y="220" width="630" height="844" rx="28" fill="#EDF5FF" stroke="#75A7ED" stroke-width="2.3" />
+<rect x="725" y="220" width="430" height="844" rx="28" fill="#FFF3EA" stroke="#F0A46B" stroke-width="2.3" />
+<text x="245" y="258" text-anchor="middle" font-size="24" fill="#1F5CB8" font-weight="700">OpenMLE-Evo</text>
+<text x="960" y="258" text-anchor="middle" font-size="26" fill="#B75518" font-weight="700">OpenMLE-ERL</text>
+<path d="M370 126 V284" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="252" y="158" width="236" height="34" rx="4" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.6" />
+<text x="370" y="182" text-anchor="middle" font-size="17" fill="#233349" font-weight="400">清洗后的轨迹数据 · SFT 冷启动</text>
+<rect x="230" y="290" width="280" height="104" rx="21" fill="#6D5BD0" stroke="#6D5BD0" stroke-width="1.6" filter="url(#softShadow)" />
+<text x="370" y="331" text-anchor="middle" font-size="26" fill="#FFFFFF" font-weight="650">Agent LLM</text>
+<text x="370" y="365" text-anchor="middle" font-size="22" fill="#FFFFFF" font-weight="600">（Frontis-MA1）</text>
+<path d="M370 394 V444" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="190" y="450" width="360" height="92" rx="17" fill="#FFFFFF" stroke="#A5C4EE" stroke-width="1.6" />
+<text x="370" y="489" text-anchor="middle" font-size="24" fill="#233349" font-weight="600">从候选池选择父节点</text>
+<text x="370" y="519" text-anchor="middle" font-size="18" fill="#6A788B" font-weight="400">综合质量、增益与新颖性</text>
+<path d="M370 542 V587" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="145" y="594" width="450" height="108" rx="17" fill="#FFFFFF" stroke="#A5C4EE" stroke-width="1.6" />
+<text x="370" y="634" text-anchor="middle" font-size="24" fill="#233349" font-weight="600">选择进化操作</text>
+<rect x="164" y="650" width="83" height="33" rx="10" fill="#DCEBFF" /><text x="205.5" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Draft</text><rect x="256" y="650" width="100" height="33" rx="10" fill="#DCEBFF" /><text x="306.0" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Improve</text><rect x="365" y="650" width="85" height="33" rx="10" fill="#DCEBFF" /><text x="407.5" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Debug</text><rect x="459" y="650" width="117" height="33" rx="10" fill="#DCEBFF" /><text x="517.5" y="673" text-anchor="middle" font-size="18" font-weight="700" fill="#245FAE">Crossover</text><path d="M370 702 V749" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="230" y="756" width="280" height="84" rx="17" fill="#FFFFFF" stroke="#A5C4EE" stroke-width="1.6" />
+<text x="370" y="791" text-anchor="middle" font-size="24" fill="#233349" font-weight="600">生成候选方案</text>
+<text x="370" y="819" text-anchor="middle" font-size="18" fill="#6A788B" font-weight="400">输出可执行程序</text>
+<path d="M370 840 V891" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="165" y="898" width="430" height="108" rx="17" fill="#EAF8F0" stroke="#4CB67A" stroke-width="1.6" />
+<text x="380" y="936" text-anchor="middle" font-size="25" fill="#247149" font-weight="650">OpenMLE-Gym</text>
+<text x="380" y="968" text-anchor="middle" font-size="20" fill="#4A7660" font-weight="400">执行与评测：返回分数、状态与错误</text>
+<path d="M380 1006 V1035 H92 V496 H183" fill="none" stroke="#3478F6" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#blue)" />
+<rect x="60" y="735" width="65" height="168" rx="0" fill="#EDF5FF" stroke="#EDF5FF" stroke-width="1.6" />
+<text x="92" y="763" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">回写</text>
+<text x="92" y="794" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">搜索树</text>
+<text x="92" y="840" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">更新</text>
+<text x="92" y="871" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">候选池</text>
+<path d="M595 952 H768" fill="none" stroke="#EF7C2C" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#orange)" />
+<rect x="613" y="905" width="142" height="32" rx="5" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.6" />
+<text x="684" y="927" text-anchor="middle" font-size="16" fill="#B66329" font-weight="400">轨迹与执行反馈</text>
+<rect x="775" y="898" width="330" height="108" rx="17" fill="#FFFFFF" stroke="#F0B081" stroke-width="1.6" />
+<text x="940" y="936" text-anchor="middle" font-size="23" fill="#8B4319" font-weight="600">形成在线训练轨迹</text>
+<text x="940" y="968" text-anchor="middle" font-size="18" fill="#765C49" font-weight="400">生成 → 执行 → 反馈：Rollout</text>
+<path d="M940 898 V740" fill="none" stroke="#EF7C2C" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#orange)" />
+<text x="1031" y="817" text-anchor="middle" font-size="18" fill="#B66329" font-weight="400">执行结果</text>
+<text x="1031" y="845" text-anchor="middle" font-size="18" fill="#B66329" font-weight="400">构造 Reward</text>
+<rect x="775" y="588" width="330" height="145" rx="20" fill="#EF7C2C" stroke="#EF7C2C" stroke-width="1.6" />
+<text x="940" y="628" text-anchor="middle" font-size="24" fill="#FFFFFF" font-weight="650">Online RL 更新</text>
+<text x="940" y="667" text-anchor="middle" font-size="20" fill="#FFFFFF" font-weight="400">依据执行奖励优化生成策略</text>
+<text x="940" y="701" text-anchor="middle" font-size="20" fill="#FFFFFF" font-weight="400">将进化经验内化至模型参数</text>
+<path d="M940 588 V342 H517" fill="none" stroke="#EF7C2C" stroke-width="3.2" stroke-linejoin="round" marker-end="url(#orange)" />
+<rect x="748" y="320" width="157" height="36" rx="0" fill="#FFF3EA" stroke="#FFF3EA" stroke-width="1.6" />
+<text x="827" y="346" text-anchor="middle" font-size="20" fill="#BF5B1B" font-weight="650">更新模型参数 θ</text>
+<rect x="792" y="387" width="298" height="70" rx="6" fill="#FFF3EA" stroke="#FFF3EA" stroke-width="1.6" />
+<text x="940" y="414" text-anchor="middle" font-size="18" fill="#8A6145" font-weight="400">新版改进器通过独立验证后</text>
+<text x="940" y="443" text-anchor="middle" font-size="18" fill="#8A6145" font-weight="400">用于后续任务搜索</text>
+<text x="369" y="1098" text-anchor="middle" font-size="18" fill="#3478F6" font-weight="600">任务内：改进方案，模型参数固定</text>
+<text x="941" y="1098" text-anchor="middle" font-size="18" fill="#BF5B1B" font-weight="600">跨轮次：学习经验，更新改进能力</text>
+<circle cx="100" cy="250" r="18" fill="#3478F6" /><text x="100" y="257" text-anchor="middle" font-size="21" font-weight="700" fill="white">1</text><circle cx="780" cy="250" r="18" fill="#EF7C2C" /><text x="780" y="257" text-anchor="middle" font-size="21" font-weight="700" fill="white">2</text></g></svg>
