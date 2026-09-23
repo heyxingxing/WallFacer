@@ -13,6 +13,6 @@
 
 ## 仓库
 
-- GitHub： https://github.com/xingxing-dev/the-wallfacer-plan
+- GitHub： https://github.com/heyxingxing/the-wallfacer-plan
 - 可见性：私有。
 - 仓库英文名称：`the-wallfacer-plan`。
