@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 知识质量</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+
+.page-header { text-align: center; margin-bottom: 12px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 双栏 ── */
+.cols { display: flex; gap: 10px; align-items: stretch; }
+.col  { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+/* ── 功能面板 ── */
+.panel {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  overflow: hidden; flex: 1; display: flex; flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.panel-header {
+  padding: 10px 14px; border-bottom: 1.5px solid #e2e8f0;
+  display: flex; align-items: center; gap: 8px;
+}
+.ph-icon  { font-size: 16px; flex-shrink: 0; }
+.ph-title { font-size: 13px; font-weight: 700; color: #0f172a; flex: 1; }
+.ph-badge {
+  font-size: 9.5px; font-weight: 700; padding: 2px 8px;
+  border-radius: 10px; flex-shrink: 0;
+}
+.pb-green { background: #d1fae5; color: #065f46; }
+.pb-purple{ background: #ede9fe; color: #6d28d9; }
+
+.panel-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+
+/* ── 小节标题 ── */
+.sec-lbl {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 5px;
+}
+
+/* ── 知识更新：叶子节点扫描展示 ── */
+.leaf-box {
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  overflow: hidden;
+}
+.leaf-dir-header {
+  padding: 5px 10px; background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 10px; font-weight: 700; color: #475569;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.entry-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-bottom: 1px solid #f1f5f9;
+  transition: background .12s;
+}
+.entry-row:last-child { border-bottom: none; }
+.entry-row.stale { background: #fff5f5; }
+.entry-row.warn  { background: #fffbeb; }
+
+.er-icon { font-size: 12px; flex-shrink: 0; }
+.er-title { font-size: 11px; color: #334155; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-baseline { font-size: 10px; color: #94a3b8; flex-shrink: 0; white-space: nowrap; }
+
+/* 天数条 */
+.days-bar { width: 64px; flex-shrink: 0; }
+.db-track { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; position: relative; }
+.db-fill  { height: 100%; border-radius: 3px; }
+.db-label { font-size: 9.5px; font-weight: 700; text-align: right; margin-top: 2px; }
+
+/* 阈值标注线 */
+.threshold-note {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; background: #fef9c3;
+  border-top: 1px dashed #fcd34d;
+  font-size: 10px; color: #92400e; font-weight: 600;
+}
+
+/* 更新动作示意 */
+.update-flow {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; background: #f0fdf4;
+  border: 1.5px solid #bbf7d0; border-radius: 8px;
+  font-size: 11px;
+}
+.uf-step {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  flex: 1; text-align: center;
+}
+.uf-icon { font-size: 15px; }
+.uf-text { font-size: 10px; color: #475569; line-height: 1.3; }
+.uf-arrow { color: #86efac; font-size: 13px; flex-shrink: 0; }
+
+/* ── 矛盾检测：候选对生成展示 ── */
+.cand-path {
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  padding: 9px 11px; display: flex; gap: 10px; align-items: center;
+}
+.cp-left { flex: 1; min-width: 0; }
+.cp-tag {
+  font-size: 9px; font-weight: 700; padding: 1px 7px;
+  border-radius: 8px; display: inline-block; margin-bottom: 5px;
+}
+.ct-dim1 { background: #ede9fe; color: #6d28d9; }
+.ct-dim2 { background: #dbeafe; color: #1e40af; }
+
+.mini-dir {
+  display: flex; flex-direction: column; gap: 3px;
+}
+.mini-entry {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10.5px; color: #334155;
+  padding: 3px 7px; background: #fff;
+  border: 1px solid #e2e8f0; border-radius: 5px;
+}
+.me-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.kw-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.kw-tag  { font-size: 9.5px; padding: 1px 6px; border-radius: 4px; }
+.kw-shared { background: #dbeafe; color: #1e40af; font-weight: 700; }
+.kw-own    { background: #f1f5f9; color: #64748b; }
+
+.cp-arrow { color: #cbd5e1; font-size: 18px; flex-shrink: 0; }
+.cp-result {
+  flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+}
+.pair-badge {
+  font-size: 9px; font-weight: 700; padding: 2px 7px;
+  border-radius: 8px; background: #fef3c7; color: #92400e;
+  white-space: nowrap;
+}
+
+/* 疑似矛盾卡 */
+.contradiction-card {
+  border: 1.5px solid #ddd6fe; border-radius: 8px; overflow: hidden;
+}
+.cc-header {
+  background: #faf5ff; padding: 5px 11px; border-bottom: 1px solid #ddd6fe;
+  font-size: 10px; font-weight: 700; color: #7c3aed;
+  display: flex; align-items: center; gap: 5px;
+}
+.cc-body { display: flex; }
+.cc-side {
+  flex: 1; padding: 9px 11px; font-size: 11px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.cc-side + .cc-side { border-left: 1px solid #ede9fe; background: #faf5ff; }
+.cs-src  { font-size: 9.5px; color: #94a3b8; }
+.cs-desc { color: #334155; line-height: 1.5; }
+.cs-conflict {
+  font-size: 10.5px; font-weight: 700;
+  padding: 2px 7px; border-radius: 5px; display: inline-block;
+}
+.cc-conflict-a { background: #fee2e2; color: #991b1b; }
+.cc-conflict-b { background: #ede9fe; color: #6d28d9; }
+.cc-divider {
+  width: 28px; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; background: #faf5ff;
+  font-size: 14px; color: #c4b5fd;
+  border-left: 1px solid #ede9fe; border-right: 1px solid #ede9fe;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 知识质量</h1>
+    <p>知识更新 &nbsp;·&nbsp; 矛盾检测</p>
+  </div>
+
+  <div class="cols">
+
+    <!-- ══ 左列：知识更新 ══ -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="ph-icon">🔄</span>
+          <span class="ph-title">知识更新</span>
+          <span class="ph-badge pb-green">定期巡检 · 学城文档</span>
+        </div>
+        <div class="panel-body">
+
+          <div>
+            <div class="sec-lbl">扫描：叶子节点 baseline 距今天数</div>
+            <div class="leaf-box">
+              <div class="leaf-dir-header">📁 某领域/子分类/data_structure.md</div>
+
+              <!-- 新鲜 -->
+              <div class="entry-row">
+                <span class="er-icon">📄</span>
+                <span class="er-title">架构设计方案 v2</span>
+                <span class="er-baseline">baseline 2026-05-10</span>
+                <div class="days-bar">
+                  <div class="db-track"><div class="db-fill" style="width:18%;background:#22c55e"></div></div>
+                  <div class="db-label" style="color:#16a34a">12 天</div>
+                </div>
+              </div>
+
+              <!-- 临近阈值 -->
+              <div class="entry-row warn">
+                <span class="er-icon">📄</span>
+                <span class="er-title">接口参数说明</span>
+                <span class="er-baseline">baseline 2026-04-20</span>
+                <div class="days-bar">
+                  <div class="db-track"><div class="db-fill" style="width:60%;background:#f59e0b"></div></div>
+                  <div class="db-label" style="color:#d97706">25 天</div>
+                </div>
+              </div>
+
+              <!-- 过期 -->
+              <div class="entry-row stale">
+                <span class="er-icon">📄</span>
+                <span class="er-title">部署流程规范</span>
+                <span class="er-baseline">baseline 2026-03-01</span>
+                <div class="days-bar">
+                  <div class="db-track"><div class="db-fill" style="width:100%;background:#ef4444"></div></div>
+                  <div class="db-label" style="color:#dc2626">92 天 ↑</div>
+                </div>
+              </div>
+
+              <!-- 过期 -->
+              <div class="entry-row stale">
+                <span class="er-icon">📄</span>
+                <span class="er-title">核心配置项说明</span>
+                <span class="er-baseline">baseline 2026-02-15</span>
+                <div class="days-bar">
+                  <div class="db-track"><div class="db-fill" style="width:100%;background:#ef4444"></div></div>
+                  <div class="db-label" style="color:#dc2626">113 天 ↑</div>
+                </div>
+              </div>
+
+              <div class="threshold-note">⚡ 阈值 30 天 · 超出的 2 条进入候选列表</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sec-lbl">验证 & 更新动作</div>
+            <div class="update-flow">
+              <div class="uf-step">
+                <span class="uf-icon">🌐</span>
+                <span class="uf-text">citadel<br>读取原文</span>
+              </div>
+              <span class="uf-arrow">›</span>
+              <div class="uf-step">
+                <span class="uf-icon">🔍</span>
+                <span class="uf-text">对比现有<br>摘要</span>
+              </div>
+              <span class="uf-arrow">›</span>
+              <div class="uf-step">
+                <span class="uf-icon">✏️</span>
+                <span class="uf-text">有变更<br>重写摘要</span>
+              </div>
+              <span class="uf-arrow">›</span>
+              <div class="uf-step">
+                <span class="uf-icon">🗂️</span>
+                <span class="uf-text">文档不存在<br>标记失效</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 右列：矛盾检测 ══ -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="ph-icon">🔍</span>
+          <span class="ph-title">矛盾检测</span>
+          <span class="ph-badge pb-purple">定期扫描 · 本地文件</span>
+        </div>
+        <div class="panel-body">
+
+          <div>
+            <div class="sec-lbl">候选对生成：两个维度</div>
+
+            <!-- 维度一：同目录 -->
+            <div class="cand-path" style="margin-bottom:7px">
+              <div class="cp-left">
+                <span class="cp-tag ct-dim1">维度一：同目录配对</span>
+                <div class="mini-dir">
+                  <div class="mini-entry"><span class="me-dot" style="background:#7c3aed"></span>某配置项的作用说明</div>
+                  <div class="mini-entry"><span class="me-dot" style="background:#7c3aed"></span>某配置项的默认值</div>
+                  <div class="mini-entry"><span class="me-dot" style="background:#7c3aed"></span>某配置项的历史变更</div>
+                </div>
+              </div>
+              <span class="cp-arrow">→</span>
+              <div class="cp-result">
+                <span class="pair-badge">C(3,2) = 3 对</span>
+                <span style="font-size:9.5px;color:#94a3b8;margin-top:2px">全部配对</span>
+              </div>
+            </div>
+
+            <!-- 维度二：跨目录关键词 -->
+            <div class="cand-path">
+              <div class="cp-left">
+                <span class="cp-tag ct-dim2">维度二：跨目录关键词交集 ≥ 2</span>
+                <div style="display:flex;gap:6px;align-items:flex-start">
+                  <div style="flex:1">
+                    <div class="mini-entry" style="margin-bottom:4px"><span class="me-dot" style="background:#3b82f6"></span>领域A / 子分类1</div>
+                    <div class="kw-tags">
+                      <span class="kw-tag kw-shared">超时配置</span>
+                      <span class="kw-tag kw-shared">重试策略</span>
+                      <span class="kw-tag kw-own">服务治理</span>
+                    </div>
+                  </div>
+                  <div style="flex:1">
+                    <div class="mini-entry" style="margin-bottom:4px"><span class="me-dot" style="background:#06b6d4"></span>领域B / 子分类3</div>
+                    <div class="kw-tags">
+                      <span class="kw-tag kw-shared">超时配置</span>
+                      <span class="kw-tag kw-shared">重试策略</span>
+                      <span class="kw-tag kw-own">链路追踪</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span class="cp-arrow">→</span>
+              <div class="cp-result">
+                <span class="pair-badge">交集 = 2</span>
+                <span style="font-size:9.5px;color:#94a3b8;margin-top:2px">进入候选</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sec-lbl">Agent 语义审查：疑似矛盾示例</div>
+            <div class="contradiction-card">
+              <div class="cc-header">⚠️ 疑似矛盾 · 同目录配对触发</div>
+              <div class="cc-body">
+                <div class="cc-side">
+                  <span class="cs-src">领域A / 子分类1 / 文档甲</span>
+                  <span class="cs-desc">描述了某组件的默认行为</span>
+                  <span class="cs-conflict cc-conflict-a">默认超时时间：30s</span>
+                </div>
+                <div class="cc-divider">≠</div>
+                <div class="cc-side">
+                  <span class="cs-src">领域A / 子分类1 / 文档乙</span>
+                  <span class="cs-desc">同样描述了该组件的配置</span>
+                  <span class="cs-conflict cc-conflict-b">默认超时时间：60s</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

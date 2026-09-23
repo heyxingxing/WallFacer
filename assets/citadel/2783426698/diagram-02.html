@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 知识库组织形式</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b; font-size: 13px;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+
+.page-header { text-align: center; margin-bottom: 12px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 主体双栏 ── */
+.explorer {
+  display: flex; gap: 0;
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  overflow: hidden; height: 420px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+/* ── 左侧文件树 ── */
+.tree-panel {
+  width: 252px; flex-shrink: 0;
+  background: #f8fafc; border-right: 1.5px solid #e2e8f0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.tree-title {
+  padding: 9px 12px 8px; font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: #94a3b8;
+  border-bottom: 1px solid #e2e8f0; flex-shrink: 0;
+}
+.tree-scroll { flex: 1; overflow-y: auto; padding: 6px 0; }
+
+.tree-item {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; cursor: pointer; user-select: none;
+  border-radius: 0; transition: background .12s;
+  white-space: nowrap; overflow: hidden;
+}
+.tree-item:hover { background: #e2e8f0; }
+.tree-item.selected { background: #dbeafe; }
+.tree-item.selected .item-name { color: #1d4ed8; font-weight: 600; }
+
+.toggle { width: 14px; height: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #94a3b8; transition: transform .15s; }
+.toggle.open { transform: rotate(90deg); }
+.toggle.empty { visibility: hidden; }
+
+.item-icon { flex-shrink: 0; font-size: 13px; }
+.item-name { font-size: 12px; color: #334155; overflow: hidden; text-overflow: ellipsis; }
+.item-name.dir { color: #1e293b; font-weight: 500; }
+
+.tree-children { overflow: hidden; transition: height .15s; }
+
+/* ── 右侧内容面板 ── */
+.content-panel {
+  flex: 1; display: flex; flex-direction: column; min-width: 0; background: #fff;
+}
+.content-header {
+  padding: 8px 14px; border-bottom: 1.5px solid #e2e8f0;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.breadcrumb { font-size: 11px; color: #94a3b8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.breadcrumb span { color: #64748b; }
+.breadcrumb .last { color: #334155; font-weight: 600; }
+.node-badge {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700; padding: 2px 7px;
+  border-radius: 10px; letter-spacing: .3px;
+}
+.badge-container { background: #ede9fe; color: #6d28d9; }
+.badge-leaf      { background: #d1fae5; color: #065f46; }
+.badge-index     { background: #fef3c7; color: #92400e; }
+.badge-root      { background: #e0f2fe; color: #0369a1; }
+
+.content-body {
+  flex: 1; overflow-y: auto; padding: 14px 16px;
+  font-size: 12px; line-height: 1.8;
+}
+
+/* 内容渲染：标题、字段、分割线 */
+.c-h2    { font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; }
+.c-h2:first-child { margin-top: 0; }
+.c-h3    { font-size: 12.5px; font-weight: 700; color: #1e40af; margin: 10px 0 4px; }
+.c-field { margin: 3px 0; }
+.c-key   { font-weight: 700; color: #475569; }
+.c-val   { color: #334155; }
+.c-val a { color: #2563eb; text-decoration: none; }
+.c-val a:hover { text-decoration: underline; }
+.c-outline li { margin-left: 18px; color: #64748b; font-size: 11.5px; }
+.c-kw    { display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 0 5px; font-size: 10.5px; color: #475569; margin: 1px 3px 1px 0; }
+.c-hr    { border: none; border-top: 1.5px dashed #e2e8f0; margin: 10px 0; }
+.c-desc  { color: #64748b; margin: 4px 0 8px; font-size: 12px; }
+.c-pre   { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; font-family: 'SF Mono','Fira Code',monospace; font-size: 11px; color: #334155; overflow-x: auto; white-space: pre; }
+
+/* 空状态 */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; gap: 8px; }
+.empty-state .icon { font-size: 32px; }
+.empty-state p { font-size: 12px; }
+
+/* ── 说明文字 ── */
+.notes { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+.note-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #f8fafc; border-radius: 8px; border: 1.5px solid #e2e8f0;
+  padding: 9px 12px;
+}
+.note-badge {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700; padding: 2px 8px;
+  border-radius: 10px; margin-top: 1px;
+}
+.nb-purple { background: #ede9fe; color: #6d28d9; }
+.nb-green  { background: #d1fae5; color: #065f46; }
+.nb-amber  { background: #fef3c7; color: #92400e; }
+.note-text { font-size: 12px; color: #475569; line-height: 1.7; }
+.note-text strong { color: #1e293b; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 知识库组织形式</h1>
+    <p>点击左侧目录或文件，查看各节点的内容结构</p>
+  </div>
+
+  <div class="explorer">
+    <div class="tree-panel">
+      <div class="tree-title">知识库文件结构</div>
+      <div class="tree-scroll" id="tree-root"></div>
+    </div>
+    <div class="content-panel">
+      <div class="content-header" id="content-header" style="display:none">
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <span class="node-badge" id="node-badge"></span>
+      </div>
+      <div class="content-body" id="content-body">
+        <div class="empty-state">
+          <span class="icon">📂</span>
+          <p>点击左侧文件查看内容</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note-item">
+      <span class="note-badge nb-purple">容器节点</span>
+      <div class="note-text">目录下还有子目录时，<code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:10.5px">data_structure.md</code> 扮演"导览牌"角色——每个子目录对应一个 <code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:10.5px">### 子目录名/</code> 小节，附带 100-300 字的范围描述。Agent 在树状导航时读取这份描述，判断问题应该往哪个方向深入。</div>
+    </div>
+    <div class="note-item">
+      <span class="note-badge nb-green">叶子节点</span>
+      <div class="note-text">最底层目录的 <code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:10.5px">data_structure.md</code> 才是真正的<strong>文档索引</strong>——每篇文档对应一个 <code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:10.5px">## 标题</code> 条目，包含简介、纲要、关键词和原始链接。检索命中后，Agent 用链接读取完整文档内容。</div>
+    </div>
+    <div class="note-item">
+      <span class="note-badge nb-amber">索引文件</span>
+      <div class="note-text"><code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:10.5px">keyword_index.json</code> 是从整颗目录树的关键词字段提取后构建的快速查找表，将关键词直接映射到对应目录路径，供 Layer 2 辅助检索使用，加快 Agent 的定位速度。</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── 树形数据定义 ──
+const TREE = [
+  {
+    id: 'root', name: 'knowledge/', type: 'dir', open: true,
+    children: [
+      { id: 'root-idx', name: 'keyword_index.json', type: 'file', fileType: 'json' },
+      { id: 'root-md',  name: 'data_structure.md',  type: 'file', fileType: 'md', nodeType: 'root' },
+      {
+        id: 'dir-sys', name: '系统架构/', type: 'dir', open: false,
+        children: [
+          { id: 'dir-sys-md', name: 'data_structure.md', type: 'file', fileType: 'md', nodeType: 'container' },
+          {
+            id: 'dir-svc', name: '服务架构/', type: 'dir', open: false,
+            children: [
+              { id: 'dir-svc-md', name: 'data_structure.md', type: 'file', fileType: 'md', nodeType: 'leaf' }
+            ]
+          },
+          {
+            id: 'dir-flow', name: '核心流程/', type: 'dir', open: false,
+            children: [
+              { id: 'dir-flow-md', name: 'data_structure.md', type: 'file', fileType: 'md', nodeType: 'leaf' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'dir-exp', name: '实验沉淀/', type: 'dir', open: false,
+        children: [
+          { id: 'dir-exp-md', name: 'data_structure.md', type: 'file', fileType: 'md', nodeType: 'container' },
+          {
+            id: 'dir-train', name: '模型训练/', type: 'dir', open: false,
+            children: [
+              { id: 'dir-train-md', name: 'data_structure.md', type: 'file', fileType: 'md', nodeType: 'leaf' }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+
+// ── 内容数据 ──
+const CONTENT = {
+  'root-md': {
+    badge: '根节点', badgeClass: 'badge-root',
+    path: 'knowledge/data_structure.md',
+    html: `
+      <div class="c-desc">知识库根目录的 data_structure.md 描述所有顶级领域的范围和内容方向，是 Agent 树状导航的第一站。</div>
+      <div class="c-h3">### 系统架构/</div>
+      <p style="color:#475569;font-size:12px;margin:4px 0 10px;line-height:1.7">收录系统整体设计、服务拓扑和核心业务流程相关文档。包含架构图、服务依赖关系、关键数据流程等内容，适合需要了解系统全貌时检索。</p>
+      <div class="c-h3">### 实验沉淀/</div>
+      <p style="color:#475569;font-size:12px;margin:4px 0 10px;line-height:1.7">记录各类离线实验的方案设计与结果分析。包含模型训练实验、策略调优对比等，是回溯历史实验决策依据的主要来源。</p>
+    `
+  },
+  'dir-sys-md': {
+    badge: '容器节点', badgeClass: 'badge-container',
+    path: 'knowledge/系统架构/data_structure.md',
+    html: `
+      <div class="c-desc">当前目录下还有子目录，此文件描述各子目录的内容边界，供 Agent 选择继续深入的方向。</div>
+      <div class="c-h3">### 服务架构/</div>
+      <p style="color:#475569;font-size:12px;margin:4px 0 10px;line-height:1.7">服务级别的架构设计文档，包含服务拓扑图、上下游依赖关系、部署方式及容量规划相关内容。</p>
+      <div class="c-h3">### 核心流程/</div>
+      <p style="color:#475569;font-size:12px;margin:4px 0 10px;line-height:1.7">核心业务流程的详细说明，包含完整请求链路、数据处理各阶段逻辑及关键决策点的描述。</p>
+    `
+  },
+  'dir-svc-md': {
+    badge: '叶子节点', badgeClass: 'badge-leaf',
+    path: 'knowledge/系统架构/服务架构/data_structure.md',
+    html: `
+      <div class="c-desc">最底层目录，此文件存放实际文档条目，每个 <strong>## 标题</strong> 对应一篇学城文档。</div>
+      <div class="c-h2">整体服务架构设计</div>
+      <div class="c-field"><span class="c-key">**文档简介**：</span><span class="c-val">描述系统整体服务拓扑，包含主要服务模块、调用关系和数据流向。</span></div>
+      <div class="c-field" style="margin-top:4px"><span class="c-key">**内容纲要**：</span></div>
+      <ul class="c-outline"><li>服务模块划分与职责</li><li>上下游依赖关系</li><li>关键数据流向说明</li></ul>
+      <div class="c-field" style="margin-top:5px"><span class="c-key">**关键词**：</span><span class="c-kw">服务架构</span><span class="c-kw">服务拓扑</span><span class="c-kw">模块划分</span><span class="c-kw">调用关系</span></div>
+      <div class="c-field"><span class="c-key">**文档链接**：</span><span class="c-val"><a href="#">https://km.sankuai.com/collabpage/xxxxxxx</a></span></div>
+      <div class="c-field"><span class="c-key">**更新时间**：</span><span class="c-val">2026-03-15</span></div>
+      <hr class="c-hr">
+      <div class="c-h2">服务容量与扩缩容策略</div>
+      <div class="c-field"><span class="c-key">**文档简介**：</span><span class="c-val">介绍服务容量规划方法和自动扩缩容触发策略。</span></div>
+      <div class="c-field" style="margin-top:4px"><span class="c-key">**内容纲要**：</span></div>
+      <ul class="c-outline"><li>容量评估指标</li><li>扩缩容阈值设定</li><li>历次容量问题复盘</li></ul>
+      <div class="c-field" style="margin-top:5px"><span class="c-key">**关键词**：</span><span class="c-kw">容量规划</span><span class="c-kw">扩缩容</span><span class="c-kw">QPS</span><span class="c-kw">资源利用率</span></div>
+      <div class="c-field"><span class="c-key">**文档链接**：</span><span class="c-val"><a href="#">https://km.sankuai.com/collabpage/xxxxxxx</a></span></div>
+      <div class="c-field"><span class="c-key">**更新时间**：</span><span class="c-val">2026-04-01</span></div>
+      <hr class="c-hr">
+    `
+  },
+  'dir-flow-md': {
+    badge: '叶子节点', badgeClass: 'badge-leaf',
+    path: 'knowledge/系统架构/核心流程/data_structure.md',
+    html: `
+      <div class="c-desc">最底层目录，此文件存放实际文档条目。</div>
+      <div class="c-h2">请求处理全链路说明</div>
+      <div class="c-field"><span class="c-key">**文档简介**：</span><span class="c-val">从用户请求进入系统到最终响应，完整描述各处理阶段的逻辑和关键决策点。</span></div>
+      <div class="c-field" style="margin-top:4px"><span class="c-key">**内容纲要**：</span></div>
+      <ul class="c-outline"><li>请求接入与参数解析</li><li>核心处理阶段划分</li><li>结果组装与返回逻辑</li></ul>
+      <div class="c-field" style="margin-top:5px"><span class="c-key">**关键词**：</span><span class="c-kw">请求链路</span><span class="c-kw">数据流</span><span class="c-kw">处理阶段</span><span class="c-kw">关键节点</span></div>
+      <div class="c-field"><span class="c-key">**文档链接**：</span><span class="c-val"><a href="#">https://km.sankuai.com/collabpage/xxxxxxx</a></span></div>
+      <div class="c-field"><span class="c-key">**更新时间**：</span><span class="c-val">2026-02-20</span></div>
+      <hr class="c-hr">
+    `
+  },
+  'dir-exp-md': {
+    badge: '容器节点', badgeClass: 'badge-container',
+    path: 'knowledge/实验沉淀/data_structure.md',
+    html: `
+      <div class="c-desc">当前目录下还有子目录，此文件描述各子目录的内容边界。</div>
+      <div class="c-h3">### 模型训练/</div>
+      <p style="color:#475569;font-size:12px;margin:4px 0 10px;line-height:1.7">各类模型训练实验的记录，包含实验方案、关键参数、离线评测结果和上线决策背景，是回溯历史实验的主要来源。</p>
+    `
+  },
+  'dir-train-md': {
+    badge: '叶子节点', badgeClass: 'badge-leaf',
+    path: 'knowledge/实验沉淀/模型训练/data_structure.md',
+    html: `
+      <div class="c-desc">最底层目录，此文件存放实际文档条目。</div>
+      <div class="c-h2">基线模型训练实验</div>
+      <div class="c-field"><span class="c-key">**文档简介**：</span><span class="c-val">记录基线模型的训练方案、数据构成和离线评测结果。</span></div>
+      <div class="c-field" style="margin-top:4px"><span class="c-key">**内容纲要**：</span></div>
+      <ul class="c-outline"><li>训练数据来源与规模</li><li>模型结构与超参数设定</li><li>离线指标与基线对比</li></ul>
+      <div class="c-field" style="margin-top:5px"><span class="c-key">**关键词**：</span><span class="c-kw">模型训练</span><span class="c-kw">基线</span><span class="c-kw">离线评测</span><span class="c-kw">实验记录</span></div>
+      <div class="c-field"><span class="c-key">**文档链接**：</span><span class="c-val"><a href="#">https://km.sankuai.com/collabpage/xxxxxxx</a></span></div>
+      <div class="c-field"><span class="c-key">**更新时间**：</span><span class="c-val">2026-03-15</span></div>
+      <hr class="c-hr">
+      <div class="c-h2">改进方案 A 实验对比</div>
+      <div class="c-field"><span class="c-key">**文档简介**：</span><span class="c-val">在基线基础上验证方案 A（特征工程改进）的效果。</span></div>
+      <div class="c-field" style="margin-top:4px"><span class="c-key">**内容纲要**：</span></div>
+      <ul class="c-outline"><li>改进方案设计思路</li><li>与基线的指标对比</li><li>结论与后续迭代方向</li></ul>
+      <div class="c-field" style="margin-top:5px"><span class="c-key">**关键词**：</span><span class="c-kw">实验对比</span><span class="c-kw">特征工程</span><span class="c-kw">效果验证</span><span class="c-kw">迭代方向</span></div>
+      <div class="c-field"><span class="c-key">**文档链接**：</span><span class="c-val"><a href="#">https://km.sankuai.com/collabpage/xxxxxxx</a></span></div>
+      <div class="c-field"><span class="c-key">**更新时间**：</span><span class="c-val">2026-04-01</span></div>
+      <hr class="c-hr">
+    `
+  },
+  'root-idx': {
+    badge: '索引文件', badgeClass: 'badge-index',
+    path: 'knowledge/keyword_index.json',
+    html: `
+      <div class="c-desc" style="margin-bottom:10px">由脚本扫描整颗目录树的关键词字段自动生成，将关键词直接映射到所在目录路径，供 Layer 2 辅助检索使用。</div>
+      <pre class="c-pre">{
+  "服务架构":   ["系统架构/服务架构"],
+  "服务拓扑":   ["系统架构/服务架构"],
+  "模块划分":   ["系统架构/服务架构"],
+  "调用关系":   ["系统架构/服务架构"],
+  "容量规划":   ["系统架构/服务架构"],
+  "QPS":        ["系统架构/服务架构"],
+  "请求链路":   ["系统架构/核心流程"],
+  "数据流":     ["系统架构/核心流程"],
+  "处理阶段":   ["系统架构/核心流程"],
+  "模型训练":   ["实验沉淀/模型训练"],
+  "基线":       ["实验沉淀/模型训练"],
+  "离线评测":   ["实验沉淀/模型训练"],
+  "实验记录":   ["实验沉淀/模型训练"],
+  "特征工程":   ["实验沉淀/模型训练"],
+  ...
+}</pre>
+    `
+  }
+};
+
+// ── 渲染树 ──
+let selectedId = null;
+
+function getIcon(node) {
+  if (node.type === 'dir') return node.open ? '📂' : '📁';
+  if (node.fileType === 'json') return '📋';
+  if (node.nodeType === 'leaf') return '📄';
+  if (node.nodeType === 'root') return '📄';
+  return '📝';
+}
+
+function renderTree(nodes, depth, container) {
+  nodes.forEach(node => {
+    const item = document.createElement('div');
+    item.className = 'tree-item' + (node.id === selectedId ? ' selected' : '');
+    item.style.paddingLeft = (10 + depth * 16) + 'px';
+    item.dataset.id = node.id;
+
+    const toggle = document.createElement('span');
+    toggle.className = 'toggle' + (node.type === 'dir' ? (node.children.length ? (node.open ? ' open' : '') : ' empty') : ' empty');
+    toggle.textContent = '▶';
+
+    const icon = document.createElement('span');
+    icon.className = 'item-icon';
+    icon.textContent = getIcon(node);
+
+    const name = document.createElement('span');
+    name.className = 'item-name' + (node.type === 'dir' ? ' dir' : '');
+    name.textContent = node.name;
+
+    item.appendChild(toggle);
+    item.appendChild(icon);
+    item.appendChild(name);
+    container.appendChild(item);
+
+    if (node.type === 'dir' && node.children) {
+      const childWrap = document.createElement('div');
+      childWrap.className = 'tree-children';
+      childWrap.id = 'children-' + node.id;
+      childWrap.style.display = node.open ? 'block' : 'none';
+      container.appendChild(childWrap);
+      renderTree(node.children, depth + 1, childWrap);
+    }
+
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (node.type === 'dir' && node.children) {
+        node.open = !node.open;
+        toggle.className = 'toggle' + (node.children.length ? (node.open ? ' open' : '') : ' empty');
+        icon.textContent = getIcon(node);
+        const cw = document.getElementById('children-' + node.id);
+        if (cw) cw.style.display = node.open ? 'block' : 'none';
+      }
+      if (node.type === 'file') {
+        selectedId = node.id;
+        document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+        item.classList.add('selected');
+        name.parentElement.querySelector('.item-name').style.color = '';
+        showContent(node.id);
+      }
+    });
+  });
+}
+
+function showContent(id) {
+  const data = CONTENT[id];
+  if (!data) return;
+
+  const header = document.getElementById('content-header');
+  const breadcrumb = document.getElementById('breadcrumb');
+  const badge = document.getElementById('node-badge');
+  const body = document.getElementById('content-body');
+
+  header.style.display = 'flex';
+
+  const parts = data.path.split('/');
+  breadcrumb.innerHTML = parts.map((p, i) =>
+    i === parts.length - 1
+      ? `<span class="last">${p}</span>`
+      : `<span>${p}</span> <span style="color:#cbd5e1;margin:0 3px">/</span>`
+  ).join('');
+
+  badge.textContent = data.badge;
+  badge.className = 'node-badge ' + data.badgeClass;
+  body.innerHTML = data.html;
+}
+
+// ── 初始化 ──
+const treeRoot = document.getElementById('tree-root');
+renderTree(TREE, 0, treeRoot);
+</script>
+</body>
+</html>

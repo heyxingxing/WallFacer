@@ -1,0 +1,1037 @@
+<km-doc>
+<km-title nodeId="6d482b01-7757-47ae-81b8-8ec28fb3153a">上下文工程(Context Engineering)调研</km-title>
+<h2 nodeId="n010">1. 概念定义与演进</h2>
+<h3 nodeId="n010a">1.1 定义与起源</h3>
+<p nodeId="n011"><strong>上下文工程(Context Engineering)</strong> 是一门构建动态系统的工程学科，其核心目标是：<strong>为 LLM 的每次推理调用，提供正确的信息和工具，以正确的格式和优先级注入上下文窗口，使模型有可能完成任务</strong> [论文5]。简而言之，上下文工程不是写一段好的提示词，而是构建一个能动态组装最优信息的系统。</p>
+<blockquote nodeId="n011a">
+<p nodeId="n011b">"Context Engineering is the art and science of building dynamic systems that provide the right information and tools, in the right format, so the LLM can plausibly accomplish the task." ， Harrison Chase (LangChain)</p>
+<p nodeId="n011c">"It is the delicate art and science of filling the context window with just the right information - task descriptions, few-shot examples, RAG, tools, state, and history - all compressed and composed in the right way." ， Andrej Karpathy</p>
+</blockquote>
+<p nodeId="n012"><strong>概念演进时间线</strong>：2025.6 Shopify CEO Tobi Lutke 公开表示 "I prefer Context Engineering over Prompt Engineering"，Karpathy 同期转发支持 → 2025.9 Anthropic 工程博客发布系统性阐述 → 2025.11 上海交大发表《Context Engineering 2.0》论文，提出 1.0→4.0 学术演进框架 → 2026.5 CMU 等发表 Agent Harness Engineering Survey → 2026.6 Loop Engineering 概念兴起（OpenClaw/Claude Code/Google Chrome 团队同周独立提出），标志着概念演进进入新阶段：<strong>Prompt Engineering ⊂ Context Engineering ⊂ Harness Engineering ⊂ Loop Engineering</strong></p>
+<h3 nodeId="n012a">1.2 与 Prompt Engineering 的关系</h3>
+<p nodeId="n012b">上下文工程并非对提示词工程的简单替代，而是更高维度的范式升级：</p>
+<table nodeId="n013">
+<tr nodeId="n014">
+<th colwidth="[68]" nodeId="n015">
+<p nodeId="n016">维度</p>
+</th>
+<th colwidth="[68]" nodeId="n017">
+<p nodeId="n018">Prompt Engineering</p>
+</th>
+<th colwidth="[68]" nodeId="n019">
+<p nodeId="n020">Context Engineering</p>
+</th>
+</tr>
+<tr nodeId="n021">
+<td colwidth="[68]" nodeId="n022">
+<p nodeId="n023"><strong>信息来源</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n024">
+<p nodeId="n025">主要来自用户输入</p>
+</td>
+<td colwidth="[68]" nodeId="n026">
+<p nodeId="n027">绝大部分来自机器(工具)的输出</p>
+</td>
+</tr>
+<tr nodeId="n028">
+<td colwidth="[68]" nodeId="n029">
+<p nodeId="n030"><strong>动态性</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n031">
+<p nodeId="n032">静态、一次性</p>
+</td>
+<td colwidth="[68]" nodeId="n033">
+<p nodeId="n034">高度动态，随 Agent 运行周期不断累积变化</p>
+</td>
+</tr>
+<tr nodeId="n035">
+<td colwidth="[68]" nodeId="n036">
+<p nodeId="n037"><strong>范式</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n038">
+<p nodeId="n039">"写一段好文字"</p>
+</td>
+<td colwidth="[68]" nodeId="n040">
+<p nodeId="n041">"构建一个组装信息的系统"</p>
+</td>
+</tr>
+<tr nodeId="n042">
+<td colwidth="[68]" nodeId="n043">
+<p nodeId="n044"><strong>关注点</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n045">
+<p nodeId="n046">措辞、格式、技巧</p>
+</td>
+<td colwidth="[68]" nodeId="n047">
+<p nodeId="n048">信息选择、结构设计、系统架构</p>
+</td>
+</tr>
+<tr nodeId="n042a">
+<td colwidth="[68]" nodeId="n043a">
+<p nodeId="n044a"><strong>核心挑战</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n045a">
+<p nodeId="n046a">如何表达清楚</p>
+</td>
+<td colwidth="[68]" nodeId="n047a">
+<p nodeId="n048a">如何在有限窗口内最大化信息密度</p>
+</td>
+</tr>
+</table>
+<h3 nodeId="n049x">1.3 为什么现在重要</h3>
+<p nodeId="n049">三个关键驱动力使上下文工程成为 Agent 建设的核心课题：</p>
+<ol nodeId="n049a">
+<li nodeId="n049b"><strong>Agent 时代的到来</strong>：从简单 ChatBot 到复杂多步骤 Agent，上下文不再是一段固定文本，而是一个持续膨胀、需要精心管理的动态信息流。</li>
+<li nodeId="n049c"><strong>上下文衰减的现实约束</strong>：研究发现，上下文超过 32,000 个 token 后，模型正确性显著下降 [论文3]，远早于官方宣称的百万级 token 限制。"塞更多信息"不是解决方案，"选对信息"才是。</li>
+<li nodeId="n049d"><strong>生产级复杂度</strong>：业务系统 Agent 需要对接大量工具、处理复杂状态、跨多轮对话工作，这些都需要系统性的上下文管理，而非手工编写 prompt 能解决。</li>
+</ol>
+<h2 nodeId="n050">2. 上下文的组成要素</h2>
+<p nodeId="n051">一个 Agent 的上下文窗口由以下七大要素组成，每个要素都需要独立的管理策略：</p>
+<km-html nodeId="diagram-elements"><![CDATA[<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  padding:12px 16px;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;
+  background:#fff;
+  -webkit-font-smoothing:antialiased
+}
+
+.diagram-container{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:32px;
+  padding:8px 0;
+}
+
+/* Ring chart */
+.ring-wrapper{position:relative;width:150px;height:150px;flex-shrink:0}
+.ring-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.ring-center .label{font-size:9px;color:#64748B;font-weight:500}
+.ring-center .value{font-size:15px;font-weight:700;color:#1E293B;margin-top:1px}
+
+/* Legend */
+.legend{display:flex;flex-direction:column;gap:6px}
+.legend-item{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 10px;
+  background:#fff;
+  border-radius:6px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.03);
+  min-width:200px;
+}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend-name{font-size:10px;font-weight:600;color:#1E293B;flex:1}
+.legend-pct{font-size:10px;font-weight:700;color:#475569;font-family:"SF Mono",Menlo,monospace}
+</style>
+</head><body>
+
+<div class="diagram-container">
+  <div class="ring-wrapper">
+    <svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#F1F5F9" stroke-width="20"/>
+      <!-- 消息历史 35% = 127.5 of 364 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#6366F1" stroke-width="20"
+        stroke-dasharray="127 237" stroke-dashoffset="91"/>
+      <!-- 工具定义 15% = 55 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#3B82F6" stroke-width="20"
+        stroke-dasharray="55 309" stroke-dashoffset="-36"/>
+      <!-- 外部数据 15% = 55 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#059669" stroke-width="20"
+        stroke-dasharray="55 309" stroke-dashoffset="-91"/>
+      <!-- 系统提示词 10% = 36 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#8B5CF6" stroke-width="20"
+        stroke-dasharray="36 328" stroke-dashoffset="-146"/>
+      <!-- 记忆系统 8% = 29 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#D97706" stroke-width="20"
+        stroke-dasharray="29 335" stroke-dashoffset="-182"/>
+      <!-- 示例 7% = 25 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#64748B" stroke-width="20"
+        stroke-dasharray="25 339" stroke-dashoffset="-211"/>
+      <!-- 任务状态 10% = 36 -->
+      <circle cx="75" cy="75" r="58" fill="none" stroke="#EF4444" stroke-width="20"
+        stroke-dasharray="36 328" stroke-dashoffset="-236"/>
+      <!-- Center white circle -->
+      <circle cx="75" cy="75" r="46" fill="#fff"/>
+    </svg>
+    <div class="ring-center">
+      <div class="label">建议总占比</div>
+      <div class="value">70-80%</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#6366F1"></div>
+      <div class="legend-name">消息历史</div>
+      <div class="legend-pct">30-40%</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#3B82F6"></div>
+      <div class="legend-name">工具定义</div>
+      <div class="legend-pct">10-20%</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#059669"></div>
+      <div class="legend-name">外部数据 RAG/MCP</div>
+      <div class="legend-pct">10-20%</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#8B5CF6"></div>
+      <div class="legend-name">系统提示词</div>
+      <div class="legend-pct">5-15%</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#D97706"></div>
+      <div class="legend-name">记忆系统</div>
+      <div class="legend-pct">5-10%</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#64748B"></div>
+      <div class="legend-name">示例 Few-shot</div>
+      <div class="legend-pct">5-10%</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#EF4444"></div>
+      <div class="legend-name">任务状态</div>
+      <div class="legend-pct">5-10%</div>
+    </div>
+  </div>
+</div>
+
+</body></html>
+]]></km-html>
+<table nodeId="n052">
+<tr nodeId="n053">
+<th colwidth="[120]" nodeId="n054">
+<p nodeId="n055"><strong>要素</strong></p>
+</th>
+<th colwidth="[380]" nodeId="n056">
+<p nodeId="n057"><strong>定义</strong></p>
+</th>
+<th colwidth="[380]" nodeId="n058">
+<p nodeId="n059"><strong>关键考量</strong></p>
+</th>
+<th colwidth="[80]" nodeId="n058a">
+<p nodeId="n059a"><strong>典型占比</strong></p>
+</th>
+</tr>
+<tr nodeId="n060">
+<td colwidth="[120]" nodeId="n061">
+<p nodeId="n062"><strong>系统提示词</strong> (System Prompt)</p>
+</td>
+<td colwidth="[380]" nodeId="n063">
+<p nodeId="n064">Agent 的"基本人格"和行为规范，定义了 Agent 是谁、做什么、怎么做</p>
+</td>
+<td colwidth="[380]" nodeId="n063a">
+<p nodeId="n064a">生产级系统由十几层逻辑模块动态组装，而非一段静态文字；用 XML/Markdown 结构化组织</p>
+</td>
+<td colwidth="[80]" nodeId="n065">
+<p nodeId="n066">5-15%</p>
+</td>
+</tr>
+<tr nodeId="n067">
+<td colwidth="[120]" nodeId="n068">
+<p nodeId="n069"><strong>工具定义</strong> (Tools)</p>
+</td>
+<td colwidth="[380]" nodeId="n070">
+<p nodeId="n071">Agent 可调用的工具集合及参数说明，定义了 Agent 与操作空间的契约</p>
+</td>
+<td colwidth="[380]" nodeId="n070a">
+<p nodeId="n071a">每个工具的 schema 都会占据 token（全量可达 77K+）；避免一次性加载全部工具，按需加载</p>
+</td>
+<td colwidth="[80]" nodeId="n072">
+<p nodeId="n073">10-20%</p>
+</td>
+</tr>
+<tr nodeId="n074">
+<td colwidth="[120]" nodeId="n075">
+<p nodeId="n076"><strong>外部数据</strong> (RAG/MCP)</p>
+</td>
+<td colwidth="[380]" nodeId="n077">
+<p nodeId="n078">通过检索增强生成(RAG)或模型上下文协议(MCP)从外部数据源获取的信息</p>
+</td>
+<td colwidth="[380]" nodeId="n077a">
+<p nodeId="n078a">检索质量直接决定上下文质量；需要权衡召回率与精确率；检索结果需适当截断和格式化</p>
+</td>
+<td colwidth="[80]" nodeId="n079">
+<p nodeId="n080">10-20%</p>
+</td>
+</tr>
+<tr nodeId="n081">
+<td colwidth="[120]" nodeId="n082">
+<p nodeId="n083"><strong>消息历史</strong> (Message History)</p>
+</td>
+<td colwidth="[380]" nodeId="n084">
+<p nodeId="n085">用户与 Agent 之间的对话历史，包括用户输入和 Agent 响应</p>
+</td>
+<td colwidth="[380]" nodeId="n084a">
+<p nodeId="n085a">随对话轮次增加持续消耗 token；第 15 轮开始忘记输出格式，第 20 轮开始用错工具，这是上下文架构问题</p>
+</td>
+<td colwidth="[80]" nodeId="n086">
+<p nodeId="n087">30-40%</p>
+</td>
+</tr>
+<tr nodeId="n088">
+<td colwidth="[120]" nodeId="n089">
+<p nodeId="n090"><strong>记忆系统</strong> (Memory)</p>
+</td>
+<td colwidth="[380]" nodeId="n091">
+<p nodeId="n092">跨会话持久化的信息存储，包括用户偏好、历史决策、学到的知识等</p>
+</td>
+<td colwidth="[380]" nodeId="n091a">
+<p nodeId="n092a">短期记忆(当前会话) vs 长期记忆(跨会话)；LightMem [论文19]：三阶段记忆架构，Token 降低 38x</p>
+</td>
+<td colwidth="[80]" nodeId="n093">
+<p nodeId="n094">5-10%</p>
+</td>
+</tr>
+<tr nodeId="n095">
+<td colwidth="[120]" nodeId="n096">
+<p nodeId="n097"><strong>示例</strong> (Few-shot)</p>
+</td>
+<td colwidth="[380]" nodeId="n098">
+<p nodeId="n099">向模型展示期望的输入-输出格式和行为模式的参考样例</p>
+</td>
+<td colwidth="[380]" nodeId="n098a">
+<p nodeId="n099a">对 LLM 来说，示例是"一图胜千言"，比纯文字描述更有效；需权衡数量与 token 消耗</p>
+</td>
+<td colwidth="[80]" nodeId="n100">
+<p nodeId="n101">5-10%</p>
+</td>
+</tr>
+<tr nodeId="n102">
+<td colwidth="[120]" nodeId="n103">
+<p nodeId="n104"><strong>任务状态</strong> (State)</p>
+</td>
+<td colwidth="[380]" nodeId="n105">
+<p nodeId="n106">Agent 当前任务的执行状态，包括进度、中间结果、待处理项</p>
+</td>
+<td colwidth="[380]" nodeId="n105a">
+<p nodeId="n106a">状态信息随任务推进不断变化；需要决定哪些状态值得保留在上下文中</p>
+</td>
+<td colwidth="[80]" nodeId="n107">
+<p nodeId="n108">5-10%</p>
+</td>
+</tr>
+</table>
+<blockquote nodeId="n109">
+<p nodeId="n109a">📌 <strong>预留空间</strong>：以上各要素合计应控制在总窗口的 70-80%，至少预留 20-30% 给模型生成。超过预算时按优先级触发裁剪。</p>
+</blockquote>
+<h2 nodeId="n110">3. 核心策略框架</h2>
+<p nodeId="n111">LangChain 创始人 Harrison Chase 提出四大操作策略（Write / Select / Compress / Isolate），构成上下文工程的完整方法论。四大策略协同配合，不是互斥的。</p>
+<table nodeId="n112">
+<tr nodeId="n113">
+<th colwidth="[100]" nodeId="n114">
+<p nodeId="n115"><strong>策略</strong></p>
+</th>
+<th colwidth="[280]" nodeId="n116">
+<p nodeId="n117"><strong>核心思想</strong></p>
+</th>
+<th colwidth="[300]" nodeId="n118">
+<p nodeId="n119"><strong>典型应用</strong></p>
+</th>
+<th colwidth="[280]" nodeId="n120">
+<p nodeId="n121"><strong>2026 前沿进展</strong></p>
+</th>
+</tr>
+<tr nodeId="n122">
+<td colwidth="[100]" nodeId="n123">
+<p nodeId="n124"><strong>Write 写入</strong></p>
+</td>
+<td colwidth="[280]" nodeId="n125">
+<p nodeId="n126">将信息持久化到窗口之外的存储，需要时再读取</p>
+</td>
+<td colwidth="[300]" nodeId="n127">
+<p nodeId="n128">关键决策写入笔记；用户偏好写入长期记忆；推理结果固化为工作流蓝图 [论文14]（token 成本降低 99%+）</p>
+</td>
+<td colwidth="[280]" nodeId="n129">
+<p nodeId="n130">MCP Workflow Engine：Agent 推理产出声明式 JSON 蓝图，后续执行只消耗一次 token</p>
+</td>
+</tr>
+<tr nodeId="n131">
+<td colwidth="[100]" nodeId="n132">
+<p nodeId="n133"><strong>Select 选择</strong></p>
+</td>
+<td colwidth="[280]" nodeId="n134">
+<p nodeId="n135">从海量信息中选取最相关的部分注入上下文</p>
+</td>
+<td colwidth="[300]" nodeId="n136">
+<p nodeId="n137">RAG 语义检索；Tool Search 按需加载工具；条件加载上下文模块</p>
+</td>
+<td colwidth="[280]" nodeId="n138">
+<p nodeId="n139">Stable-RAG [论文16]：消除排列偏差幻觉；Predictive Prefetching [论文17]：预测性预取降低延迟</p>
+</td>
+</tr>
+<tr nodeId="n140">
+<td colwidth="[100]" nodeId="n141">
+<p nodeId="n142"><strong>Compress 压缩</strong></p>
+</td>
+<td colwidth="[280]" nodeId="n143">
+<p nodeId="n144">对已有上下文进行压缩，保留关键信息的同时减少 token 消耗</p>
+</td>
+<td colwidth="[300]" nodeId="n145">
+<p nodeId="n146">对话摘要；工具输出截断；冗余清除；渐进式摘要</p>
+</td>
+<td colwidth="[280]" nodeId="n147">
+<p nodeId="n148">ContextCurator [论文13]：RL 训练轻量策略模型主动修剪噪声，WebArena 成功率 41.2%，token 减少 8.8%</p>
+</td>
+</tr>
+<tr nodeId="n149">
+<td colwidth="[100]" nodeId="n150">
+<p nodeId="n151"><strong>Isolate 隔离</strong></p>
+</td>
+<td colwidth="[280]" nodeId="n152">
+<p nodeId="n153">将不同任务的上下文隔离到不同 Agent/窗口，避免上下文污染</p>
+</td>
+<td colwidth="[300]" nodeId="n154">
+<p nodeId="n155">子 Agent 架构（干净窗口）；多窗口管理；任务隔离（子 Agent 仅返回浓缩摘要）</p>
+</td>
+<td colwidth="[280]" nodeId="n156">
+<p nodeId="n157">Agent-Radar [论文20]：时空衰减注意力引导，无需训练即可让每个 Agent 聚焦相关上下文</p>
+</td>
+</tr>
+</table>
+<p nodeId="n158"><strong>策略 × 要素交叉矩阵</strong>（快速定位最佳实践）：</p>
+<table nodeId="n158a">
+<tr nodeId="n158b">
+<th colwidth="[68]" nodeId="n158c">
+<p nodeId="n158d">要素 ╲ 策略</p>
+</th>
+<th colwidth="[68]" nodeId="n158e">
+<p nodeId="n158f">Write</p>
+</th>
+<th colwidth="[68]" nodeId="n158g">
+<p nodeId="n158h">Select</p>
+</th>
+<th colwidth="[68]" nodeId="n158i">
+<p nodeId="n158j">Compress</p>
+</th>
+<th colwidth="[68]" nodeId="n158k">
+<p nodeId="n158l">Isolate</p>
+</th>
+</tr>
+<tr nodeId="n158m">
+<td colwidth="[68]" nodeId="n158n">
+<p nodeId="n158o"><strong>系统提示词</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n158p">
+<p nodeId="n158q">动态组装模块化指令</p>
+</td>
+<td colwidth="[68]" nodeId="n158r">
+<p nodeId="n158s">按任务阶段条件加载</p>
+</td>
+<td colwidth="[68]" nodeId="n158t">
+<p nodeId="n158u">精简措辞，避免冗余规则</p>
+</td>
+<td colwidth="[68]" nodeId="n158v">
+<p nodeId="n158w">子 Agent 各自独立 System Prompt</p>
+</td>
+</tr>
+<tr nodeId="n158x">
+<td colwidth="[68]" nodeId="n158y">
+<p nodeId="n158z"><strong>工具定义</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n159a">
+<p nodeId="n159b">推理结果固化为工作流蓝图</p>
+</td>
+<td colwidth="[68]" nodeId="n159c">
+<p nodeId="n159d">Tool Search 按需加载</p>
+</td>
+<td colwidth="[68]" nodeId="n159e">
+<p nodeId="n159f">精简 schema 描述</p>
+</td>
+<td colwidth="[68]" nodeId="n159g">
+<p nodeId="n159h">不同子 Agent 加载不同工具集</p>
+</td>
+</tr>
+<tr nodeId="n159i">
+<td colwidth="[68]" nodeId="n159j">
+<p nodeId="n159k"><strong>消息历史</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n159l">
+<p nodeId="n159m">关键决策写入笔记持久化</p>
+</td>
+<td colwidth="[68]" nodeId="n159n">
+<p nodeId="n159o">滑动窗口保留近 N 轮</p>
+</td>
+<td colwidth="[68]" nodeId="n159p">
+<p nodeId="n159q">渐进式摘要 + 工具调用清除</p>
+</td>
+<td colwidth="[68]" nodeId="n159r">
+<p nodeId="n159s">子任务对话不回流主 Agent</p>
+</td>
+</tr>
+<tr nodeId="n159t">
+<td colwidth="[68]" nodeId="n159u">
+<p nodeId="n159v"><strong>记忆系统</strong></p>
+</td>
+<td colwidth="[68]" nodeId="n159w">
+<p nodeId="n159x">三阶段记忆架构(LightMem)</p>
+</td>
+<td colwidth="[68]" nodeId="n159y">
+<p nodeId="n159z">语义检索相关记忆条目</p>
+</td>
+<td colwidth="[68]" nodeId="n160a">
+<p nodeId="n160b">离线整合，在线推理分离</p>
+</td>
+<td colwidth="[68]" nodeId="n160c">
+<p nodeId="n160d">用户/会话/Agent 三级隔离</p>
+</td>
+</tr>
+</table>
+<p nodeId="25ec2aa7ad474c95b70d47403eb0bc44">当你面对某个具体的上下文要素（比如工具定义太大、消息历史太长），可以快速查表找到对应的操作手段。例如："工具定义"占 token 太多 → 查表发现可以用 <strong>Select</strong>（按需加载）+ <strong>Compress</strong>（精简 schema）+ <strong>Isolate</strong>（不同子 Agent 各自加载自己的工具集）</p>
+<h2 nodeId="n160">4. 关键技术实践</h2>
+<h3 nodeId="n161a">4.1 即时上下文(JIT Context) vs 预加载</h3>
+<p nodeId="n161b">两种加载模式各有取舍，最佳实践是<strong>混合策略</strong>：</p>
+<table nodeId="n161">
+<tr nodeId="n162">
+<th colwidth="[120]" nodeId="n163">
+<p nodeId="n164"><strong>维度</strong></p>
+</th>
+<th colwidth="[420]" nodeId="n165">
+<p nodeId="n166"><strong>预加载 (Eager Loading)</strong></p>
+</th>
+<th colwidth="[420]" nodeId="n167">
+<p nodeId="n168"><strong>即时上下文 (JIT / Lazy Loading)</strong></p>
+</th>
+</tr>
+<tr nodeId="n169">
+<td colwidth="[120]" nodeId="n170">
+<p nodeId="n171"><strong>机制</strong></p>
+</td>
+<td colwidth="[420]" nodeId="n172">
+<p nodeId="n173">Agent 启动时一次性将所有可能需要的信息加载到上下文</p>
+</td>
+<td colwidth="[420]" nodeId="n174">
+<p nodeId="n175">维护轻量标识符（文件路径、ID），运行时通过工具按需获取完整内容</p>
+</td>
+</tr>
+<tr nodeId="n176">
+<td colwidth="[120]" nodeId="n177">
+<p nodeId="n178"><strong>优点</strong></p>
+</td>
+<td colwidth="[420]" nodeId="n179">
+<p nodeId="n180">实现简单，信息随时可用，无额外延迟</p>
+</td>
+<td colwidth="[420]" nodeId="n181">
+<p nodeId="n182">节省 token，信息时效性高，上下文信噪比高</p>
+</td>
+</tr>
+<tr nodeId="n183">
+<td colwidth="[120]" nodeId="n184">
+<p nodeId="n185"><strong>适用场景</strong></p>
+</td>
+<td colwidth="[420]" nodeId="n186">
+<p nodeId="n187">少量核心信息（Agent 身份定义、基础规则）</p>
+</td>
+<td colwidth="[420]" nodeId="n188">
+<p nodeId="n189">大规模知识库、工具集、文档库</p>
+</td>
+</tr>
+</table>
+<p nodeId="n190"><strong>生产实践参考</strong>：</p>
+<ul nodeId="e90e9422f3d0436196a93b14c3dc2339">
+<li nodeId="d7c9765a27bd40729b32b4f6afcf9d1d">Claude Code 预加载 <code>CLAUDE.md</code>（~2k tokens），文件树索引作为 Layer 1，具体文件内容通过 <code>Read</code> 工具按需加载；</li>
+<li nodeId="d06ada5c0b1d4dc1bd8d961408bde0ec">Skill 架构以 <code>SKILL.md</code> 作为路由层预加载，<code>references/</code> 目录下的详细文档按需 <code>read_file</code> 加载。</li>
+</ul>
+<h3 nodeId="n191">4.2 渐进式披露</h3>
+<p nodeId="n192"><strong>核心思想</strong>：不一次性暴露所有信息，而是根据任务进展逐步披露，逐步缩小 LLM 每次决策时需要"看到"的上下文范围。</p>
+<p nodeId="n193"><strong>实现方式</strong>：① 分层信息架构，将信息分为"概览层"和"详情层"，先给概览，需要时再加载详情；② 条件触发，根据用户意图或任务阶段，决定披露哪些信息模块；③ 工具分页，对大型工具返回值实施分页，先返回摘要，Agent 可请求更多详情。</p>
+<p nodeId="n194"><strong>生产实践参考</strong>：</p>
+<ul nodeId="8d839ed0933a4a2cafd4de581e01da30">
+<li nodeId="14acbd2ccb254cba8ef117420500689d">Claude Code 预加载文件目录结构（<code>tree</code> 输出），具体文件内容通过 <code>Read</code> 工具按需加载；</li>
+<li nodeId="c66f02ba55c04c24beca914b200dd588">OpenClaw Skill 系统采用"名称+描述"预加载 → 匹配后读取完整 <code>SKILL.md</code> → 按需加载 <code>references/</code> 子文档的三级渐进披露。</li>
+</ul>
+<h3 nodeId="n195">4.3 结构化笔记与持久化记忆</h3>
+<p nodeId="n196"><strong>核心思想</strong>：Agent 定期将关键信息写入上下文窗口之外的持久化存储，稍后重新读取。关键在于"结构化"，不是随意记录，而是有组织、可检索、可更新的信息管理。</p>
+<p nodeId="n197"><strong>实现模式</strong>：① 待办事项列表，Agent 维护任务清单，完成一项划掉一项；② 战略笔记，记录高层架构决策、设计原则；③ 错误日志，记录已尝试但失败的方案，避免重复犯错；④ 会话摘要，每次会话结束时生成摘要，下次会话启动时加载。</p>
+<p nodeId="n198"><strong>生产实践参考</strong>：</p>
+<ul nodeId="6d38bcaf73d4431eb3813466e181b781">
+<li nodeId="739a09039f8941a5b061a9d9a541efde">Claude Code 以 <code>CLAUDE.md</code> 作为长期记忆文件，每次会话启动时预加载；</li>
+<li nodeId="6e8226104d924b21853b9148bbc40db6">OpenClaw 采用"记忆即文件"设计，三级存储架构：<code>memory/YYYY-MM-DD.md</code>（每日记忆）+ <code>MEMORY.md</code>（长期记忆）+ 向量库（语义检索）；</li>
+<li nodeId="d0773c65b6a341fd8d6d308063b104b4">飞象 Dumbo，CatCalw 等 以 <code>IDENTITY.md</code> / <code>SOUL.md</code> / <code>USER.md</code> 分别存储 Agent 身份、行为契约、用户偏好，<code>memory_write</code> / <code>memory_search</code> 工具支持短期和长期记忆的写入与检索。</li>
+</ul>
+<h3 nodeId="n199">4.4 上下文隔离（子 Agent 架构）</h3>
+<p nodeId="n200"><strong>核心思想</strong>：使用专门的子 Agent 处理特定任务，每个子 Agent 拥有干净的上下文窗口，互不干扰。</p>
+<p nodeId="n201"><strong>关键设计原则</strong>：① 主 Agent 负责高层协调（理解意图、分解任务、整合结果）；② 子 Agent 拥有独立上下文，不受主 Agent 历史对话的污染；③ 子 Agent 返回浓缩摘要，不将全部工作过程注入主 Agent 的上下文；④ 子 Agent 的失败不会污染主 Agent 的上下文。</p>
+<p nodeId="n202"><strong>生产实践参考</strong>：</p>
+<ul nodeId="5065d44dae464f80adfccfd5c73da22f">
+<li nodeId="bde4ab4bdca84be58e102c29d49e7287">Claude Code Sub-agent 机制为每个子任务启动独立 ReAct 循环，支持独立无继承模式和 Fork 复制模式，搭配 <code>--worktree</code> 隔离可并行修改代码；</li>
+<li nodeId="72554952f5fa48c8b4a87e29b85e56b8">供商助手 MainAgent + 多 SubAgent 按业务域隔离（酒店、平台方向、定时任务各有独立 SubAgent），Skill 和 Context 相互隔离，各方向可独立迭代。</li>
+</ul>
+<h3 nodeId="n203">4.5 对话历史管理</h3>
+<p nodeId="n204">对话历史是上下文膨胀的主要来源之一。三种策略按轻量→重量排列，生产中通常组合使用：</p>
+<table nodeId="n205">
+<tr nodeId="n206">
+<th colwidth="[130]" nodeId="n207">
+<p nodeId="n208"><strong>策略</strong></p>
+</th>
+<th colwidth="[350]" nodeId="n209">
+<p nodeId="n210"><strong>机制</strong></p>
+</th>
+<th colwidth="[240]" nodeId="n211">
+<p nodeId="n212"><strong>优点</strong></p>
+</th>
+<th colwidth="[240]" nodeId="n213">
+<p nodeId="n214"><strong>缺点</strong></p>
+</th>
+</tr>
+<tr nodeId="n215">
+<td colwidth="[130]" nodeId="n216">
+<p nodeId="n217"><strong>工具调用清除</strong></p>
+</td>
+<td colwidth="[350]" nodeId="n218">
+<p nodeId="n219">清除已完成的工具调用 request+response，仅保留结论性一句话</p>
+</td>
+<td colwidth="[240]" nodeId="n220a">
+<p nodeId="n221a">最轻量，零额外推理成本</p>
+</td>
+<td colwidth="[240]" nodeId="n222a">
+<p nodeId="n223a">仅适用于工具密集型对话</p>
+</td>
+</tr>
+<tr nodeId="n224">
+<td colwidth="[130]" nodeId="n225">
+<p nodeId="n226"><strong>滑动窗口</strong></p>
+</td>
+<td colwidth="[350]" nodeId="n227">
+<p nodeId="n228">只保留最近 N 轮对话，被滑出的部分可生成摘要保留</p>
+</td>
+<td colwidth="[240]" nodeId="n229a">
+<p nodeId="n230a">实现简单，token 消耗可控</p>
+</td>
+<td colwidth="[240]" nodeId="n231a">
+<p nodeId="n232a">可能丢失早期关键信息</p>
+</td>
+</tr>
+<tr nodeId="n233">
+<td colwidth="[130]" nodeId="n234">
+<p nodeId="n235"><strong>对话摘要</strong></p>
+</td>
+<td colwidth="[350]" nodeId="n236">
+<p nodeId="n237">将历史对话压缩为结构化摘要（保留：决策、未解决问题、偏好）</p>
+</td>
+<td colwidth="[240]" nodeId="n238a">
+<p nodeId="n239a">压缩比高（约 5:1），保留关键语义</p>
+</td>
+<td colwidth="[240]" nodeId="n240a">
+<p nodeId="n241a">摘要本身消耗推理预算</p>
+</td>
+</tr>
+</table>
+<p nodeId="n242"><strong>生产实践参考</strong>：</p>
+<ul nodeId="8be9890d7ad742a0b81dec77e9599c09">
+<li nodeId="9936e3bcc5c640b9b9d8e4a819503c7d">Claude Code 五层压缩引擎（MicroCompact→Collapse→Session Memory→AutoCompact→Context Reset），在 95% 窗口时自动触发；</li>
+<li nodeId="405127a23f8c4a69a7e12407c7902c2b">供商助手 Context Pruning + Compaction 分级降级，Compaction 触发从 <sub>30 轮推迟到 </sub>55 轮（+83%），群聊启动固定注入从 <sub>20,500 tokens 降至 </sub>9,400 tokens（-54%）。</li>
+</ul>
+<h3 nodeId="n243">4.6 工具返回值优化</h3>
+<p nodeId="n244">工具返回值是 Agent 系统中最容易被忽视但影响巨大的上下文消耗源。优化策略：</p>
+<table nodeId="n245">
+<tr nodeId="n246">
+<th colwidth="[68]" nodeId="n247">
+<p nodeId="n248"><strong>优化策略</strong></p>
+</th>
+<th colwidth="[68]" nodeId="n249">
+<p nodeId="n250"><strong>具体做法</strong></p>
+</th>
+<th colwidth="[68]" nodeId="n251a">
+<p nodeId="n252a"><strong>生产实践</strong></p>
+</th>
+</tr>
+<tr nodeId="n253a">
+<td colwidth="[68]" nodeId="n254a">
+<p nodeId="n255a">Schema 瘦身</p>
+</td>
+<td colwidth="[68]" nodeId="n256a">
+<p nodeId="n257a">工具 description 控制在 50 词以内；用 enum 替代自由文本</p>
+</td>
+<td colwidth="[68]" nodeId="n258a">
+<p nodeId="n259a">供商助手 watson-cli 118 命令 AI Ready 改造：bizCode 免查、CLI help 丰富化，消除 LLM 幻觉推断参数问题</p>
+</td>
+</tr>
+<tr nodeId="n260a">
+<td colwidth="[68]" nodeId="n261a">
+<p nodeId="n262a">分级返回</p>
+</td>
+<td colwidth="[68]" nodeId="n263a">
+<p nodeId="n264a">工具支持 detail_level=summary|full，默认返回摘要</p>
+</td>
+<td colwidth="[68]" nodeId="n265a">
+<p nodeId="n266a">Dumbo 学城文档工具返回超长文档时自动输出简化版 Markdown 而非完整 XML</p>
+</td>
+</tr>
+<tr nodeId="n267a">
+<td colwidth="[68]" nodeId="n268a">
+<p nodeId="n269a">流式分页</p>
+</td>
+<td colwidth="[68]" nodeId="n270a">
+<p nodeId="n271a">列表类工具默认返回有限条数 + has_more + cursor</p>
+</td>
+<td colwidth="[68]" nodeId="n272a">
+<p nodeId="n273a">Claude Code grep/glob 工具通过 limit 参数控制单次返回条数</p>
+</td>
+</tr>
+<tr nodeId="n274a">
+<td colwidth="[68]" nodeId="n275a">
+<p nodeId="n276a">结构化截断</p>
+</td>
+<td colwidth="[68]" nodeId="n277a">
+<p nodeId="n278a">保留前 N 行 + 末尾 M 行 + 中间省略标记</p>
+</td>
+<td colwidth="[68]" nodeId="n279a">
+<p nodeId="n280a">OpenClaw Context Pruning 对旧工具输出做临时裁剪，每次会话节省 10k~30k tokens</p>
+</td>
+</tr>
+</table>
+<hr nodeId="n281" />
+<h2 nodeId="n220">5. 实践落地：供商 AI 运维助手的上下文工程</h2>
+<p nodeId="n221">以供商 AI 运维助手（华生 Watson）为案例，展示上下文工程如何在真实业务系统中落地。该助手基于 CatClaw 群助理形态，覆盖值班问题排查、每日巡检、告警分析、WBR 周报等场景。</p>
+<h3 nodeId="755e4014-0a04-43a9-a5a4-d640348c65c0">5.1 业务背景与挑战</h3>
+<table nodeId="n221b">
+<tr nodeId="n221c">
+<th colwidth="[68]" nodeId="n221d">
+<p nodeId="n221e">挑战维度</p>
+</th>
+<th colwidth="[68]" nodeId="n221f">
+<p nodeId="n221g">具体问题</p>
+</th>
+<th colwidth="[68]" nodeId="n221h">
+<p nodeId="n221i">对上下文工程的要求</p>
+</th>
+</tr>
+<tr nodeId="n221j">
+<td colwidth="[68]" nodeId="n221k">
+<p nodeId="n221l">场景分散</p>
+</td>
+<td colwidth="[68]" nodeId="n221m">
+<p nodeId="n221n">TT 值班、巡检（20+ 服务）、告警（日均 100+）、WBR 周报</p>
+</td>
+<td colwidth="[68]" nodeId="n221o">
+<p nodeId="n221p">需要精准的 Skill 路由，避免上下文中塞入无关场景的规则</p>
+</td>
+</tr>
+<tr nodeId="n221q">
+<td colwidth="[68]" nodeId="n221r">
+<p nodeId="n221s">工具链庞大</p>
+</td>
+<td colwidth="[68]" nodeId="n221t">
+<p nodeId="n221u">118 个 CLI 命令、50+ 代码仓库、多个知识库</p>
+</td>
+<td colwidth="[68]" nodeId="n221v">
+<p nodeId="n221w">工具描述不能全量注入，需要分层选择（Select）</p>
+</td>
+</tr>
+<tr nodeId="n221x">
+<td colwidth="[68]" nodeId="n221y">
+<p nodeId="n221z">排查链路长</p>
+</td>
+<td colwidth="[68]" nodeId="n222b">
+<p nodeId="n222c">单个 TT 需串联 Raptor → 日志 → traceId → 代码定位</p>
+</td>
+<td colwidth="[68]" nodeId="n222d">
+<p nodeId="n222e">需要工具返回值裁剪（Compress）和上下文生命周期管理</p>
+</td>
+</tr>
+<tr nodeId="n222f">
+<td colwidth="[68]" nodeId="n222g">
+<p nodeId="n222h">多方向并行</p>
+</td>
+<td colwidth="[68]" nodeId="n222i">
+<p nodeId="n222j">酒店 B 端、C 端、平台方向各有独立 Skill 和知识库</p>
+</td>
+<td colwidth="[68]" nodeId="n222k">
+<p nodeId="n222l">需要子 Agent 隔离（Isolate），各方向 Context 互不干扰</p>
+</td>
+</tr>
+</table>
+<h3 nodeId="n222m">5.2 上下文工程技术拆解</h3>
+<table responsive="false" nodeId="n222">
+<tr nodeId="n223">
+<th colwidth="[151]" nodeId="n224a">
+<p nodeId="n225a">关键技术（第 4 章）</p>
+</th>
+<th colwidth="[770]" nodeId="n226a">
+<p nodeId="n227a">在平台方向的落地方式</p>
+</th>
+<th colwidth="[600.9921875]" nodeId="n228a">
+<p nodeId="n229b">效果/收益（来源）</p>
+</th>
+</tr>
+<tr nodeId="n230">
+<td colwidth="[151]" nodeId="n231">
+<p nodeId="n232"><strong>渐进式披露</strong></p>
+</td>
+<td colwidth="[770]" nodeId="n233a">
+<p nodeId="n234a"><strong>4 层 Skill 智能路由演进</strong><km-footnote id="08afe69b-bbea-4ab7-a652-774bb02328de" annotate="" nodeId="2caf806e43c446afbd343cc9b2c9e1cb" />：V1 全量注入→V2 Skill Map 结构化索引→V3 SubAgent 分层隔离→V4 语义召回（BM25+Embedding，138 Skill/1,026 功能点）</p>
+</td>
+<td colwidth="[600.9921875]" nodeId="n235a">
+<p nodeId="n236a">主 Agent Skill 路由准确率 42%→92%；子 Agent pass⁵ 33%→87%</p>
+</td>
+</tr>
+<tr nodeId="n237a">
+<td colwidth="[151]" nodeId="n238">
+<p nodeId="n239"><strong>持久化记忆</strong></p>
+</td>
+<td colwidth="[770]" nodeId="n240">
+<p nodeId="n241"><strong>知识冷启动三步法</strong>：① 存量蒸馏，将已有排查经验批量转化为结构化知识；② 增量采集，AI 无法解决的问题，人给 AI 输入解决思路后沉淀为 Skill/知识库；③ 教学投喂，管理员主动写入规则与 SOP</p>
+</td>
+<td colwidth="[600.9921875]" nodeId="n242a">
+<p nodeId="n243a">"越用越聪明"正循环：新问题解决后知识库自动扩充<km-footnote id="c5dd13f2-5f52-488b-8cbd-6e924bfd6985" annotate="" nodeId="48ab4bbf5fb9407db758fc64f60dbe7b" /></p>
+</td>
+</tr>
+<tr nodeId="n244a">
+<td colwidth="[151]" nodeId="n245a">
+<p nodeId="n246a"><strong>子 Agent 隔离</strong></p>
+</td>
+<td colwidth="[770]" nodeId="n247a">
+<p nodeId="n248a">MainAgent + 多 SubAgent 分层：酒店、平台方向、定时任务各有独立 SubAgent，Skill 和 Context 相互隔离</p>
+</td>
+<td colwidth="[600.9921875]" nodeId="n249a">
+<p nodeId="n250a">解决"子 Agent 专用 Skill 挂在主 Agent 上导致路由干扰"问题</p>
+</td>
+</tr>
+<tr nodeId="n251b">
+<td colwidth="[151]" nodeId="n252b">
+<p nodeId="n253b"><strong>对话历史管理</strong></p>
+</td>
+<td colwidth="[770]" nodeId="n254b">
+<p nodeId="n255b"><strong>Context Pruning + Compaction 分级降级</strong>：① Pruning 临时裁剪过期工具输出；② Compaction 永久压缩为摘要；③ Bootstrap 文件结构重排，高优先级规则前置；④ 内容瘦身，目录型内容迁移到独立文件</p>
+</td>
+<td colwidth="[600.9921875]" nodeId="n256b">
+<p nodeId="n257b">Compaction 触发从 <sub>30 轮推迟到 </sub>55 轮（+83%）；固定注入 20,500→9,400 tokens（-54%）；关键规则覆盖率 100%<km-footnote id="23c29cac-6e6e-46f5-8014-a3446825e709" annotate="" nodeId="2c691ae56fd6469089ecd92347b85a85" /></p>
+</td>
+</tr>
+<tr nodeId="n258b">
+<td colwidth="[151]" nodeId="n259b">
+<p nodeId="n260b"><strong>工具返回值优化</strong></p>
+</td>
+<td colwidth="[770]" nodeId="n261b">
+<p nodeId="n262b"><strong>watson-cli 118 命令 AI Ready 改造</strong>：bizCode 免查优化、CLI help 丰富化、返回值结构化精简</p>
+</td>
+<td colwidth="[600.9921875]" nodeId="n263b">
+<p nodeId="n264b">消除 LLM 幻觉推断参数值问题；工具调用复杂度大幅降低</p>
+</td>
+</tr>
+</table>
+<h3 nodeId="n265b">5.3 量化效果</h3>
+<table nodeId="n266b">
+<tr nodeId="n267b">
+<th colwidth="[68]" nodeId="n268b">
+<p nodeId="n269b">度量维度</p>
+</th>
+<th colwidth="[68]" nodeId="n270b">
+<p nodeId="n271b">优化前</p>
+</th>
+<th colwidth="[68]" nodeId="n272b">
+<p nodeId="n273b">优化后</p>
+</th>
+<th colwidth="[68]" nodeId="n274b">
+<p nodeId="n275b">对应技术</p>
+</th>
+</tr>
+<tr nodeId="n276b">
+<td colwidth="[68]" nodeId="n277b">
+<p nodeId="n278b">Skill 路由准确率</p>
+</td>
+<td colwidth="[68]" nodeId="n279b">
+<p nodeId="n280b">42%（107+ Skill desc 被截断）</p>
+</td>
+<td colwidth="[68]" nodeId="n281a">
+<p nodeId="n282">92%（SubAgent 分层后+智能路由）</p>
+</td>
+<td colwidth="[68]" nodeId="n283">
+<p nodeId="n284">渐进式披露 + 子 Agent 隔离</p>
+</td>
+</tr>
+<tr nodeId="n285">
+<td colwidth="[68]" nodeId="n286">
+<p nodeId="n287">pass⁵ 通过率</p>
+</td>
+<td colwidth="[68]" nodeId="n288">
+<p nodeId="n289">33%</p>
+</td>
+<td colwidth="[68]" nodeId="n290">
+<p nodeId="n291">87%</p>
+</td>
+<td colwidth="[68]" nodeId="n292">
+<p nodeId="n293">综合优化</p>
+</td>
+</tr>
+<tr nodeId="n294">
+<td colwidth="[68]" nodeId="n295">
+<p nodeId="n296">上下文压缩触发</p>
+</td>
+<td colwidth="[68]" nodeId="n297a">
+<p nodeId="n298a">~30 轮后</p>
+</td>
+<td colwidth="[68]" nodeId="n299a">
+<p nodeId="n300a">~55 轮后（+83%）</p>
+</td>
+<td colwidth="[68]" nodeId="n301a">
+<p nodeId="n302">Context Pruning + 对话历史管理</p>
+</td>
+</tr>
+<tr nodeId="n303">
+<td colwidth="[68]" nodeId="n304">
+<p nodeId="n305">群聊启动固定注入</p>
+</td>
+<td colwidth="[68]" nodeId="n306">
+<p nodeId="n307">~20,500 tokens</p>
+</td>
+<td colwidth="[68]" nodeId="n308">
+<p nodeId="n309">~9,400 tokens（-54%）</p>
+</td>
+<td colwidth="[68]" nodeId="n310">
+<p nodeId="n311">Bootstrap 结构重排 + 内容瘦身</p>
+</td>
+</tr>
+<tr nodeId="n312">
+<td colwidth="[68]" nodeId="n313">
+<p nodeId="n314">平台 TT 完全解决率</p>
+</td>
+<td colwidth="[68]" nodeId="n315">
+<p nodeId="n316">—</p>
+</td>
+<td colwidth="[68]" nodeId="n317">
+<p nodeId="n318">27%（25/91）</p>
+</td>
+<td colwidth="[68]" nodeId="n319">
+<p nodeId="n320">全链路综合效果</p>
+</td>
+</tr>
+<tr nodeId="n321">
+<td colwidth="[68]" nodeId="n322">
+<p nodeId="n323">平台 TT AI 参与解决率</p>
+</td>
+<td colwidth="[68]" nodeId="n324">
+<p nodeId="n325">—</p>
+</td>
+<td colwidth="[68]" nodeId="n326">
+<p nodeId="n327">70.3%（64/91）</p>
+</td>
+<td colwidth="[68]" nodeId="n328">
+<p nodeId="n329">全链路综合效果</p>
+</td>
+</tr>
+</table>
+<h3 nodeId="n330">5.4 关键经验</h3>
+<ul nodeId="n331">
+<li nodeId="n332"><strong>上下文工程是 Agent 从"能用"到"好用"的分水岭</strong>：同样的模型和工具集，仅通过上下文工程优化（分层隔离、Pruning、结构重排），路由准确率提升明显。</li>
+<li nodeId="n333"><strong>渐进式披露是解决 Skill 膨胀的核心策略</strong>：4 层路由演进的本质是逐步缩小 LLM 的决策范围，从全量注入到结构化索引再到分层隔离，每一步都在减少无关信息。</li>
+<li nodeId="n334"><strong>Token 节省直接转化为能力提升</strong>：固定注入减少 54% 意味着更多 token 预算留给实际排查，Agent 能完成更长链路推理而不触发压缩。</li>
+<li nodeId="n335"><strong>持续运营机制是上下文质量的保障</strong>：通过"问题上报→打标→TODO→验收"闭环，持续发现 AI 能力缺口并补充对应 Skill/知识，驱动上下文质量螺旋上升。</li>
+<li nodeId="n336"><strong>不是所有技术都需要强行落地</strong>：选择适合自身场景的技术组合比追求全覆盖更重要。</li>
+</ul>
+<hr nodeId="n340" />
+<h2 nodeId="n270">6. 总结与展望</h2>
+<h3 nodeId="f5f96d20-cd64-43d9-897e-4d8af4dbc8b9">6.1 核心结论</h3>
+<table nodeId="n271">
+<tr nodeId="n272">
+<th colwidth="[68]" nodeId="n273">
+<p nodeId="n274"><strong>核心结论</strong></p>
+</th>
+<th colwidth="[68]" nodeId="n275">
+<p nodeId="n276"><strong>要点</strong></p>
+</th>
+<th colwidth="[68]" nodeId="1e71c010-4802-469b-8cb1-4de798b7ac29">
+<p nodeId="b7a66cf4-a6ba-4250-a1d0-c99c0e8abcab"><strong>支撑依据</strong></p>
+</th>
+</tr>
+<tr nodeId="n277">
+<td colwidth="[68]" nodeId="n278">
+<p nodeId="n279">上下文工程是 Agent 成败的关键</p>
+</td>
+<td colwidth="[68]" nodeId="n280">
+<p nodeId="n281b">Gartner 预测 40%+ Agentic AI 项目将失败，根因之一是缺乏系统性上下文管理</p>
+</td>
+<td colwidth="[68]" nodeId="n281c">
+<p nodeId="n281d">[报告11] Gartner 2025；[报告12] MIT NANDA</p>
+</td>
+</tr>
+<tr nodeId="n282a">
+<td colwidth="[68]" nodeId="n283a">
+<p nodeId="n284a">更长窗口不能替代更好的工程</p>
+</td>
+<td colwidth="[68]" nodeId="n285a">
+<p nodeId="n286a">超过 32K token 后正确性显著下降；位置效应导致中间信息被忽略。精选和编排才是关键</p>
+</td>
+<td colwidth="[68]" nodeId="n286b">
+<p nodeId="n286c">[论文3] Context Rot；[论文21] Lost in the Middle</p>
+</td>
+</tr>
+<tr nodeId="n287a">
+<td colwidth="[68]" nodeId="n288a">
+<p nodeId="n289a">四大策略构成完整方法论</p>
+</td>
+<td colwidth="[68]" nodeId="n290a">
+<p nodeId="n291a">Write/Select/Compress/Isolate 的组合可覆盖所有上下文管理问题</p>
+</td>
+<td colwidth="[68]" nodeId="n291b">
+<p nodeId="n291c">[报告10] LangChain；[报告9] Anthropic</p>
+</td>
+</tr>
+<tr nodeId="n292a">
+<td colwidth="[68]" nodeId="n293a">
+<p nodeId="n294a">概念层次仍在快速演进</p>
+</td>
+<td colwidth="[68]" nodeId="n295a">
+<p nodeId="n296a">PE → CE → Harness Engineering → Loop Engineering，每层解决更大时间尺度的问题</p>
+</td>
+<td colwidth="[68]" nodeId="n296b">
+<p nodeId="n296c">[论文15] Harness Engineering Survey</p>
+</td>
+</tr>
+<tr nodeId="n296d">
+<td colwidth="[68]" nodeId="n296e">
+<p nodeId="n296f">可观测性是持续优化的前提</p>
+</td>
+<td colwidth="[68]" nodeId="n296g">
+<p nodeId="n296h">89% 的组织已实现某种可观测性，但只有 52% 在做离线评估。上下文组装延迟、token 利用率、缓存命中率是三个核心指标</p>
+</td>
+<td colwidth="[68]" nodeId="n296i">
+<p nodeId="n296j">LangChain 2026 State of AI Agents</p>
+</td>
+</tr>
+</table>
+<h3 nodeId="n297b">6.2 未来方向</h3>
+<ul nodeId="n297c">
+<li nodeId="n297d"><strong>自适应上下文系统</strong>：Agent 自主学习何时压缩、何时检索、何时遗忘，从"人工编排"走向"自动编排"</li>
+<li nodeId="n297e"><strong>缓存感知的上下文管理</strong>：TokenPilot [论文22] 开创了将 KV Cache 命中率纳入上下文决策的范式</li>
+<li nodeId="n297f"><strong>多 Agent 协作中的上下文共享</strong>：上下文的隔离与共享边界如何设计是开放问题</li>
+<li nodeId="n297g"><strong>上下文安全与对抗鲁棒性</strong>：Agent 从更多外部源拉取上下文，上下文注入攻击的防御将成为必修课</li>
+<li nodeId="n297h"><strong>端到端评估体系</strong>：从"评估模型输出"到"评估上下文质量"，需要建立独立评估标准</li>
+</ul>
+<h2 nodeId="ap001">附录：参考文献</h2>
+<h3 nodeId="ap002">A.1 学术论文</h3>
+<p nodeId="ap003"><strong>[论文1]</strong> <a href="http://arxiv.org/abs/2510.26493" title="Context Engineering 2.0: The Context of Context Engineering" nodeId="ap004">Context Engineering 2.0: The Context of Context Engineering</a> — 上海交大 (2025.11)，首次系统化定义上下文工程的学术演进框架(1.0→4.0)</p>
+<p nodeId="ap005"><strong>[论文2]</strong> <a href="http://arxiv.org/abs/2510.04618" title="Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models" nodeId="ap006">Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models</a> — Stanford/MIT (2025)，提出 ACE 框架，将上下文视为可演化的"作战手册"</p>
+<p nodeId="ap007"><strong>[论文3]</strong> Context Rot: How Adding Input Tokens Degrades LLM Performance — 证明上下文超过 32K token 后模型正确性显著下降</p>
+<p nodeId="ap008"><strong>[论文5]</strong> Context Engineering: A Survey for Systematic Optimization of Information Load in LLMs — 综述论文，系统分析 1400+ 篇论文，将上下文工程形式化为数学优化问题</p>
+<p nodeId="ap009"><strong>[论文6]</strong> <a href="http://arxiv.org/abs/2512.13564" title="Memory in the Age of AI Agents: A Survey" nodeId="ap010">Memory in the Age of AI Agents: A Survey</a> — NUS/人大/复旦/北大联合 (2025)，提出 Forms-Functions-Dynamics 三维统一分析框架</p>
+<p nodeId="ap011"><strong>[论文13]</strong> <a href="http://arxiv.org/abs/2604.11462" title="Escaping the Context Bottleneck: Active Context Curation for LLM Agents via RL" nodeId="ap012">Escaping the Context Bottleneck: Active Context Curation for LLM Agents via RL</a> — (2026.4)，ContextCurator + TaskExecutor 共生框架，WebArena 成功率 41.2%，token 减少 8.8%</p>
+<p nodeId="ap013"><strong>[论文14]</strong> <a href="http://arxiv.org/abs/2605.00827" title="Separating Intelligence from Execution: A Workflow Engine for the Model Context Protocol" nodeId="ap014">Separating Intelligence from Execution: A Workflow Engine for the Model Context Protocol</a> — (2026.3)，推理与执行解耦，单次执行 token 成本降低 99%+</p>
+<p nodeId="ap015"><strong>[论文15]</strong> <a href="http://openreview.net/pdf?id=eONq7FdiHa" title="Agent Harness for Large Language Model Agents: A Survey" nodeId="ap016">Agent Harness for Large Language Model Agents: A Survey</a> — CMU/Yale/JHU/Amazon (2026.4)，提出 ETCLOVG 七层 Harness 架构，仅调整 Harness 即可获 10× 性能差异</p>
+<p nodeId="ap017"><strong>[论文16]</strong> <a href="http://arxiv.org/abs/2601.02993" title="Stable-RAG: Mitigating Retrieval-Permutation-Induced Hallucinations in RAG" nodeId="ap018">Stable-RAG: Mitigating Retrieval-Permutation-Induced Hallucinations in RAG</a> — ACL 2026，发现 RAG 检索结果排列顺序显著影响生成准确性</p>
+<p nodeId="ap019"><strong>[论文17]</strong> <a href="http://arxiv.org/abs/2605.17989" title="Predictive Prefetching for Retrieval-Augmented Generation" nodeId="ap020">Predictive Prefetching for Retrieval-Augmented Generation</a> — ICML 2026，预测性预取机制大幅降低端到端延迟</p>
+<p nodeId="ap021"><strong>[论文19]</strong> <a href="http://arxiv.org/abs/2510.18866" title="LightMem: Lightweight and Efficient Memory-Augmented Generation" nodeId="ap022">LightMem: Lightweight and Efficient Memory-Augmented Generation</a> — 浙江大学，ICLR 2026，三阶段记忆架构，Token 降低 38x，QA 准确率提升 29.3%</p>
+<p nodeId="ap023"><strong>[论文20]</strong> <a href="http://arxiv.org/abs/2605.30136" title="Agent-Radar: Enhancing Multi-Agent Communication through Attention Steering" nodeId="ap024">Agent-Radar: Enhancing Multi-Agent Communication through Attention Steering</a> — (2026.05)，时空衰减注意力引导，5 个 benchmark SOTA</p>
+<p nodeId="ap025"><strong>[论文21]</strong> <a href="http://arxiv.org/abs/2307.03172" title="Lost in the Middle: How Language Models Use Long Contexts" nodeId="ap026">Lost in the Middle: How Language Models Use Long Contexts</a> — TACL 2024，验证 LLM 位置偏差"U 形"注意力分布</p>
+<p nodeId="ap027"><strong>[论文22]</strong> <a href="http://arxiv.org/abs/2606.17016" title="TokenPilot: Cache-Efficient Context Management for LLM Agents" nodeId="ap028">TokenPilot: Cache-Efficient Context Management for LLM Agents</a> — (2026.06)，缓存友好的 Agent 上下文管理框架，60%+ 成本降低</p>
+<h3 nodeId="ap030">A.2 行业报告与文章</h3>
+<p nodeId="ap031"><strong>[报告9]</strong> <a href="http://anthropic.com/engineering/effective-context-engineering-for-ai-agents" title="Anthropic: Effective Context Engineering for AI Agents" nodeId="ap032">Anthropic: Effective Context Engineering for AI Agents</a> — (2025.9)，系统性实践指南</p>
+<p nodeId="ap033"><strong>[报告10]</strong> <a href="http://blog.langchain.com/context-engineering-for-agents" title="LangChain: Context Engineering for Agents" nodeId="ap034">LangChain: Context Engineering for Agents</a> — Harrison Chase 提出 Write/Select/Compress/Isolate 四大策略框架</p>
+<p nodeId="ap035"><strong>[报告11]</strong> <a href="http://gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-more-than-40-percent-of-agentic-ai-projects-will-be-cancelled-by-end-of-2027" title="Gartner 预测报告" nodeId="ap036">Gartner 预测报告</a> — (2025.6)，超过 40% 的 Agentic AI 项目将在 2027 年前被取消</p>
+<p nodeId="ap037"><strong>[报告12]</strong> MIT 2025 年商业 AI 现状报告 (Project NANDA) — 95% 的 AI 试点未能产生可衡量的 P&amp;L 影响</p>
+<km-footnote-list nodeId="e80db315ea6243cf93c0daf5700760ff">
+<km-footnote-item footnoteNodeId="2caf806e43c446afbd343cc9b2c9e1cb" nodeId="64dcabea984743fcaa27bb70a92ac20a"><p nodeId="08393330c133473cb89a2380b3694626">4 层 Skill 智能路由演进：<a href="https://km.sankuai.com/collabpage/2773773240" title="https://km.sankuai.com/collabpage/2773773240" autoUpdate="true" nodeId="00e2b1084bd64041974fbe7a6a143155">https://km.sankuai.com/collabpage/2773773240</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="48ab4bbf5fb9407db758fc64f60dbe7b" nodeId="90b9855163ae4533b27ebc0ee96c9d61"><p nodeId="a1180959b8d64558a497810817275c79">"越用越聪明"正循环：新问题解决后知识库自动扩充：<a href="https://km.sankuai.com/collabpage/2774647408" title="https://km.sankuai.com/collabpage/2774647408" autoUpdate="true" nodeId="5cd89d6cb32e4ae79aff2af3b0495b5d">https://km.sankuai.com/collabpage/2774647408</a></p></km-footnote-item>
+<km-footnote-item footnoteNodeId="2c691ae56fd6469089ecd92347b85a85" nodeId="ceb79ea3e41f4427a68b718d98fc8214"><p nodeId="267641a81d694b8391fab82d2d93a72e">Compaction 触发从 <sub>30 轮推迟到 </sub>55 轮（+83%）；固定注入 20,500→9,400 tokens（-54%）；关键规则覆盖率 100%：<a href="https://km.sankuai.com/collabpage/2769420283" title="https://km.sankuai.com/collabpage/2769420283" autoUpdate="true" nodeId="0d656912265f4e338313fc3b6755bf52">https://km.sankuai.com/collabpage/2769420283</a></p></km-footnote-item>
+</km-footnote-list>
+</km-doc>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>群答疑助手</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 14px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+.sec-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
+
+/* ── 系统架构条 ── */
+.arch-bar {
+  display: flex; align-items: center; gap: 0;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 9px;
+  padding: 12px 16px; margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.arch-node {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  text-align: center;
+}
+.an-icon { font-size: 22px; }
+.an-name { font-size: 11.5px; font-weight: 700; color: #1e293b; }
+.an-sub  { font-size: 10px; color: #94a3b8; line-height: 1.4; }
+.an-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 8px; margin-top: 2px;
+}
+.ab-blue   { background: #dbeafe; color: #1e40af; }
+.ab-purple { background: #e0e7ff; color: #3730a3; }
+.ab-green  { background: #d1fae5; color: #065f46; }
+
+.arch-arr {
+  flex: 0 0 32px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #cbd5e1;
+}
+
+/* ── 主体两栏 ── */
+.main-cols { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.col-l { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.col-r { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+/* ── 回答对比 ── */
+.answer-card {
+  border-radius: 9px; border: 1.5px solid; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.ac-head {
+  padding: 9px 13px; border-bottom: 1.5px solid;
+  display: flex; align-items: center; gap: 7px;
+}
+.ac-icon { font-size: 14px; }
+.ac-title { font-size: 12px; font-weight: 700; flex: 1; }
+.ac-mode {
+  font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 8px;
+}
+
+.no-kb { border-color: #e2e8f0; }
+.no-kb .ac-head { background: #f8fafc; border-bottom-color: #e2e8f0; }
+.no-kb .ac-title { color: #64748b; }
+.no-kb .ac-mode { background: #f1f5f9; color: #64748b; }
+
+.with-kb { border-color: #818cf8; }
+.with-kb .ac-head { background: #eef2ff; border-bottom-color: #c7d2fe; }
+.with-kb .ac-title { color: #3730a3; }
+.with-kb .ac-mode { background: #e0e7ff; color: #3730a3; }
+
+.ac-body { padding: 11px 13px; display: flex; flex-direction: column; gap: 7px; }
+
+/* 对话气泡 */
+.bubble-user {
+  align-self: flex-end; background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 10px 10px 2px 10px;
+  padding: 6px 10px; font-size: 11px; color: #1e40af; max-width: 85%;
+}
+.bubble-bot {
+  align-self: flex-start; background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 10px 10px 10px 2px;
+  padding: 8px 11px; font-size: 11px; color: #334155; max-width: 95%; line-height: 1.65;
+}
+.bubble-bot.kb-answer { border-color: #c7d2fe; background: #f5f3ff; }
+
+.kb-indicator {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 9.5px; color: #6366f1; font-weight: 600; margin-top: 4px;
+}
+.kbi-icon { font-size: 11px; }
+
+.answer-diff {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 3px;
+}
+.diff-tag {
+  font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 5px;
+}
+.dt-good { background: #d1fae5; color: #065f46; }
+.dt-bad  { background: #fee2e2; color: #991b1b; }
+
+/* ── 实时纠错入库 ── */
+.feedback-flow { display: flex; flex-direction: column; gap: 5px; }
+
+.ff-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 12px; border-radius: 8px; border: 1.5px solid;
+}
+.ff-step.s-wrong  { border-color: #fca5a5; background: #fff5f5; }
+.ff-step.s-correct{ border-color: #fde68a; background: #fffbeb; }
+.ff-step.s-write  { border-color: #c4b5fd; background: #f5f3ff; }
+.ff-step.s-verify { border-color: #86efac; background: #f0fdf4; }
+
+.ffs-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.ffs-body { flex: 1; }
+.ffs-name { font-size: 11.5px; font-weight: 700; margin-bottom: 3px; }
+.s-wrong  .ffs-name { color: #dc2626; }
+.s-correct .ffs-name { color: #92400e; }
+.s-write  .ffs-name { color: #6d28d9; }
+.s-verify .ffs-name { color: #059669; }
+.ffs-desc { font-size: 10.5px; color: #475569; line-height: 1.55; }
+
+.ff-arr { text-align: center; font-size: 10px; color: #cbd5e1; line-height: 1; padding: 1px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>群答疑助手</h1>
+    <p>知识库冷启建档 · 挂载群聊机器人 · 答疑中实时积累经验</p>
+  </div>
+
+  <!-- ── 系统架构条 ── -->
+  <div class="arch-bar">
+    <div class="arch-node">
+      <span class="an-icon">💬</span>
+      <span class="an-name">业务群聊</span>
+      <span class="an-sub">成员 @机器人<br>提出问题</span>
+    </div>
+    <div class="arch-arr">→</div>
+    <div class="arch-node">
+      <span class="an-icon">🤖</span>
+      <span class="an-name">CatClaw 群聊虾</span>
+      <span class="an-sub">群聊 AI 机器人<br>接收 @ 消息并响应</span>
+      <span class="an-badge ab-blue">Agent 基建</span>
+    </div>
+    <div class="arch-arr">→</div>
+    <div class="arch-node">
+      <span class="an-icon">📚</span>
+      <span class="an-name">knowledge-flow 知识库</span>
+      <span class="an-sub">业务规则 + 历史案例<br>冷启建档 + 持续积累</span>
+      <span class="an-badge ab-purple">knowledge-flow 管理</span>
+    </div>
+    <div class="arch-arr">→</div>
+    <div class="arch-node">
+      <span class="an-icon">✅</span>
+      <span class="an-name">有规则依据的答案</span>
+      <span class="an-sub">引用知识库条目<br>来源清晰可追溯</span>
+      <span class="an-badge ab-green">精准可溯源</span>
+    </div>
+  </div>
+
+  <div class="main-cols">
+
+    <!-- 左：有无知识库对比 -->
+    <div class="col-l">
+      <div class="sec-lbl">有无知识库的回答差异</div>
+
+      <div class="answer-card no-kb">
+        <div class="ac-head">
+          <span class="ac-icon">💭</span>
+          <span class="ac-title">未检索知识库</span>
+          <span class="ac-mode">纯 LLM 推理</span>
+        </div>
+        <div class="ac-body">
+          <div class="bubble-user">这个 case 按规则应该怎么判断？</div>
+          <div class="bubble-bot">
+            从两方面来看，一方面…另一方面…如果实际情况 A，则结论为 X；如果是情况 B，则结论为 Y。建议结合具体数据进一步判断。
+          </div>
+          <div class="answer-diff">
+            <span class="diff-tag dt-bad">无规则依据</span>
+            <span class="diff-tag dt-bad">结论模糊</span>
+            <span class="diff-tag dt-bad">边界情况未处理</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="answer-card with-kb">
+        <div class="ac-head">
+          <span class="ac-icon">📚</span>
+          <span class="ac-title">检索知识库后作答</span>
+          <span class="ac-mode">规则驱动</span>
+        </div>
+        <div class="ac-body">
+          <div class="bubble-user">这个 case 按规则应该怎么判断？</div>
+          <div class="bubble-bot kb-answer">
+            知识库已在本次会话中检索过，关键规则已加载。<br><br>
+            依据《业务规则文档》第 X 条：满足条件 A 时判断为结论 Y；不满足时判断为结论 Z。本 case 符合条件 A，结论：<strong>Y</strong>。
+            <div class="kb-indicator"><span class="kbi-icon">📚</span>知识库：规则文档已加载</div>
+          </div>
+          <div class="answer-diff">
+            <span class="diff-tag dt-good">引用具体规则条款</span>
+            <span class="diff-tag dt-good">结论明确</span>
+            <span class="diff-tag dt-good">边界情况有依据</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：实时纠错入库 -->
+    <div class="col-r">
+      <div class="sec-lbl">实时纠错 → 即时入库 → 下次更准</div>
+
+      <div class="feedback-flow">
+
+        <div class="ff-step s-wrong">
+          <span class="ffs-icon">❌</span>
+          <div class="ffs-body">
+            <div class="ffs-name">Agent 给出错误结论</div>
+            <div class="ffs-desc">某条 case 的判断结果有误——Agent 引用了错误的规则分支，或规则边界不清晰导致判断偏差。</div>
+          </div>
+        </div>
+        <div class="ff-arr">↓</div>
+
+        <div class="ff-step s-correct">
+          <span class="ffs-icon">💬</span>
+          <div class="ffs-body">
+            <div class="ffs-name">用户在群里给出正确答案</div>
+            <div class="ffs-desc">团队成员指出错误根因，解释正确的规则适用逻辑，并指示 Agent 将本次经验写入知识库。</div>
+          </div>
+        </div>
+        <div class="ff-arr">↓</div>
+
+        <div class="ff-step s-write">
+          <span class="ffs-icon">✍️</span>
+          <div class="ffs-body">
+            <div class="ffs-name">Agent 即时写入知识库</div>
+            <div class="ffs-desc">在指定目录下新增历史案例条目，记录原始数据、错误根因、正确规则依据和规避方法。更新 data_structure.md 和关键词索引，推送 Git。</div>
+          </div>
+        </div>
+        <div class="ff-arr">↓</div>
+
+        <div class="ff-step s-verify">
+          <span class="ffs-icon">✅</span>
+          <div class="ffs-body">
+            <div class="ffs-name">知识沉淀，下次复用</div>
+            <div class="ffs-desc">经验写入知识库，下次遇到同类问题时直接命中，不再依赖人工解答，也不再误判。</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+</div>
+</body>
+</html>

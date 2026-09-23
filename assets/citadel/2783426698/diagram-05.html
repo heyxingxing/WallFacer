@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 本地文件入库</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 12px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 主体 ── */
+.main {
+  display: flex; align-items: center; gap: 0;
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  background: #f8fafc; padding: 18px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  position: relative;
+}
+#svg-arrows {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 1;
+}
+
+/* ── 文件卡片列 ── */
+.cards-col { display: flex; flex-direction: column; gap: 8px; flex: 0 0 380px; z-index: 2; }
+
+.fc {
+  background: #fff; border-radius: 8px; border: 1.5px solid #e2e8f0;
+  padding: 9px 12px; display: flex; align-items: center; gap: 10px;
+  transition: box-shadow .15s;
+}
+.fc:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+.fc.fc-more { border-style: dashed; background: #f8fafc; }
+
+.fc-icon { font-size: 16px; flex-shrink: 0; }
+.fc-body { flex: 1; min-width: 0; }
+.fc-name { font-size: 11.5px; font-weight: 700; color: #1e293b; }
+.fc-desc { font-size: 10px; color: #94a3b8; margin-top: 1px; line-height: 1.4; }
+.fc-fmt  {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700;
+  padding: 2px 7px; border-radius: 6px;
+  font-family: 'SF Mono','Fira Code',monospace;
+}
+
+/* 格式 tag 颜色 */
+.fmt-md   { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.fmt-txt  { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.fmt-more { background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; }
+
+/* ── 知识库目标 ── */
+.kb-box {
+  flex: 0 0 130px; margin-left: auto; z-index: 2;
+  border: 2px solid #059669; border-radius: 10px;
+  background: #ecfdf5; padding: 20px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center;
+}
+.kb-icon { font-size: 24px; }
+.kb-name { font-size: 12px; font-weight: 700; color: #065f46; line-height: 1.4; }
+
+/* ── 知识库内容说明条 ── */
+.kb-detail {
+  margin-top: 10px;
+  border: 1.5px solid #e2e8f0; border-radius: 8px;
+  background: #f8fafc; padding: 10px 14px;
+  display: flex; gap: 18px; align-items: flex-start;
+}
+.kd-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .6px;
+  text-transform: uppercase; color: #94a3b8;
+  flex-shrink: 0; margin-top: 1px; width: 72px;
+}
+.kd-body { flex: 1; display: flex; gap: 6px; flex-wrap: wrap; }
+.kd-chip {
+  font-size: 10.5px; padding: 2px 9px; border-radius: 6px;
+  border: 1.5px solid #e2e8f0; background: #fff; color: #334155;
+}
+
+/* ── 注释 ── */
+.note { font-size: 10.5px; color: #94a3b8; margin-top: 10px; line-height: 1.6; }
+.note strong { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 本地文件入库</h1>
+    <p>多种本地文件形式 · 统一写入知识库目录</p>
+  </div>
+
+  <div class="main" id="main-wrap">
+    <svg id="svg-arrows" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="cards-col">
+
+      <div class="fc" id="fc-code">
+        <span class="fc-icon">💻</span>
+        <div class="fc-body">
+          <div class="fc-name">代码库知识</div>
+          <div class="fc-desc">系统架构、核心流程、服务依赖关系</div>
+        </div>
+        <span class="fc-fmt fmt-md">.md</span>
+      </div>
+
+      <div class="fc" id="fc-session">
+        <span class="fc-icon">🤖</span>
+        <div class="fc-body">
+          <div class="fc-name">会话沉淀</div>
+          <div class="fc-desc">排查经验、决策依据、踩坑记录</div>
+        </div>
+        <span class="fc-fmt fmt-md">.md</span>
+      </div>
+
+      <div class="fc" id="fc-config">
+        <span class="fc-icon">🗂️</span>
+        <div class="fc-body">
+          <div class="fc-name">配置 & 数据表索引</div>
+          <div class="fc-desc">配置依赖关系、数据血缘（XT 任务产出）</div>
+        </div>
+        <span class="fc-fmt fmt-txt">.txt</span>
+      </div>
+
+      <div class="fc" id="fc-tt">
+        <span class="fc-icon">🎫</span>
+        <div class="fc-body">
+          <div class="fc-name">工单经验</div>
+          <div class="fc-desc">历史 TT 工单整理后的问题类型与解决路径</div>
+        </div>
+        <span class="fc-fmt fmt-md">.md</span>
+      </div>
+
+      <div class="fc fc-more" id="fc-more">
+        <span class="fc-icon">📄</span>
+        <div class="fc-body">
+          <div class="fc-name" style="color:#64748b">其他本地文档</div>
+          <div class="fc-desc">任何可被 Agent 理解并转化为结构化条目的文本内容</div>
+        </div>
+        <span class="fc-fmt fmt-more">…</span>
+      </div>
+
+    </div>
+
+    <div class="kb-box" id="kb-box">
+      <span class="kb-icon">📚</span>
+      <span class="kb-name">本地<br>知识库</span>
+    </div>
+  </div>
+
+  <div class="kb-detail">
+    <span class="kd-label">知识库内存储</span>
+    <div class="kd-body">
+      <span class="kd-chip">data_structure.md 条目索引</span>
+      <span class="kd-chip">本地 .md 全文文件</span>
+      <span class="kd-chip">.txt 索引文件</span>
+      <span class="kd-chip">keyword_index.json 快查索引</span>
+    </div>
+  </div>
+
+  <div class="note">⚡ 本地文件入库是学城文档入库之外的另一条渠道。与学城文档（存链接 + 摘要）不同，本地文件会将<strong>完整内容</strong>存储到知识库目录，检索命中时直接 Read 本地文件，无需额外的工具调用请求。</div>
+
+</div>
+
+<script>
+(function () {
+  function rect(id) {
+    const el = document.getElementById(id);
+    const wrap = document.getElementById('main-wrap');
+    if (!el || !wrap) return null;
+    const er = el.getBoundingClientRect();
+    const wr = wrap.getBoundingClientRect();
+    return { r: er.right - wr.left, cy: (er.top + er.bottom) / 2 - wr.top };
+  }
+
+  function draw() {
+    const svg = document.getElementById('svg-arrows');
+    const wrap = document.getElementById('main-wrap');
+    svg.innerHTML = '';
+    svg.setAttribute('width', wrap.offsetWidth);
+    svg.setAttribute('height', wrap.offsetHeight);
+
+    const kb = document.getElementById('kb-box');
+    const wr = wrap.getBoundingClientRect();
+    const kr = kb.getBoundingClientRect();
+    const kbX = kr.left - wr.left;
+    const kbCY = (kr.top + kr.bottom) / 2 - wr.top;
+
+    const cards = ['fc-code','fc-session','fc-config','fc-tt','fc-more'];
+    cards.forEach((id, i) => {
+      const r = rect(id);
+      if (!r) return;
+      const x1 = r.r + 2, y1 = r.cy;
+      const x2 = kbX - 2, y2 = kbCY;
+      const mx = (x1 + x2) / 2;
+      const isDashed = id === 'fc-more';
+      const opacity = id === 'fc-more' ? '0.4' : '0.65';
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#94a3b8');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('opacity', opacity);
+      if (isDashed) path.setAttribute('stroke-dasharray', '5 3');
+      svg.appendChild(path);
+
+      if (!isDashed) {
+        const AH = 6, AW = 3;
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', `${x2},${y2} ${x2-AH},${y2-AW} ${x2-AH},${y2+AW}`);
+        poly.setAttribute('fill', '#94a3b8');
+        poly.setAttribute('opacity', opacity);
+        svg.appendChild(poly);
+      }
+    });
+  }
+
+  window.addEventListener('load', draw);
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>

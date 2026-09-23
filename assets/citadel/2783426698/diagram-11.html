@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 易用性</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 12px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 三栏布局 ── */
+.cols { display: flex; gap: 10px; align-items: stretch; }
+.col  { flex: 1; display: flex; flex-direction: column; }
+
+/* ── 功能卡片 ── */
+.card {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  overflow: hidden; flex: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  display: flex; flex-direction: column;
+}
+.card-head {
+  padding: 10px 14px 9px; border-bottom: 1.5px solid #e2e8f0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ch-top { display: flex; align-items: center; gap: 7px; }
+.ch-icon  { font-size: 15px; }
+.ch-name  { font-size: 13px; font-weight: 700; color: #0f172a; }
+.ch-tag   { font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 8px; margin-left: auto; }
+.ch-desc  { font-size: 11px; color: #64748b; line-height: 1.6; }
+
+.card-body { padding: 14px 14px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+.c-blue   { border-color: #bfdbfe; }
+.c-blue   .card-head { background: #eff6ff; border-bottom-color: #bfdbfe; }
+.c-blue   .ch-tag { background: #dbeafe; color: #1e40af; }
+.c-green  { border-color: #bbf7d0; }
+.c-green  .card-head { background: #ecfdf5; border-bottom-color: #bbf7d0; }
+.c-green  .ch-tag { background: #d1fae5; color: #065f46; }
+.c-amber  { border-color: #fde68a; }
+.c-amber  .card-head { background: #fffbeb; border-bottom-color: #fde68a; }
+.c-amber  .ch-tag { background: #fef3c7; color: #92400e; }
+
+/* ── 多知识库：注册表演示 ── */
+.kb-table {
+  border: 1.5px solid #e2e8f0; border-radius: 7px; overflow: hidden;
+  font-size: 10.5px;
+}
+.kt-head {
+  display: flex; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+  font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: .4px;
+}
+.kt-row  { display: flex; border-bottom: 1px solid #f1f5f9; align-items: center; }
+.kt-row:last-child { border-bottom: none; }
+.kt-row.active { background: #ecfdf5; }
+.kc-mark { flex: 0 0 18px; text-align: center; font-weight: 700; font-size: 12px; padding: 5px 0; }
+.kc-name { flex: 0 0 90px; padding: 5px 6px; color: #334155; font-weight: 500; }
+.kc-path { flex: 1; padding: 5px 6px; color: #94a3b8; font-family: 'SF Mono','Fira Code',monospace; font-size: 9.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kt-row.active .kc-mark { color: #059669; }
+.kt-row.active .kc-name { color: #065f46; font-weight: 700; }
+
+.switch-demo {
+  background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 7px;
+  padding: 7px 10px; display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+}
+.sd-cmd { font-family: 'SF Mono','Fira Code',monospace; font-size: 10px; color: #065f46; font-weight: 600; flex: 1; }
+.sd-desc { font-size: 10px; color: #94a3b8; }
+
+/* ── 初始化：配置清单 ── */
+.check-list { display: flex; flex-direction: column; gap: 5px; }
+.ci {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 10px; background: #f8fafc;
+  border: 1.5px solid #e2e8f0; border-radius: 7px;
+}
+.ci-check {
+  flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; margin-top: 1px;
+}
+.ci-ok  { background: #d1fae5; color: #059669; }
+.ci-body { flex: 1; }
+.ci-name { font-size: 11px; font-weight: 600; color: #334155; }
+.ci-sub  { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
+.init-cmd {
+  background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 7px;
+  padding: 8px 11px; font-family: 'SF Mono','Fira Code',monospace;
+  font-size: 11px; color: #065f46; font-weight: 600; text-align: center;
+}
+
+/* ── 能力速查：对话气泡 ── */
+.chat-demo { display: flex; flex-direction: column; gap: 7px; }
+
+.bubble-user {
+  align-self: flex-end; background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 10px 10px 2px 10px;
+  padding: 6px 10px; font-size: 11px; color: #1e40af; max-width: 80%;
+}
+.bubble-agent {
+  align-self: flex-start; background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 10px 10px 10px 2px;
+  padding: 8px 10px; font-size: 10.5px; color: #334155; max-width: 95%;
+  line-height: 1.6;
+}
+.cap-item {
+  display: flex; align-items: flex-start; gap: 5px;
+  font-size: 10.5px; color: #334155; margin-bottom: 3px;
+}
+.cap-dot  { flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: #93c5fd; margin-top: 5px; }
+.cap-text { flex: 1; line-height: 1.5; }
+
+/* ── 底部注释 ── */
+.note { font-size: 10.5px; color: #94a3b8; line-height: 1.6; padding-top: 6px; border-top: 1px solid #f1f5f9; margin-top: auto; }
+.note strong { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 易用性</h1>
+    <p>三个功能让知识库的配置、管理和使用更顺畅</p>
+  </div>
+
+  <div style="background:#faf5ff;border:1.5px solid #ddd6fe;border-radius:9px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+    <span style="font-size:16px;flex-shrink:0">💬</span>
+    <span style="font-size:12px;color:#4c1d95;line-height:1.6"><strong>所有功能均可通过自然语言触发</strong>，无需记住任何指令名称。直接向 Agent 描述你想做的事，它会自动识别并执行对应的功能。</span>
+  </div>
+
+  <div class="cols">
+
+    <!-- ══ 多知识库管理 & 切换 ══ -->
+    <div class="col">
+      <div class="card c-blue">
+        <div class="card-head">
+          <div class="ch-top">
+            <span class="ch-icon">🗂️</span>
+            <span class="ch-name">多知识库管理 & 切换</span>
+            <span class="ch-tag">多库场景</span>
+          </div>
+          <div class="ch-desc">维护一个知识库注册表，支持注册多个知识库，一键切换当前激活项，自动同步所有相关配置。</div>
+        </div>
+        <div class="card-body">
+
+          <div class="bubble-user" style="align-self:flex-end;margin-bottom:2px">帮我切换至 knowledge-main 知识库</div>
+
+          <div class="kb-table">
+            <div class="kt-head">
+              <span class="kc-mark"></span>
+              <span class="kc-name" style="padding:5px 6px">名称</span>
+              <span class="kc-path" style="padding:5px 6px">路径</span>
+            </div>
+            <div class="kt-row active">
+              <span class="kc-mark">★</span>
+              <span class="kc-name">knowledge-main</span>
+              <span class="kc-path">references/knowledge</span>
+            </div>
+            <div class="kt-row">
+              <span class="kc-mark"></span>
+              <span class="kc-name">knowledge-test</span>
+              <span class="kc-path">references/knowledge_test</span>
+            </div>
+            <div class="kt-row">
+              <span class="kc-mark"></span>
+              <span class="kc-name">knowledge-team</span>
+              <span class="kc-path">references/knowledge_team</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 一键初始化配置 ══ -->
+    <div class="col">
+      <div class="card c-green">
+        <div class="card-head">
+          <div class="ch-top">
+            <span class="ch-icon">⚡</span>
+            <span class="ch-name">一键初始化配置</span>
+            <span class="ch-tag">首次使用</span>
+          </div>
+          <div class="ch-desc">新用户运行一个命令，自动完成所有必要的环境配置，几分钟内开箱即用。</div>
+        </div>
+        <div class="card-body">
+
+          <div class="bubble-user" style="align-self:flex-end;margin-bottom:2px">knowledge-flow，帮我完成初始化配置</div>
+
+          <div class="check-list">
+            <div class="ci">
+              <span class="ci-check ci-ok">✓</span>
+              <div class="ci-body">
+                <div class="ci-name">验证相关技能安装状态</div>
+                <div class="ci-sub">citadel 等常用官方技能，给出修复指引</div>
+              </div>
+            </div>
+            <div class="ci">
+              <span class="ci-check ci-ok">✓</span>
+              <div class="ci-body">
+                <div class="ci-name">配置知识仓地址</div>
+                <div class="ci-sub">关联 Git 远端仓库，写入本地配置文件</div>
+              </div>
+            </div>
+            <div class="ci">
+              <span class="ci-check ci-ok">✓</span>
+              <div class="ci-body">
+                <div class="ci-name">检查用户身份配置</div>
+                <div class="ci-sub">验证 MIS 是否正确设置</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 能力速查手册 ══ -->
+    <div class="col">
+      <div class="card c-amber">
+        <div class="card-head">
+          <div class="ch-top">
+            <span class="ch-icon">📖</span>
+            <span class="ch-name">能力速查手册</span>
+            <span class="ch-tag">使用引导</span>
+          </div>
+          <div class="ch-desc">通过自然语言提问，随时查看 knowledge-flow 当前具备哪些能力及对应的使用方式。</div>
+        </div>
+        <div class="card-body">
+
+          <div class="chat-demo">
+            <div class="bubble-user">你能做什么？</div>
+            <div class="bubble-agent">
+              <div class="cap-item"><span class="cap-dot"></span><span class="cap-text"><strong>知识检索</strong>：回答问题时自动检索本地知识库</span></div>
+              <div class="cap-item"><span class="cap-dot"></span><span class="cap-text"><strong>知识入库</strong>：学城链接入库 / 父目录批量入库 / 冷启入库</span></div>
+              <div class="cap-item"><span class="cap-dot"></span><span class="cap-text"><strong>结构治理</strong>：目录结构优化 / 容器节点优化</span></div>
+              <div class="cap-item"><span class="cap-dot"></span><span class="cap-text"><strong>知识质量</strong>：评测集构建 / 知识库评测 / 矛盾检测</span></div>
+              <div class="cap-item"><span class="cap-dot"></span><span class="cap-text" style="color:#94a3b8">… 更多能力</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

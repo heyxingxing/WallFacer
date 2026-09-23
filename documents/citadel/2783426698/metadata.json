@@ -1,0 +1,572 @@
+{
+  "title": "knowledge-flow —— Agent知识管理方案与实践",
+  "source_url": "https://km.sankuai.com/collabpage/2783426698",
+  "content_id": "2783426698",
+  "step_version": 6,
+  "archived_at": "2026-09-23T17:04:32+08:00",
+  "source_created_at": "2026-08-30T16:24:59+08:00",
+  "source_modified_at": "2026-09-23T16:53:19+08:00",
+  "export_tool": "oa-skills citadel",
+  "raw_exports": [
+    "source.md",
+    "source.xml"
+  ],
+  "reading_copy": "README.md",
+  "transformations": [
+    "Removed CLI notice and added provenance in reading copy",
+    "Retained embedded HTML verbatim and replaced inline HTML with local PNG previews",
+    "Added static previews for selected interactive states",
+    "Normalized inline annotations into GFM footnotes; trimmed reading-copy trailing whitespace",
+    "Preserved Drawio SVG, extracted editable mxGraph XML, and rendered PNG preview"
+  ],
+  "scope": "Current document body and embedded HTML/Drawio assets; linked references not recursively archived; original claims not independently verified.",
+  "assets": [
+    {
+      "type": "html",
+      "title": "knowledge-flow 功能板块详览",
+      "source_html": "assets/citadel/2783426698/diagram-01.html",
+      "preview": "assets/citadel/2783426698/diagram-01.png",
+      "preview_variants": [
+        {
+          "label": "🧩 知识抽取",
+          "path": "assets/citadel/2783426698/diagram-01-tab-2.png"
+        },
+        {
+          "label": "📥 知识入库",
+          "path": "assets/citadel/2783426698/diagram-01-tab-3.png"
+        },
+        {
+          "label": "⚙️ 知识管理",
+          "path": "assets/citadel/2783426698/diagram-01-tab-4.png"
+        },
+        {
+          "label": "🛠 其他",
+          "path": "assets/citadel/2783426698/diagram-01-tab-5.png"
+        }
+      ],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 知识库组织形式",
+      "source_html": "assets/citadel/2783426698/diagram-02.html",
+      "preview": "assets/citadel/2783426698/diagram-02.png",
+      "preview_variants": [
+        {
+          "label": "📋\nkeyword_index.json (root-idx)",
+          "path": "assets/citadel/2783426698/diagram-02-state-1.png"
+        },
+        {
+          "label": "📄\ndata_structure.md (root-md)",
+          "path": "assets/citadel/2783426698/diagram-02-state-2.png"
+        },
+        {
+          "label": "📝\ndata_structure.md (dir-sys-md)",
+          "path": "assets/citadel/2783426698/diagram-02-state-3.png"
+        },
+        {
+          "label": "📄\ndata_structure.md (dir-svc-md)",
+          "path": "assets/citadel/2783426698/diagram-02-state-4.png"
+        },
+        {
+          "label": "📄\ndata_structure.md (dir-flow-md)",
+          "path": "assets/citadel/2783426698/diagram-02-state-5.png"
+        },
+        {
+          "label": "📝\ndata_structure.md (dir-exp-md)",
+          "path": "assets/citadel/2783426698/diagram-02-state-6.png"
+        },
+        {
+          "label": "📄\ndata_structure.md (dir-train-md)",
+          "path": "assets/citadel/2783426698/diagram-02-state-7.png"
+        }
+      ],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 知识抽取",
+      "source_html": "assets/citadel/2783426698/diagram-03.html",
+      "preview": "assets/citadel/2783426698/diagram-03.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 学城文档入库",
+      "source_html": "assets/citadel/2783426698/diagram-04.html",
+      "preview": "assets/citadel/2783426698/diagram-04.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 本地文件入库",
+      "source_html": "assets/citadel/2783426698/diagram-05.html",
+      "preview": "assets/citadel/2783426698/diagram-05.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 知识库结构治理",
+      "source_html": "assets/citadel/2783426698/diagram-06.html",
+      "preview": "assets/citadel/2783426698/diagram-06.png",
+      "preview_variants": [
+        {
+          "label": "命名偏差 (p-rename)",
+          "path": "assets/citadel/2783426698/diagram-06-state-1.png"
+        },
+        {
+          "label": "描述缺失 (p-sys-desc)",
+          "path": "assets/citadel/2783426698/diagram-06-state-2.png"
+        },
+        {
+          "label": "描述过短 (p-exp-desc)",
+          "path": "assets/citadel/2783426698/diagram-06-state-3.png"
+        },
+        {
+          "label": "文档过密 (p-split)",
+          "path": "assets/citadel/2783426698/diagram-06-state-4.png"
+        },
+        {
+          "label": "模板文字 (p-policy-desc)",
+          "path": "assets/citadel/2783426698/diagram-06-state-5.png"
+        },
+        {
+          "label": "目录重叠 (p-merge)",
+          "path": "assets/citadel/2783426698/diagram-06-state-6.png"
+        },
+        {
+          "label": "子目录不符 (p-mismatch)",
+          "path": "assets/citadel/2783426698/diagram-06-state-7.png"
+        }
+      ],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 知识质量",
+      "source_html": "assets/citadel/2783426698/diagram-07.html",
+      "preview": "assets/citadel/2783426698/diagram-07.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 评测集构建 & 知识库评测",
+      "source_html": "assets/citadel/2783426698/diagram-08.html",
+      "preview": "assets/citadel/2783426698/diagram-08.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 知识库可视化",
+      "source_html": "assets/citadel/2783426698/diagram-09.html",
+      "preview": "assets/citadel/2783426698/diagram-09.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 版本管理 & 团队共享",
+      "source_html": "assets/citadel/2783426698/diagram-10.html",
+      "preview": "assets/citadel/2783426698/diagram-10.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 易用性",
+      "source_html": "assets/citadel/2783426698/diagram-11.html",
+      "preview": "assets/citadel/2783426698/diagram-11.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "knowledge-flow · 应用数据",
+      "source_html": "assets/citadel/2783426698/diagram-12.html",
+      "preview": "assets/citadel/2783426698/diagram-12.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "工程 Agent 全托管需求迭代",
+      "source_html": "assets/citadel/2783426698/diagram-13.html",
+      "preview": "assets/citadel/2783426698/diagram-13.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "算法 Agent 需求托管开发",
+      "source_html": "assets/citadel/2783426698/diagram-14.html",
+      "preview": "assets/citadel/2783426698/diagram-14.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "SKILL 闭环迭代",
+      "source_html": "assets/citadel/2783426698/diagram-15.html",
+      "preview": "assets/citadel/2783426698/diagram-15.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "群答疑助手",
+      "source_html": "assets/citadel/2783426698/diagram-16.html",
+      "preview": "assets/citadel/2783426698/diagram-16.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "html",
+      "title": "CASE 自主排查",
+      "source_html": "assets/citadel/2783426698/diagram-17.html",
+      "preview": "assets/citadel/2783426698/diagram-17.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    },
+    {
+      "type": "drawio",
+      "source_url": "https://km.sankuai.com/api/file/cdn/2783426698/253581748603?isNewContent=false&contentType=0&isNewContent=false",
+      "original_svg": "assets/citadel/2783426698/drawio-source.svg",
+      "editable_graph": "assets/citadel/2783426698/drawio-source.drawio",
+      "preview": "assets/citadel/2783426698/drawio-source.png"
+    }
+  ],
+  "unarchived_media": [],
+  "validation": {
+    "nontransformed_content_preserved": true,
+    "all_html_previews_rendered": true,
+    "render_script_errors": 0
+  },
+  "files": {
+    "documents/citadel/2783426698/source.md": {
+      "bytes": 248086,
+      "sha256": "2186f90cedd5fa24ec7ed9edd4567c2024bdcf1a7dfe600b41bc425973901326"
+    },
+    "documents/citadel/2783426698/README.md": {
+      "bytes": 37246,
+      "sha256": "6e2b747d87130e45486c44374748e4394d634ece85bdb049e1422fca5adbec08"
+    },
+    "documents/citadel/2783426698/source.xml": {
+      "bytes": 268539,
+      "sha256": "99155c7f00d3dabae688be32c793cbbdcbbd617f40336818327cf774dcb5332f"
+    },
+    "assets/citadel/2783426698/diagram-06-state-4.png": {
+      "bytes": 208446,
+      "sha256": "ae89f5094f976996e491935c606cb3b28a8d218a2783721cb5cb4ea45393c46b",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-06-state-5.png": {
+      "bytes": 209497,
+      "sha256": "cb6a530275b94826c700522a7c883d0b76fde180daae79f51cc2928a85e89c57",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-06-state-7.png": {
+      "bytes": 230284,
+      "sha256": "fcf999fcf24a15ec92d213b5fa3f3f1c3c4838417ea330c38489c7772823bb73",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-17.html": {
+      "bytes": 14742,
+      "sha256": "b8116b6e6e8217ab7b5be0482ada3bc8089df071272909d2b9a10d32e5cd3a3e"
+    },
+    "assets/citadel/2783426698/diagram-06-state-6.png": {
+      "bytes": 193103,
+      "sha256": "52198e12b6c5f1e0380a7bda1493fcaac81f099cef4bb6e9579ddf652524374b",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-01.html": {
+      "bytes": 17140,
+      "sha256": "7c0f84af4a90fd12d3f66b573c1aad38caac3c1a364e6c7786e51f39ccbf98cd"
+    },
+    "assets/citadel/2783426698/diagram-06-state-2.png": {
+      "bytes": 224047,
+      "sha256": "da4ada4f3abe54bde24851938236728d8e370d99c98b6df063d0f3e86ecdb678",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-16.html": {
+      "bytes": 10302,
+      "sha256": "003a561e41c444fff583e42ae3f86b1644224900f7da28609bfce94d5cda3261"
+    },
+    "assets/citadel/2783426698/diagram-06-state-3.png": {
+      "bytes": 231357,
+      "sha256": "7fbd74151ae59d52f50c02f56d55afc41159d8f516db609d998e694ee2b27165",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-06-state-1.png": {
+      "bytes": 199138,
+      "sha256": "affd3d6185adfe44c89e4fbc739f68407646552d010f9ec34012e9ce6af1178f",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-11.html": {
+      "bytes": 11017,
+      "sha256": "efe19b37df3ea6a4197edf5b3d0a33741c499624957fbedb17b73ab6608bfe69"
+    },
+    "assets/citadel/2783426698/diagram-07.html": {
+      "bytes": 14368,
+      "sha256": "06c7c79cea4ca4d869bf55c974d25c462052d9f785c5b57d6e3d79c7a57c72cb"
+    },
+    "assets/citadel/2783426698/diagram-01-tab-4.png": {
+      "bytes": 268185,
+      "sha256": "70d9895e4dbd3e3ec4b51264d075d7785e85f49dbcfdf292091689f519dabee2",
+      "width": 1287,
+      "height": 1418
+    },
+    "assets/citadel/2783426698/diagram-08.png": {
+      "bytes": 298434,
+      "sha256": "130fc2f39de07d4000334120f89930ee00b7ec7dea3c9ca2aea9bf9c11ccb444",
+      "width": 1287,
+      "height": 1563
+    },
+    "assets/citadel/2783426698/diagram-09.png": {
+      "bytes": 128842,
+      "sha256": "cd1d9df97ca966cd997e7eb6c89b1beaec261926c74513276e3dc24ea2f605d0",
+      "width": 1287,
+      "height": 953
+    },
+    "assets/citadel/2783426698/diagram-01-tab-5.png": {
+      "bytes": 148770,
+      "sha256": "55fc91ea4f19ed9a5ecc42cc771d425c09fe8a91a3184f9b2941099fcb352ab9",
+      "width": 1287,
+      "height": 807
+    },
+    "assets/citadel/2783426698/diagram-06.html": {
+      "bytes": 18607,
+      "sha256": "58a4023ef8a506105017e79da2bef37b8874eb94c29b6a11afae2b67c3a30f39"
+    },
+    "assets/citadel/2783426698/diagram-01-tab-2.png": {
+      "bytes": 143129,
+      "sha256": "86e4187f1fcd877b3e1841f78d25fc4b8576994f430be1b710d921b547940429",
+      "width": 1287,
+      "height": 779
+    },
+    "assets/citadel/2783426698/diagram-10.html": {
+      "bytes": 9886,
+      "sha256": "1a6cfbb86d05c7553683f31e9dbda7933784933f9e9d07a9b2b1a6bcbee702cd"
+    },
+    "assets/citadel/2783426698/diagram-01-tab-3.png": {
+      "bytes": 201687,
+      "sha256": "bf091464c11e2ad111afb79b57eb80e87c3e6e1452a636e9eb4e0de7e6e5e1c8",
+      "width": 1287,
+      "height": 963
+    },
+    "assets/citadel/2783426698/diagram-02-state-5.png": {
+      "bytes": 247486,
+      "sha256": "0cb9a5734a1a96ec416a10ae50deeabfa2d1bbe3295bec9393fba3036b423560",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-05.html": {
+      "bytes": 8217,
+      "sha256": "5f356b0346832716539016dfab3407e967eba2b2dc4fef3ea84c40139f904ce0"
+    },
+    "assets/citadel/2783426698/diagram-16.png": {
+      "bytes": 252982,
+      "sha256": "6007292caf12d7198c3741cde61fad99fa9d965949f3150eadd05092603b861d",
+      "width": 1287,
+      "height": 1074
+    },
+    "assets/citadel/2783426698/diagram-13.html": {
+      "bytes": 9610,
+      "sha256": "d8ea92312990fd7eca50210767bb103b26079a3f9a0198ea8def086cfa9f55e0"
+    },
+    "assets/citadel/2783426698/diagram-02.png": {
+      "bytes": 275364,
+      "sha256": "b18bdf41c3119a067701943358fc8806d4908ce65e8f157110231d479d70eb0f",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-03.png": {
+      "bytes": 264166,
+      "sha256": "c87992233730b91f1da018315dac90070b4be379677842b2f7abed91eb8efa48",
+      "width": 1287,
+      "height": 1139
+    },
+    "assets/citadel/2783426698/diagram-17.png": {
+      "bytes": 300605,
+      "sha256": "56f2288c185d637a4093ad8fccea2c528a009e0a71400aa4af9fa66d0aa45229",
+      "width": 1287,
+      "height": 1464
+    },
+    "assets/citadel/2783426698/diagram-02-state-4.png": {
+      "bytes": 265013,
+      "sha256": "a490cc72feb0c0b4ee3bcfad5e9b80b31d8e2a7c6e685bfcdefde08a6521fb89",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-02-state-6.png": {
+      "bytes": 207838,
+      "sha256": "5818ebe3d339012ba092bc15cc07a784b3c7a18ae67b6c73b97e870ea5cdb1e3",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-09.html": {
+      "bytes": 10212,
+      "sha256": "13b0c60742f5ce1601147affdb826e646641a2c8fb944a2ba8fa3aadda7b5c6f"
+    },
+    "assets/citadel/2783426698/drawio-source.drawio": {
+      "bytes": 17354,
+      "sha256": "340be7782e4f9e63c2982652d892f886314e3aee64595bb8bf534ed03f8629e0"
+    },
+    "assets/citadel/2783426698/diagram-01.png": {
+      "bytes": 148253,
+      "sha256": "8a37aa3ba8ef762317ab7516c32b50c9749456c896354c55db751759f79d7554",
+      "width": 1287,
+      "height": 779
+    },
+    "assets/citadel/2783426698/diagram-15.png": {
+      "bytes": 271938,
+      "sha256": "38e6939bf22de16308c30837a956ed2aafa200de7cbe514384ffb20c07d4f2ac",
+      "width": 1287,
+      "height": 1035
+    },
+    "assets/citadel/2783426698/diagram-14.png": {
+      "bytes": 199269,
+      "sha256": "e0d6d48b372823cc14ad7cd84e03e54e314fc5ab4b028ba9f4659422871a86b4",
+      "width": 1287,
+      "height": 1064
+    },
+    "assets/citadel/2783426698/diagram-02-state-7.png": {
+      "bytes": 260459,
+      "sha256": "f8d07025aef84988535a18187483c569c232838b7587994b684a16d165e56898",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/drawio-source.svg": {
+      "bytes": 55573,
+      "sha256": "406abe472d00454247b844585746877cc69d870fc4c86bc08a086fe4b4fd8708"
+    },
+    "assets/citadel/2783426698/diagram-02-state-3.png": {
+      "bytes": 227536,
+      "sha256": "5e36c4a6c3d9018a0a067b7c373579dafd63a8bad4f2c1b166b717dc0d549b09",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-04.png": {
+      "bytes": 332575,
+      "sha256": "9b78831c32eec591f9e554bda9a20089e0dcd40cb166aff949e85232f25a212f",
+      "width": 1287,
+      "height": 1407
+    },
+    "assets/citadel/2783426698/diagram-10.png": {
+      "bytes": 179195,
+      "sha256": "bebecb67049d684077f61cca1aa7d28c4b9dc4e01475295536bb107ff4d20d9c",
+      "width": 1287,
+      "height": 1056
+    },
+    "assets/citadel/2783426698/diagram-11.png": {
+      "bytes": 194024,
+      "sha256": "7fb672955e2027346d95f9ac821cc31f9f29bb185fc5c69cead579bea496e97f",
+      "width": 1287,
+      "height": 728
+    },
+    "assets/citadel/2783426698/diagram-05.png": {
+      "bytes": 125330,
+      "sha256": "bddcf04bd5a37ff91c0b32a5d56a82d66128bd81539004c2f8cffcad437cde18",
+      "width": 1287,
+      "height": 779
+    },
+    "assets/citadel/2783426698/diagram-02-state-2.png": {
+      "bytes": 241631,
+      "sha256": "8954be72724699253639c99ac8339958f470a46ba55c48aa7bfb339f42523191",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-08.html": {
+      "bytes": 16706,
+      "sha256": "3be7f586b4af335271ed9eaf5b895a8d6fa4dbe5e20e3f2aefe401ac6eea904a"
+    },
+    "assets/citadel/2783426698/diagram-13.png": {
+      "bytes": 161609,
+      "sha256": "4b7bd6c167a1ec22bb68f8aa0c59c7ad23c479e379a2393e1ec939e138258a59",
+      "width": 1287,
+      "height": 801
+    },
+    "assets/citadel/2783426698/diagram-07.png": {
+      "bytes": 174484,
+      "sha256": "ceb9fb620692edc28734f865b423746045bd52c616667d9e198d5b656eb919aa",
+      "width": 1287,
+      "height": 828
+    },
+    "assets/citadel/2783426698/diagram-06.png": {
+      "bytes": 199136,
+      "sha256": "ee8c24ad3a7d49efa35d2c304b40a28660d7c2e707faa52f14483e321efaa78e",
+      "width": 1287,
+      "height": 1169
+    },
+    "assets/citadel/2783426698/diagram-12.html": {
+      "bytes": 2035,
+      "sha256": "4abe23b26ac6bf732132190270caf0a97f97c8d010174e78e78a1c349dbf6da3"
+    },
+    "assets/citadel/2783426698/diagram-12.png": {
+      "bytes": 18268,
+      "sha256": "94ba6ae2a092111512ac1bb7462961fe3b427716adf1e97e9f463f15743773cb",
+      "width": 1287,
+      "height": 153
+    },
+    "assets/citadel/2783426698/diagram-04.html": {
+      "bytes": 15020,
+      "sha256": "a575c032b84521eee0f110de0bc183e3400b255eb7146cbc2ef469213b923e0a"
+    },
+    "assets/citadel/2783426698/diagram-02-state-1.png": {
+      "bytes": 275277,
+      "sha256": "5b975c34c3084f453f55aa705baa18fd3a64b531da70b046c25d1cdd825eb71e",
+      "width": 1287,
+      "height": 1089
+    },
+    "assets/citadel/2783426698/diagram-03.html": {
+      "bytes": 14153,
+      "sha256": "a91b45ce250ce84f3c94f2acce087b3a19da6d171cf1038ad800e02dca1ca5a5"
+    },
+    "assets/citadel/2783426698/diagram-15.html": {
+      "bytes": 11514,
+      "sha256": "4cb0f01ffc44ce09c71445596d4c3569fbb75168f055341a2b060cf9ca1eea2a"
+    },
+    "assets/citadel/2783426698/drawio-source.png": {
+      "bytes": 304528,
+      "sha256": "fb759ba10141e5875ced08771b54047153934331f79b1aa4c8a0311ea28d317a",
+      "width": 1995,
+      "height": 1458
+    },
+    "assets/citadel/2783426698/diagram-14.html": {
+      "bytes": 11257,
+      "sha256": "f1607fafebf7ea852c8fdd503bc4d19f521725ef07a955ab24f94eb895f3cbec"
+    },
+    "assets/citadel/2783426698/diagram-02.html": {
+      "bytes": 21777,
+      "sha256": "9bd0c2f199f273135ee1bc2c5db8375b852ecb8192c36489c325a8b1c1e11e57"
+    }
+  }
+}

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 知识库结构治理</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+
+.page-header { text-align: center; margin-bottom: 10px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 图例条 ── */
+.legend-bar {
+  display: flex; align-items: center; gap: 16px;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  padding: 8px 14px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.legend-bar .hint { font-size: 11px; color: #94a3b8; margin-left: auto; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.leg-o { background: #f97316; }
+.leg-y { background: #ca8a04; }
+.leg-g { background: #94a3b8; }
+
+/* ── 主体双栏 ── */
+.explorer {
+  display: flex; gap: 0;
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  overflow: hidden; min-height: 420px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+/* ── 左侧文件树 ── */
+.tree-panel {
+  width: 262px; flex-shrink: 0;
+  background: #f8fafc; border-right: 1.5px solid #e2e8f0;
+  display: flex; flex-direction: column;
+}
+.tree-title {
+  padding: 9px 12px 8px; font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: #94a3b8;
+  border-bottom: 1px solid #e2e8f0; flex-shrink: 0;
+}
+.tree-scroll { flex: 1; overflow-y: auto; padding: 6px 0 12px; }
+
+.ti {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; user-select: none;
+  white-space: nowrap; overflow: hidden;
+  transition: background .12s;
+}
+.ti.clickable { cursor: pointer; }
+.ti.clickable:hover { background: #e8ecf0; }
+.ti.selected { background: #dbeafe; }
+.ti.selected .iname { color: #1d4ed8 !important; font-weight: 700; }
+
+.toggle { width: 13px; font-size: 9px; color: #94a3b8; transition: transform .15s; flex-shrink: 0; text-align: center; }
+.toggle.open { transform: rotate(90deg); }
+.toggle.empty { visibility: hidden; }
+.iicon { flex-shrink: 0; font-size: 12px; }
+.iname { font-size: 12px; color: #334155; overflow: hidden; text-overflow: ellipsis; }
+.iname.dir { font-weight: 500; color: #1e293b; }
+
+/* 问题标签 */
+.prob-tag {
+  flex-shrink: 0; font-size: 9px; font-weight: 700;
+  padding: 1px 6px; border-radius: 8px; margin-left: 4px;
+  cursor: pointer;
+}
+.pt-o { background: #fed7aa; color: #c2410c; }
+.pt-y { background: #fef08a; color: #92400e; }
+
+.tree-children { overflow: hidden; }
+
+/* ── 右侧内容面板 ── */
+.content-panel {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+.cp-header {
+  padding: 10px 14px 9px; border-bottom: 1.5px solid #e2e8f0;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.cp-title { font-size: 13px; font-weight: 700; color: #0f172a; flex: 1; }
+.feat-badge {
+  font-size: 9.5px; font-weight: 700; padding: 2px 8px;
+  border-radius: 10px; flex-shrink: 0;
+}
+.fb-o { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.fb-y { background: #fefce8; color: #92400e; border: 1px solid #fef08a; }
+
+.cp-body { flex: 1; overflow-y: auto; padding: 14px 16px; font-size: 12px; line-height: 1.8; }
+
+/* 右侧内容组件 */
+.rule-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 9px; border-radius: 10px; margin-bottom: 8px;
+}
+.rb-o { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+.rb-y { background: #fefce8; color: #92400e; border: 1px solid #fde047; }
+
+.prob-desc { color: #475569; margin-bottom: 12px; }
+
+.compare { display: flex; gap: 10px; margin-top: 4px; }
+.compare-box { flex: 1; border-radius: 7px; padding: 10px 12px; }
+.cb-before { background: #fff5f5; border: 1.5px solid #fca5a5; }
+.cb-after  { background: #f0fdf4; border: 1.5px solid #86efac; }
+.cb-label  { font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 5px; }
+.cbl-red   { color: #dc2626; }
+.cbl-grn   { color: #16a34a; }
+.cb-content { font-size: 11.5px; color: #1e293b; line-height: 1.6; }
+.cb-content code { background: rgba(0,0,0,.06); padding: 1px 4px; border-radius: 3px; font-size: 10.5px; }
+
+.op-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #fff7ed; border: 1.5px solid #fdba74;
+  border-radius: 6px; padding: 5px 10px; margin-top: 8px;
+  font-size: 11px; font-weight: 600; color: #c2410c;
+}
+
+/* 默认空状态 */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; color: #94a3b8; gap: 10px;
+  padding: 20px;
+}
+.empty-state .icon { font-size: 30px; }
+.empty-state p { font-size: 12px; text-align: center; line-height: 1.7; max-width: 280px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 知识库结构治理</h1>
+    <p>点击树中的问题标签，查看对应的问题定义与修复操作</p>
+  </div>
+
+  <div class="legend-bar">
+    <div class="leg"><span class="leg-dot leg-o"></span>结构性问题 → 目录结构优化处理</div>
+    <div class="leg"><span class="leg-dot leg-y"></span>描述质量问题 → 容器节点优化处理</div>
+    <div class="leg"><span class="leg-dot leg-g"></span>正常节点</div>
+    <span class="hint">← 点击橙/黄标签查看详情</span>
+  </div>
+
+  <div class="explorer">
+    <div class="tree-panel">
+      <div class="tree-title">知识库目录树（示例）</div>
+      <div class="tree-scroll" id="tree"></div>
+    </div>
+    <div class="content-panel" id="cp">
+      <div class="cp-header" id="cp-header" style="display:none">
+        <div class="cp-title" id="cp-title"></div>
+        <span class="feat-badge" id="cp-badge"></span>
+      </div>
+      <div class="cp-body" id="cp-body">
+        <div class="empty-state">
+          <span class="icon">🔍</span>
+          <p>这棵树上有 <strong>3 个结构性问题</strong>（橙色）和 <strong>4 个描述质量问题</strong>（黄色）。<br>点击任意标签，查看问题定义和修复方式。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── 树形数据 ──
+// prob: {id, type:'struct'|'node'}
+const TREE = [
+  { id:'root', name:'knowledge/', dir:true, open:true, depth:0, children:[
+    { id:'sys',  name:'系统设计/', dir:true, open:true, depth:1,
+      probs:[{id:'p-rename',type:'struct',label:'命名偏差'},{id:'p-sys-desc',type:'node',label:'描述缺失'}],
+      children:[
+        { id:'svc', name:'服务架构/', dir:true, open:false, depth:2, children:[
+          { id:'svc-1', name:'data_structure.md', depth:3 },
+        ]},
+        { id:'dep', name:'部署文档/', dir:true, open:false, depth:2, children:[
+          { id:'dep-1', name:'data_structure.md', depth:3 },
+        ]},
+      ]
+    },
+    { id:'exp',  name:'实验记录/', dir:true, open:true, depth:1,
+      probs:[{id:'p-exp-desc',type:'node',label:'描述过短'}],
+      children:[
+        { id:'online', name:'在线实验/', dir:true, open:false, depth:2,
+          probs:[{id:'p-split',type:'struct',label:'文档过密'}],
+          children:[
+            { id:'online-1', name:'data_structure.md', depth:3 },
+          ]
+        },
+        { id:'offline', name:'离线实验/', dir:true, open:false, depth:2, children:[
+          { id:'offline-1', name:'data_structure.md', depth:3 },
+        ]},
+      ]
+    },
+    { id:'policy', name:'策略文档/', dir:true, open:true, depth:1,
+      probs:[{id:'p-policy-desc',type:'node',label:'模板文字'}],
+      children:[
+        { id:'price1', name:'价格策略/', dir:true, open:false, depth:2,
+          probs:[{id:'p-merge',type:'struct',label:'目录重叠'}],
+          children:[
+            { id:'price1-1', name:'data_structure.md', depth:3 },
+          ]
+        },
+        { id:'price2', name:'定价逻辑/', dir:true, open:false, depth:2,
+          probs:[{id:'p-merge2',type:'struct',label:'目录重叠',ref:'p-merge'}],
+          children:[
+            { id:'price2-1', name:'data_structure.md', depth:3 },
+          ]
+        },
+      ]
+    },
+    { id:'trouble', name:'排查手册/', dir:true, open:false, depth:1,
+      probs:[{id:'p-mismatch',type:'node',label:'子目录不符'}],
+      children:[
+        { id:'faq', name:'常见问题/', dir:true, open:false, depth:2, children:[
+          { id:'faq-1', name:'data_structure.md', depth:3 },
+        ]},
+        { id:'flow', name:'处理流程/', dir:true, open:false, depth:2, children:[
+          { id:'flow-1', name:'data_structure.md', depth:3 },
+        ]},
+      ]
+    },
+  ]}
+];
+
+// ── 右侧内容数据 ──
+const DETAILS = {
+  'p-rename': {
+    type: 'struct',
+    title: '目录命名与实际内容偏差',
+    badge: '目录结构优化', badgeClass: 'fb-o',
+    ruleLabel: '操作：rename_category', ruleClass: 'rb-o',
+    desc: '"系统设计"这个名称暗示里面可能有需求分析、架构方案、详细设计等多种类型的文档。但实际上这个目录下只收录了服务架构相关内容，导致 Agent 导航时可能误判此处有更广泛的内容，浪费导航步骤。',
+    beforeLabel: '问题现状', afterLabel: '优化结果',
+    before: '系统设计/\n├── 服务架构/\n└── 部署文档/',
+    after: '服务架构/         ← 重命名\n├── 服务架构/\n└── 部署文档/',
+  },
+  'p-split': {
+    type: 'struct',
+    title: '单个目录文档过于密集',
+    badge: '目录结构优化', badgeClass: 'fb-o',
+    ruleLabel: '操作：split_category', ruleClass: 'rb-o',
+    desc: '"在线实验"目录下积累了 12 篇文档，混杂了 A/B 实验、灰度发布、流量分配三个不同主题。Agent 检索时需要逐一翻阅大量文档才能定位目标，命中精度下降。',
+    beforeLabel: '问题现状', afterLabel: '优化结果',
+    before: '在线实验/  （12 篇文档）\n├── AB实验方案-v1.md\n├── AB实验方案-v2.md\n├── 灰度发布规范.md\n├── 灰度发布复盘.md\n├── 流量分配策略.md\n└── ... (7 篇)',
+    after: 'AB实验/    （4 篇）\n灰度发布/  （4 篇）\n流量分配/  （4 篇）',
+  },
+  'p-merge': {
+    type: 'struct',
+    title: '两个目录在内容上高度重叠',
+    badge: '目录结构优化', badgeClass: 'fb-o',
+    ruleLabel: '操作：merge_categories', ruleClass: 'rb-o',
+    desc: '"价格策略"和"定价逻辑"在实际内容上高度重叠，都是价格相关的设计文档。Agent 检索价格问题时需要分别进两个目录查找，检索效率低，也容易遗漏。',
+    beforeLabel: '问题现状', afterLabel: '优化结果',
+    before: '策略文档/\n├── 价格策略/  （5 篇）\n└── 定价逻辑/  （3 篇）',
+    after: '策略文档/\n└── 价格与定价/  （8 篇）  ← 合并',
+  },
+  'p-merge2': null,  // 指向 p-merge，在 JS 里处理
+  'p-sys-desc': {
+    type: 'node',
+    title: '容器节点描述完全缺失',
+    badge: '容器节点优化', badgeClass: 'fb-y',
+    ruleLabel: '规则一：描述缺失', ruleClass: 'rb-y',
+    desc: '"服务架构"容器节点的 data_structure.md 中没有任何描述文字。Agent 导航到这里时无法判断子目录各自的内容边界，只能逐一进入每个子目录探索，大幅增加导航步骤。',
+    beforeLabel: '优化前（无描述）', afterLabel: '优化后（100+ 字）',
+    before: '### 服务架构/\n（无内容）\n\n### 部署文档/\n（无内容）',
+    after: '### 服务架构/\n收录服务拓扑设计和模块间调用关系文档，\n适合排查服务依赖或了解整体架构时检索。\n\n### 部署文档/\n收录各环境的部署规范和上线流程，\n适合需要了解发布步骤或排查环境配置时检索。',
+  },
+  'p-exp-desc': {
+    type: 'node',
+    title: '容器节点描述过短，信息不足',
+    badge: '容器节点优化', badgeClass: 'fb-y',
+    ruleLabel: '规则二：描述不足 100 字', ruleClass: 'rb-y',
+    desc: '"实验记录"节点的描述只有 8 个字——"存放实验相关内容"，无法区分"在线实验"和"离线实验"各自的范围和差异。Agent 无法仅凭此描述判断问题该往哪个子目录走。',
+    beforeLabel: '优化前（8 字）', afterLabel: '优化后（100+ 字）',
+    before: '### 在线实验/\n存放实验相关内容。\n\n### 离线实验/\n存放实验相关内容。',
+    after: '### 在线实验/\n记录线上 A/B 实验方案、灰度发布规范和流量\n分配策略，适合规划新实验或回溯历史实验配置。\n\n### 离线实验/\n记录离线评测集构建方案和指标对比报告，\n适合验证模型或策略效果时检索。',
+  },
+  'p-policy-desc': {
+    type: 'node',
+    title: '描述使用了模板占位文字',
+    badge: '容器节点优化', badgeClass: 'fb-y',
+    ruleLabel: '规则三：模板占位文字', ruleClass: 'rb-y',
+    desc: '"策略文档"节点的描述是"（待补充）"，这是入库时的默认占位文字，从未被替换为真实内容。Agent 读到这里得不到任何有效信息，等同于描述缺失。',
+    beforeLabel: '优化前（占位文字）', afterLabel: '优化后（真实描述）',
+    before: '### 价格与定价/\n（待补充）',
+    after: '### 价格与定价/\n收录价格策略设计和定价逻辑相关文档，包含\n不同场景下的定价方案、价格计算规则和历史\n策略调整记录。适合定价方案设计或价格问题\n排查时检索。',
+  },
+  'p-mismatch': {
+    type: 'node',
+    title: '描述与实际子目录列表不一致',
+    badge: '容器节点优化', badgeClass: 'fb-y',
+    ruleLabel: '规则四：子目录列表不一致', ruleClass: 'rb-y',
+    desc: '"排查手册"节点的描述中提到了"FAQ"，但实际子目录是"常见问题"和"处理流程"，两者命名不一致。Agent 在语义上可能将"FAQ"与这两个目录产生偏差，导航偏离。',
+    beforeLabel: '优化前（子目录不符）', afterLabel: '优化后（精确描述）',
+    before: '### 排查手册/\n本节点包含 FAQ 快速查找和问题处理流程\n两个部分，适合遇到问题时参考。\n\n↑ 但实际子目录是：\n  常见问题/\n  处理流程/',
+    after: '### 常见问题/\n整理高频问题的定位方法和根因分析，\n适合遇到已知问题时快速参考。\n\n### 处理流程/\n提供标准化的逐步处理 SOP，\n适合需要规范操作步骤时检索。',
+  },
+};
+
+let selectedProb = null;
+
+// ── 渲染树 ──
+function renderTree(nodes, container) {
+  nodes.forEach(node => {
+    const row = document.createElement('div');
+    row.className = 'ti' + (node.dir ? '' : '');
+    row.style.paddingLeft = (10 + node.depth * 14) + 'px';
+
+    // toggle
+    const tog = document.createElement('span');
+    tog.className = 'toggle' + (node.dir && node.children?.length ? (node.open ? ' open' : '') : ' empty');
+    tog.textContent = '▶';
+    row.appendChild(tog);
+
+    // icon
+    const ico = document.createElement('span');
+    ico.className = 'iicon';
+    ico.textContent = node.dir ? (node.open ? '📂' : '📁') : '📄';
+    row.appendChild(ico);
+
+    // name
+    const nm = document.createElement('span');
+    nm.className = 'iname' + (node.dir ? ' dir' : '');
+    nm.textContent = node.name;
+    row.appendChild(nm);
+
+    // problem tags
+    if (node.probs) {
+      node.probs.forEach(prob => {
+        const tag = document.createElement('span');
+        tag.className = 'prob-tag ' + (prob.type === 'struct' ? 'pt-o' : 'pt-y');
+        tag.textContent = prob.label;
+        tag.dataset.probId = prob.ref || prob.id;
+        tag.addEventListener('click', e => {
+          e.stopPropagation();
+          showDetail(prob.ref || prob.id, tag);
+        });
+        row.appendChild(tag);
+      });
+    }
+
+    // dir click: toggle
+    if (node.dir && node.children?.length) {
+      row.classList.add('clickable');
+      row.addEventListener('click', () => {
+        node.open = !node.open;
+        tog.className = 'toggle' + (node.children.length ? (node.open ? ' open' : '') : ' empty');
+        ico.textContent = node.open ? '📂' : '📁';
+        const cw = document.getElementById('cw-' + node.id);
+        if (cw) cw.style.display = node.open ? 'block' : 'none';
+      });
+    }
+
+    container.appendChild(row);
+
+    if (node.dir && node.children) {
+      const cw = document.createElement('div');
+      cw.className = 'tree-children';
+      cw.id = 'cw-' + node.id;
+      cw.style.display = node.open ? 'block' : 'none';
+      container.appendChild(cw);
+      renderTree(node.children, cw);
+    }
+  });
+}
+
+function showDetail(probId, tagEl) {
+  const d = DETAILS[probId];
+  if (!d) return;
+
+  // selected state on tag
+  document.querySelectorAll('.prob-tag').forEach(t => {
+    t.style.outline = '';
+    t.style.boxShadow = '';
+  });
+  if (tagEl) {
+    tagEl.style.outline = '2px solid ' + (d.type === 'struct' ? '#f97316' : '#ca8a04');
+    tagEl.style.boxShadow = '0 0 0 3px ' + (d.type === 'struct' ? '#fff7ed' : '#fefce8');
+  }
+
+  document.getElementById('cp-header').style.display = 'flex';
+  document.getElementById('cp-title').textContent = d.title;
+  const badge = document.getElementById('cp-badge');
+  badge.textContent = d.badge;
+  badge.className = 'feat-badge ' + d.badgeClass;
+
+  document.getElementById('cp-body').innerHTML = `
+    <span class="rule-badge ${d.ruleClass}">${d.ruleLabel}</span>
+    <div class="prob-desc">${d.desc}</div>
+    <div class="compare">
+      <div class="compare-box cb-before">
+        <div class="cb-label cbl-red">${d.beforeLabel}</div>
+        <pre class="cb-content" style="font-family:'SF Mono','Fira Code',monospace;font-size:10.5px;white-space:pre;line-height:1.6">${d.before}</pre>
+      </div>
+      <div class="compare-box cb-after">
+        <div class="cb-label cbl-grn">${d.afterLabel}</div>
+        <pre class="cb-content" style="font-family:'SF Mono','Fira Code',monospace;font-size:10.5px;white-space:pre;line-height:1.6">${d.after}</pre>
+      </div>
+    </div>
+  `;
+}
+
+// ── 初始化 ──
+renderTree(TREE, document.getElementById('tree'));
+</script>
+</body>
+</html>

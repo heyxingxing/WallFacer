@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKILL 闭环迭代</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 14px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 效果条 ── */
+.metrics-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+.metric {
+  flex: 1; border-radius: 9px; border: 1.5px solid;
+  padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+}
+.m-green { border-color: #86efac; background: #f0fdf4; }
+.m-blue  { border-color: #93c5fd; background: #eff6ff; }
+.metric-nums { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mv { font-size: 22px; font-weight: 800; line-height: 1; }
+.m-green .mv { color: #059669; }
+.m-blue  .mv { color: #2563eb; }
+.mv-label { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+.m-arr { font-size: 16px; color: #cbd5e1; }
+.metric-sep { width: 1px; background: #e2e8f0; align-self: stretch; flex-shrink: 0; }
+.metric-desc { font-size: 11px; color: #475569; line-height: 1.6; }
+
+.sec-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
+
+/* ── 主体两栏 ── */
+.main-cols { display: flex; gap: 12px; align-items: flex-start; }
+.col-left  { flex: 0 0 300px; display: flex; flex-direction: column; gap: 10px; }
+.col-right { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+/* ── 三层知识结构 ── */
+.layer-stack { display: flex; flex-direction: column; gap: 4px; }
+.layer {
+  border-radius: 8px; border: 1.5px solid;
+  padding: 10px 13px; display: flex; flex-direction: column; gap: 4px;
+}
+.l-blue   { border-color: #93c5fd; background: #eff6ff; }
+.l-green  { border-color: #6ee7b7; background: #ecfdf5; border-width: 2px; }
+.l-purple { border-color: #818cf8; background: #eef2ff; }
+
+.layer-head { display: flex; align-items: center; gap: 6px; }
+.layer-icon { font-size: 14px; flex-shrink: 0; }
+.layer-name { font-size: 12px; font-weight: 700; flex: 1; }
+.l-blue   .layer-name { color: #1e40af; }
+.l-green  .layer-name { color: #065f46; }
+.l-purple .layer-name { color: #3730a3; }
+.layer-role {
+  font-size: 9.5px; font-weight: 700; padding: 1px 7px;
+  border-radius: 6px; flex-shrink: 0;
+}
+.l-blue   .layer-role { background: #dbeafe; color: #1e40af; }
+.l-green  .layer-role { background: #d1fae5; color: #065f46; }
+.l-purple .layer-role { background: #e0e7ff; color: #3730a3; }
+.layer-desc { font-size: 10.5px; color: #64748b; line-height: 1.55; }
+.kf-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 8px;
+  background: #4f46e5; color: #fff; align-self: flex-start;
+}
+.must-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 8px;
+  background: #059669; color: #fff; align-self: flex-start;
+}
+.layer-arr { text-align: center; font-size: 10px; color: #cbd5e1; line-height: 1; padding: 1px 0; }
+
+.hard-rule {
+  background: #fef9c3; border: 1.5px solid #fde047; border-radius: 8px;
+  padding: 8px 12px; font-size: 10.5px; color: #78350f; line-height: 1.65;
+}
+
+/* ── 自进化步骤 (竖向) ── */
+.evo-steps { display: flex; flex-direction: column; }
+
+.evo-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0; border-radius: 9px;
+  background: #ffffff;
+  transition: box-shadow .15s;
+}
+.evo-step:hover { box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+
+.evo-step.step-exec   { border-color: #e2e8f0; background: #f8fafc; }
+.evo-step.step-check  { border-color: #fde68a; background: #fffbeb; }
+.evo-step.step-write  { border-color: #c4b5fd; background: #f5f3ff; }
+.evo-step.step-result { border-color: #86efac; background: #f0fdf4; }
+
+.evo-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.evo-body { flex: 1; min-width: 0; }
+.evo-name { font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+.evo-desc { font-size: 11px; color: #475569; line-height: 1.6; }
+
+.trigger-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.tt { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 5px; background: #fef3c7; color: #92400e; }
+.tt-force { background: #fee2e2; color: #991b1b; }
+
+.write-targets { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.wt { font-size: 11px; color: #475569; display: flex; gap: 6px; align-items: center; }
+.wt-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.wt-kb  { background: #6366f1; }
+.wt-ref { background: #059669; }
+
+/* 步骤间连接线 */
+.step-connector {
+  display: flex; justify-content: flex-start; align-items: center;
+  padding-left: 26px; height: 16px;
+}
+.step-conn-line { width: 2px; height: 100%; background: #e2e8f0; }
+
+/* ── 晋升路径 ── */
+.promo-bar {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #f5f3ff; border: 1.5px solid #c4b5fd; border-radius: 9px;
+  padding: 10px 14px;
+}
+.promo-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.promo-text { font-size: 11px; color: #4c1d95; line-height: 1.7; }
+.promo-text strong { color: #3730a3; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>SKILL 闭环迭代</h1>
+    <p>技能在执行中消费知识、生产经验，实现越用越强的自进化闭环</p>
+  </div>
+
+  <!-- ── 效果条 ── -->
+  <div class="metrics-bar">
+    <div class="metric m-green">
+      <div class="metric-nums">
+        <div><div class="mv">30%</div><div class="mv-label">优化前成功率</div></div>
+        <span class="m-arr">→</span>
+        <div><div class="mv">80-90%</div><div class="mv-label">多轮迭代后</div></div>
+      </div>
+      <div class="metric-sep"></div>
+      <div class="metric-desc">全流程托管成功率显著提升，技能对执行细节的覆盖随迭代渐进收敛</div>
+    </div>
+    <div class="metric m-blue">
+      <div class="metric-nums">
+        <div><div class="mv">60%↓</div><div class="mv-label">人工干预减少</div></div>
+      </div>
+      <div class="metric-sep"></div>
+      <div class="metric-desc">常见的卡点通过自动经验积累逐步消除，越用越少需要人工介入</div>
+    </div>
+  </div>
+
+  <div class="main-cols">
+
+    <!-- 左：三层知识结构 -->
+    <div class="col-left">
+      <div class="sec-lbl">三层知识结构（消费侧）</div>
+
+      <div class="layer-stack">
+        <div class="layer l-blue">
+          <div class="layer-head">
+            <span class="layer-icon">📋</span>
+            <span class="layer-name">SKILL.md</span>
+            <span class="layer-role">流程主控</span>
+          </div>
+          <div class="layer-desc">流程主控，定义阶段划分与步骤编排。每次激活首先读取。</div>
+        </div>
+        <div class="layer-arr">↓ 进入步骤前必读</div>
+        <div class="layer l-green">
+          <div class="layer-head">
+            <span class="layer-icon">📁</span>
+            <span class="layer-name">references/</span>
+            <span class="layer-role">步骤必读</span>
+          </div>
+          <div class="layer-desc">步骤强制约束，不能容忍检索遗漏，保留为必读并限制篇幅。</div>
+          <span class="must-badge">不可跳过 · 直接加载</span>
+        </div>
+        <div class="layer-arr">↓ 领域背景按需检索</div>
+        <div class="layer l-purple">
+          <div class="layer-head">
+            <span class="layer-icon">🔍</span>
+            <span class="layer-name">外挂知识库 kf</span>
+            <span class="layer-role">领域知识</span>
+          </div>
+          <div class="layer-desc">领域背景与历史经验，可容忍遗漏，体量大，按需检索。</div>
+          <span class="kf-badge">knowledge-flow 驱动</span>
+        </div>
+      </div>
+
+      <div class="hard-rule">
+        ⚡ <strong>硬约束</strong>：关键执行阶段每个步骤开始前，<strong>必须先通过 knowledge-flow 检索知识库</strong>，确认有无相关规范或踩坑记录，不可跳过。
+      </div>
+    </div>
+
+    <!-- 右：自进化竖向流 -->
+    <div class="col-right">
+      <div class="sec-lbl">自进化机制（生产侧）</div>
+
+      <div class="evo-steps">
+
+        <div class="evo-step step-exec">
+          <span class="evo-icon">⚙️</span>
+          <div class="evo-body">
+            <div class="evo-name">执行步骤</div>
+            <div class="evo-desc">按流程逐步推进，必读 references、按需检索知识库，实时记录 DEV_LOG.md。</div>
+          </div>
+        </div>
+        <div class="step-connector"><div class="step-conn-line"></div></div>
+
+        <div class="evo-step step-check">
+          <span class="evo-icon">🔔</span>
+          <div class="evo-body">
+            <div class="evo-name">步骤切换检查点</div>
+            <div class="evo-desc">每步完成、进入下一步前，检测是否触发自进化信号：</div>
+            <div class="trigger-tags">
+              <span class="tt">脚本失败后找到解法</span>
+              <span class="tt">用户纠正了方法</span>
+              <span class="tt">步骤有遗漏或错误</span>
+              <span class="tt">5+ 工具调用完成非显而易见任务</span>
+              <span class="tt tt-force">Step6 完成时强制触发</span>
+            </div>
+          </div>
+        </div>
+        <div class="step-connector"><div class="step-conn-line"></div></div>
+
+        <div class="evo-step step-write">
+          <span class="evo-icon">✍️</span>
+          <div class="evo-body">
+            <div class="evo-name">经验分类回写</div>
+            <div class="evo-desc">按能否容忍遗漏确定写入位置：</div>
+            <div class="write-targets">
+              <div class="wt"><span class="wt-dot wt-ref"></span>不能容忍遗漏的强制约束 → <strong>references/ 必读</strong>（人工确认）</div>
+              <div class="wt"><span class="wt-dot wt-kb"></span>可容忍遗漏的领域经验 → <strong>外挂知识库 kf</strong>（候选池 + 评测集）</div>
+            </div>
+          </div>
+        </div>
+        <div class="step-connector"><div class="step-conn-line"></div></div>
+
+        <div class="evo-step step-result">
+          <span class="evo-icon">📈</span>
+          <div class="evo-body">
+            <div class="evo-name">下轮执行更强</div>
+            <div class="evo-desc">知识库与必读层积累了新经验，下次执行同类步骤时直接命中，不再重复踩坑。多轮迭代后，覆盖率渐进收敛。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="promo-bar">
+        <span class="promo-icon">⬆️</span>
+        <div class="promo-text">
+          <strong>SKILL.md / references</strong> 的沉淀由<strong>人工确认</strong>，保证必读层准确；<strong>外挂知识库</strong>走自动化质量管线（候选池 + 多轮汇总 + 评测集），支持规模化积累。
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

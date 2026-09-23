@@ -1,0 +1,63 @@
+{
+  "title": "上下文工程(Context Engineering)调研",
+  "source_url": "https://km.sankuai.com/collabpage/2783059181",
+  "content_id": "2783059181",
+  "step_version": 4,
+  "archived_at": "2026-09-23T17:04:32+08:00",
+  "source_created_at": "2026-08-31T11:20:09+08:00",
+  "source_modified_at": "2026-09-23T16:52:41+08:00",
+  "export_tool": "oa-skills citadel",
+  "raw_exports": [
+    "source.md",
+    "source.xml"
+  ],
+  "reading_copy": "README.md",
+  "transformations": [
+    "Removed CLI notice and added provenance in reading copy",
+    "Retained embedded HTML verbatim and replaced inline HTML with local PNG previews",
+    "Added static previews for selected interactive states",
+    "Normalized inline annotations into GFM footnotes; trimmed reading-copy trailing whitespace"
+  ],
+  "scope": "Current document body and embedded HTML/Drawio assets; linked references not recursively archived; original claims not independently verified.",
+  "assets": [
+    {
+      "type": "html",
+      "title": "上下文工程策略图",
+      "source_html": "assets/citadel/2783059181/diagram-01.html",
+      "preview": "assets/citadel/2783059181/diagram-01.png",
+      "preview_variants": [],
+      "rendering": "Offline Chromium, all outgoing requests blocked, system fallback fonts; original HTML and interactive logic preserved",
+      "script_errors": []
+    }
+  ],
+  "unarchived_media": [],
+  "validation": {
+    "nontransformed_content_preserved": true,
+    "all_html_previews_rendered": true,
+    "render_script_errors": 0
+  },
+  "files": {
+    "documents/citadel/2783059181/source.md": {
+      "bytes": 28731,
+      "sha256": "654c38ff470636e1846a45607f14f44b4b1f53efc1e16f6a581b653b0b95509a"
+    },
+    "documents/citadel/2783059181/README.md": {
+      "bytes": 24576,
+      "sha256": "dca3fc64d5a99c4ce9c8e0b23e4e32681495bef9252e3c9433e7e15a9152cc4b"
+    },
+    "documents/citadel/2783059181/source.xml": {
+      "bytes": 50445,
+      "sha256": "ebfaa4b04ef4150998272c3707afc59e4f0b20f6e0e1522fdce8e5eb68950b5b"
+    },
+    "assets/citadel/2783059181/diagram-01.html": {
+      "bytes": 4408,
+      "sha256": "6a7e883416cffe3dee3ec9a38eb61312caacabed0ba47de0f0c3e1c7d1ce030c"
+    },
+    "assets/citadel/2783059181/diagram-01.png": {
+      "bytes": 41016,
+      "sha256": "3c9070b1500e9f375aaa58aaba375129fca0da1f45cd1fd593adec44c0223ffb",
+      "width": 2160,
+      "height": 345
+    }
+  }
+}

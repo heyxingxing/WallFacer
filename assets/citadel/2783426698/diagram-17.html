@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CASE 自主排查</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 12px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+.sec-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
+
+/* ── 对比条 ── */
+.contrast {
+  display: flex; gap: 0; margin-bottom: 12px;
+  border: 1.5px solid #e2e8f0; border-radius: 9px; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.contrast-col {
+  flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px;
+}
+.contrast-col.old { background: #fafafa; border-right: 1.5px solid #e2e8f0; }
+.contrast-col.new { background: #f0fdf4; }
+.cc-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.old .cc-label { color: #94a3b8; }
+.new .cc-label { color: #059669; }
+.cc-title { font-size: 12.5px; font-weight: 700; }
+.old .cc-title { color: #64748b; }
+.new .cc-title { color: #065f46; }
+.cc-items { display: flex; flex-direction: column; gap: 3px; }
+.cc-item { font-size: 10.5px; color: #475569; display: flex; gap: 6px; align-items: flex-start; }
+.cci-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.old .cci-dot { background: #cbd5e1; }
+.new .cci-dot { background: #22c55e; }
+.contrast-arrow {
+  flex: 0 0 36px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #cbd5e1; background: #f8fafc;
+}
+
+/* ── 主体两栏 ── */
+.main-cols { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.col-phases { flex: 0 0 200px; display: flex; flex-direction: column; }
+.col-kb     { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+/* ── 6阶段流程 ── */
+.phase {
+  border-radius: 7px; border: 1.5px solid #e2e8f0;
+  background: #fff; padding: 8px 11px;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.phase.p-key { border-color: #818cf8; background: #eef2ff; }
+.phase.p-feed { border-color: #86efac; background: #f0fdf4; }
+
+.phase-num {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+  background: #e2e8f0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; color: #64748b; margin-top: 1px;
+}
+.p-key  .phase-num { background: #4f46e5; color: #fff; }
+.p-feed .phase-num { background: #059669; color: #fff; }
+
+.phase-body { flex: 1; }
+.phase-name { font-size: 11px; font-weight: 700; color: #0f172a; }
+.phase-desc { font-size: 10px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+.phase-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 5px;
+  display: inline-block; margin-top: 3px;
+}
+.pb-indigo { background: #e0e7ff; color: #3730a3; }
+.pb-green  { background: #d1fae5; color: #065f46; }
+
+.phase-arr { text-align: center; font-size: 10px; color: #e2e8f0; line-height: 1; padding: 2px 0; }
+
+/* 假设集示例 */
+.hypo-sample {
+  margin-top: 4px; background: #fff; border: 1px solid #c7d2fe;
+  border-radius: 5px; padding: 5px 7px; overflow: hidden;
+}
+.hs-row { display: flex; gap: 6px; font-size: 9.5px; border-bottom: 1px solid #f1f5f9; padding: 2px 0; }
+.hs-row:last-child { border-bottom: none; }
+.hs-dir { flex: 1; color: #334155; }
+.hs-conf { flex-shrink: 0; font-weight: 700; }
+.conf-h { color: #dc2626; }
+.conf-m { color: #d97706; }
+
+/* ── 知识库4层 ── */
+.kb-layers { display: flex; flex-direction: column; gap: 6px; }
+.kbl {
+  border-radius: 8px; border: 1.5px solid;
+  padding: 10px 13px; display: flex; gap: 10px; align-items: flex-start;
+}
+.kbl-core   { border-color: #818cf8; background: #eef2ff; border-width: 2px; }
+.kbl-case   { border-color: #6ee7b7; background: #ecfdf5; }
+.kbl-sql    { border-color: #93c5fd; background: #eff6ff; }
+.kbl-atom   { border-color: #e2e8f0; background: #f8fafc; }
+
+.kbl-left { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.kbl-icon { font-size: 18px; }
+.kbl-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 5px;
+  text-align: center; white-space: nowrap;
+}
+.kbl-core .kbl-badge   { background: #e0e7ff; color: #3730a3; }
+.kbl-case .kbl-badge   { background: #d1fae5; color: #065f46; }
+.kbl-sql  .kbl-badge   { background: #dbeafe; color: #1e40af; }
+.kbl-atom .kbl-badge   { background: #f1f5f9; color: #64748b; }
+
+.kbl-body { flex: 1; }
+.kbl-name { font-size: 12px; font-weight: 700; }
+.kbl-core .kbl-name { color: #3730a3; }
+.kbl-case .kbl-name { color: #065f46; }
+.kbl-sql  .kbl-name { color: #1e40af; }
+.kbl-atom .kbl-name { color: #334155; }
+
+.kbl-desc { font-size: 10.5px; color: #475569; line-height: 1.55; margin-top: 3px; }
+.kbl-sub { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.ks { font-size: 9.5px; padding: 1px 7px; border-radius: 5px; }
+.kbl-core .ks { background: #e0e7ff; color: #4338ca; }
+.kbl-case .ks { background: #d1fae5; color: #065f46; }
+.kbl-sql  .ks { background: #dbeafe; color: #1d4ed8; }
+.kbl-atom .ks { background: #f1f5f9; color: #475569; }
+
+/* ── Phase 5 反馈闭环 ── */
+.feedback-wrap {
+  border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.fb-header {
+  background: #f0fdf4; border-bottom: 1.5px solid #bbf7d0;
+  padding: 9px 16px; display: flex; align-items: center; gap: 8px;
+}
+.fb-icon  { font-size: 15px; }
+.fb-title { font-size: 12.5px; font-weight: 700; color: #065f46; flex: 1; }
+.fb-q { font-size: 11px; color: #065f46; font-style: italic; }
+
+.fb-body { display: flex; gap: 0; }
+.fb-path {
+  flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px;
+}
+.fb-path.correct { border-right: 1px solid #f1f5f9; }
+.fb-path-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.fph-icon { font-size: 14px; }
+.fph-label { font-size: 11.5px; font-weight: 700; }
+.correct .fph-label { color: #065f46; }
+.wrong   .fph-label { color: #dc2626; }
+
+.fb-step { font-size: 10.5px; color: #475569; line-height: 1.6; display: flex; gap: 6px; align-items: flex-start; }
+.fbs-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.correct .fbs-dot { background: #22c55e; }
+.wrong   .fbs-dot { background: #f87171; }
+
+.constraint-note {
+  margin-top: 6px; padding: 6px 10px; border-radius: 6px; font-size: 10px; line-height: 1.55;
+}
+.cn-green { background: #dcfce7; color: #065f46; border: 1px solid #86efac; }
+.cn-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>CASE 自主排查</h1>
+    <p>从硬编码 SOP 到证据驱动排查 · 知识驱动假设形成 · 排查经验持续积累</p>
+  </div>
+
+  <!-- ── 新旧对比 ── -->
+  <div class="contrast">
+    <div class="contrast-col old">
+      <span class="cc-label">旧模式</span>
+      <span class="cc-title">硬编码 SOP</span>
+      <div class="cc-items">
+        <div class="cc-item"><span class="cci-dot"></span>排查步骤写在 skill 文件里，新类型必须改 skill</div>
+        <div class="cc-item"><span class="cci-dot"></span>路径固定，机械走完步骤 1→2→3，无法提前收敛</div>
+        <div class="cc-item"><span class="cci-dot"></span>每次排查从零开始，经验无处积累</div>
+      </div>
+    </div>
+    <div class="contrast-arrow">→</div>
+    <div class="contrast-col new">
+      <span class="cc-label">新模式</span>
+      <span class="cc-title">证据驱动排查</span>
+      <div class="cc-items">
+        <div class="cc-item"><span class="cci-dot"></span>skill 只定义执行框架，业务知识全部在知识库</div>
+        <div class="cc-item"><span class="cci-dot"></span>假设集驱动，证据足够时提前收敛，发现新线索时动态插入</div>
+        <div class="cc-item"><span class="cci-dot"></span>Phase 5 自动沉淀，线索层逐步精化</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 主体 ── -->
+  <div class="main-cols">
+
+    <!-- 左：6 阶段 -->
+    <div class="col-phases">
+      <div class="sec-lbl">执行框架（6 阶段）</div>
+
+      <div class="phase">
+        <span class="phase-num">0</span>
+        <div class="phase-body">
+          <div class="phase-name">意图识别</div>
+          <div class="phase-desc">提取业务对象 ID、日期、异常描述</div>
+        </div>
+      </div>
+      <div class="phase-arr">↓</div>
+
+      <div class="phase p-key">
+        <span class="phase-num">1</span>
+        <div class="phase-body">
+          <div class="phase-name">知识检索</div>
+          <div class="phase-desc">检索线索层，形成初始假设集</div>
+          <span class="phase-badge pb-indigo">knowledge-flow</span>
+        </div>
+      </div>
+      <div class="phase-arr">↓</div>
+
+      <div class="phase p-key">
+        <span class="phase-num">2</span>
+        <div class="phase-body">
+          <div class="phase-name">规划输出</div>
+          <div class="phase-desc">假设集 + 置信度，用户确认后执行</div>
+          <div class="hypo-sample">
+            <div class="hs-row"><span class="hs-dir">假设方向 A</span><span class="hs-conf conf-h">高</span></div>
+            <div class="hs-row"><span class="hs-dir">假设方向 B</span><span class="hs-conf conf-m">中</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="phase-arr">↓</div>
+
+      <div class="phase">
+        <span class="phase-num">3</span>
+        <div class="phase-body">
+          <div class="phase-name">逐步执行</div>
+          <div class="phase-desc">每步结果动态更新假设置信度</div>
+        </div>
+      </div>
+      <div class="phase-arr">↓</div>
+
+      <div class="phase">
+        <span class="phase-num">4</span>
+        <div class="phase-body">
+          <div class="phase-name">结论输出</div>
+          <div class="phase-desc">根因定位 + 佐证数据 + 处理建议</div>
+        </div>
+      </div>
+      <div class="phase-arr">↓</div>
+
+      <div class="phase p-feed">
+        <span class="phase-num">5</span>
+        <div class="phase-body">
+          <div class="phase-name">知识反馈</div>
+          <div class="phase-desc">沉淀新知识或修正错误线索</div>
+          <span class="phase-badge pb-green">闭环关键</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：知识库4层 -->
+    <div class="col-kb">
+      <div class="sec-lbl">知识库结构（knowledge-flow 管理）</div>
+
+      <div class="kb-layers">
+        <div class="kbl kbl-core">
+          <div class="kbl-left">
+            <span class="kbl-icon">🎯</span>
+            <span class="kbl-badge">线索层<br>核心</span>
+          </div>
+          <div class="kbl-body">
+            <div class="kbl-name">线索层 — 假设驱动的推理框架</div>
+            <div class="kbl-desc">统一结构：触发信号 / 支持证据 / 否定证据 / 验证动作，给 Agent「触发→验证→排除」完整推理框架，而不是执行清单。</div>
+          </div>
+        </div>
+
+        <div class="kbl kbl-case">
+          <div class="kbl-left">
+            <span class="kbl-icon">📂</span>
+            <span class="kbl-badge">案例层</span>
+          </div>
+          <div class="kbl-body">
+            <div class="kbl-name">案例层 — 真实排查过程记录</div>
+            <div class="kbl-desc">真实排查记录，保留边界条件和踩坑细节。线索层是通用规则，案例层补充无法泛化的细节。</div>
+          </div>
+        </div>
+
+        <div class="kbl kbl-sql">
+          <div class="kbl-left">
+            <span class="kbl-icon">🗄️</span>
+            <span class="kbl-badge">SQL<br>参考库</span>
+          </div>
+          <div class="kbl-body">
+            <div class="kbl-name">SQL 参考库 — 带陷阱注释的查询模板</div>
+            <div class="kbl-desc">带陷阱注释的查询模板，由线索层验证动作按需引用。</div>
+          </div>
+        </div>
+
+        <div class="kbl kbl-atom">
+          <div class="kbl-left">
+            <span class="kbl-icon">🔩</span>
+            <span class="kbl-badge">原子层</span>
+          </div>
+          <div class="kbl-body">
+            <div class="kbl-name">原子层 — 客观事实描述</div>
+            <div class="kbl-desc">客观事实描述，三个子目录：</div>
+            <div class="kbl-sub">
+              <span class="ks">表结构参考</span>
+              <span class="ks">指标计算口径</span>
+              <span class="ks">字段速查（含查询陷阱）</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Phase 5 反馈闭环 ── -->
+  <div class="sec-lbl">Phase 5 · 知识反馈闭环</div>
+  <div class="feedback-wrap">
+    <div class="fb-header">
+      <span class="fb-icon">🔄</span>
+      <span class="fb-title">知识反馈</span>
+      <span class="fb-q">「这次排查结论是否正确？」</span>
+    </div>
+    <div class="fb-body">
+
+      <div class="fb-path correct">
+        <div class="fb-path-head"><span class="fph-icon">✅</span><span class="fph-label">正确路线</span></div>
+        <div class="fb-step"><span class="fbs-dot"></span>判断是否产生新知识，输出审查报告，用户确认后写入</div>
+        <div class="constraint-note cn-green">
+          📌 案例层可自动写入；<strong>线索层修改必须人工确认</strong>。
+        </div>
+      </div>
+
+      <div class="fb-path wrong">
+        <div class="fb-path-head"><span class="fph-icon">❌</span><span class="fph-label">错误路线</span></div>
+        <div class="fb-step"><span class="fbs-dot"></span>追问正确根因，对错误命中的假设逐一归因</div>
+        <div class="fb-step"><span class="fbs-dot"></span>归因类型：触发信号过宽 / 执行判断失误 / 线索层缺失</div>
+        <div class="fb-step"><span class="fbs-dot"></span>提议修正动作</div>
+        <div class="constraint-note cn-red">
+          🚫 禁止静默修改线索层，修改必须经用户确认。
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

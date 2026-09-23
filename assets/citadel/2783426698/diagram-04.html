@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 学城文档入库</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 12px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 对比条 ── */
+.compare-strip {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.cs-item {
+  flex: 1; border-radius: 9px; border: 1.5px solid;
+  padding: 11px 13px; display: flex; flex-direction: column; gap: 5px;
+}
+.cs-head { display: flex; align-items: center; gap: 6px; }
+.cs-icon { font-size: 15px; }
+.cs-name { font-size: 12.5px; font-weight: 700; }
+.cs-scale {
+  font-size: 10px; font-weight: 700; padding: 1px 7px;
+  border-radius: 8px; align-self: flex-start;
+}
+.cs-when { font-size: 11px; color: #64748b; line-height: 1.5; }
+
+.cs-blue   { border-color: #bfdbfe; background: #eff6ff; }
+.cs-blue   .cs-name  { color: #1e40af; }
+.cs-blue   .cs-scale { background: #dbeafe; color: #1e40af; }
+.cs-green  { border-color: #bbf7d0; background: #ecfdf5; }
+.cs-green  .cs-name  { color: #065f46; }
+.cs-green  .cs-scale { background: #d1fae5; color: #065f46; }
+.cs-purple { border-color: #ddd6fe; background: #f5f3ff; }
+.cs-purple .cs-name  { color: #6d28d9; }
+.cs-purple .cs-scale { background: #ede9fe; color: #6d28d9; }
+
+/* ── 流程面板 ── */
+.sp {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  overflow: hidden; margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.sp:last-child { margin-bottom: 0; }
+.sp-head {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 14px; border-bottom: 1.5px solid #e2e8f0;
+}
+.sp-icon { font-size: 15px; flex-shrink: 0; }
+.sp-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+.sp-tag  { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: 2px; }
+.sp-desc { font-size: 11px; color: #64748b; flex: 1; padding-left: 10px; border-left: 1px solid #e2e8f0; margin-left: 4px; line-height: 1.6; }
+.sp-body { padding: 11px 14px; }
+
+.sp-blue   { border-color: #bfdbfe; }
+.sp-blue   .sp-head { background: #eff6ff; border-bottom-color: #bfdbfe; }
+.sp-green  { border-color: #bbf7d0; }
+.sp-green  .sp-head { background: #ecfdf5; border-bottom-color: #bbf7d0; }
+.sp-purple { border-color: #ddd6fe; }
+.sp-purple .sp-head { background: #f5f3ff; border-bottom-color: #ddd6fe; }
+
+/* ── 流程节点 ── */
+.flow-row { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; }
+.fn {
+  flex-shrink: 0; border-radius: 7px; border: 1.5px solid;
+  background: #fff; padding: 7px 8px; text-align: center; min-width: 88px;
+}
+.fn-main { font-size: 10.5px; font-weight: 600; color: #1e293b; line-height: 1.3; }
+.fn-sub  { font-size: 9px; color: #94a3b8; margin-top: 2px; line-height: 1.3; }
+.fn-result .fn-main { font-weight: 700; }
+
+.fa { flex-shrink: 0; display: flex; align-items: center; padding: 0 3px; }
+
+.c-blue   { border-color: #93c5fd; }
+.c-blue.fn-result   { background: #eff6ff; border-color: #3b82f6; }
+.c-blue.fn-result .fn-main { color: #1d4ed8; }
+.c-green  { border-color: #6ee7b7; }
+.c-green.fn-result  { background: #ecfdf5; border-color: #059669; }
+.c-green.fn-result .fn-main { color: #065f46; }
+.c-purple { border-color: #c4b5fd; }
+.c-purple.fn-result { background: #f5f3ff; border-color: #7c3aed; }
+.c-purple.fn-result .fn-main { color: #6d28d9; }
+
+/* 高亮步骤（独特核心步骤） */
+.fn-key { border-width: 2px; }
+.c-blue.fn-key   { border-color: #3b82f6; background: #eff6ff; }
+.c-blue.fn-key .fn-main { color: #1e40af; }
+.c-green.fn-key  { border-color: #059669; background: #ecfdf5; }
+.c-green.fn-key .fn-main { color: #065f46; }
+.c-purple.fn-key { border-color: #7c3aed; background: #f5f3ff; }
+.c-purple.fn-key .fn-main { color: #6d28d9; }
+
+/* 质量三档 badge 组 */
+.quality-badges { display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.qb { font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 6px; text-align: center; white-space: nowrap; }
+.qb-high { background: #d1fae5; color: #065f46; }
+.qb-mid  { background: #fef3c7; color: #92400e; }
+.qb-low  { background: #fee2e2; color: #991b1b; }
+
+/* 评估结果 badge 组 */
+.eval-badges { display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.eb { font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 6px; text-align: center; white-space: nowrap; }
+.eb-yes { background: #d1fae5; color: #065f46; }
+.eb-no  { background: #f1f5f9; color: #64748b; }
+
+/* 阶段标注 */
+.stage-wrap { display: flex; flex-direction: column; gap: 8px; }
+.stage-row  { display: flex; align-items: center; gap: 6px; }
+.stage-lbl  {
+  flex-shrink: 0; font-size: 9px; font-weight: 700; color: #94a3b8;
+  letter-spacing: .5px; writing-mode: horizontal-tb;
+  width: 24px; text-align: right;
+}
+
+.note { font-size: 10.5px; color: #94a3b8; margin-top: 9px; line-height: 1.6; }
+.note strong { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 学城文档入库</h1>
+    <p>三种模式覆盖从少量精选到大规模冷启的不同场景</p>
+  </div>
+
+  <!-- ── 对比条 ── -->
+  <div class="compare-strip">
+    <div class="cs-item cs-blue">
+      <div class="cs-head"><span class="cs-icon">🔗</span><span class="cs-name">学城链接入库</span></div>
+      <span class="cs-scale">少量 · 精选</span>
+      <div class="cs-when">手里有几篇到几十篇文档链接，直接指定入库，适合零散的按需收录。</div>
+    </div>
+    <div class="cs-item cs-green">
+      <div class="cs-head"><span class="cs-icon">📂</span><span class="cs-name">父目录批量入库</span></div>
+      <span class="cs-scale">百篇级 · 筛选后入</span>
+      <div class="cs-when">知道某个学城目录下有大量文档，希望系统扫描后由 Agent 评估哪些值得入库。</div>
+    </div>
+    <div class="cs-item cs-purple">
+      <div class="cs-head"><span class="cs-icon">🏗️</span><span class="cs-name">知识库冷启入库</span></div>
+      <span class="cs-scale">新领域 · 从零建档</span>
+      <div class="cs-when">面对一个全新领域，需要先设计目录结构，再按质量判断批量建档入库。</div>
+    </div>
+  </div>
+
+  <!-- ══ 学城链接入库 ══ -->
+  <div class="sp sp-blue">
+    <div class="sp-head">
+      <span class="sp-icon">🔗</span>
+      <span class="sp-name">学城链接入库</span>
+      <span class="sp-tag" style="background:#dbeafe;color:#1e40af">逐篇处理</span>
+      <span class="sp-desc">提供一个或多个学城文档链接，Agent 逐篇读取、生成元数据并写入知识库。适合精选收录，每篇质量有保证。</span>
+    </div>
+    <div class="sp-body">
+      <div class="flow-row">
+        <div class="fn c-blue"><div class="fn-main">提供链接列表</div><div class="fn-sub">逗号或文件分隔</div></div>
+        <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#93c5fd" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#93c5fd"/></svg></div>
+        <div class="fn c-blue"><div class="fn-main">初始化队列</div><div class="fn-sub">持久化到磁盘</div></div>
+        <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#93c5fd" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#93c5fd"/></svg></div>
+        <div class="fn c-blue"><div class="fn-main">读取文档内容</div><div class="fn-sub">km CLI</div></div>
+        <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#93c5fd" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#93c5fd"/></svg></div>
+        <div class="fn c-blue"><div class="fn-main">Agent 生成元数据</div><div class="fn-sub">简介/纲要/关键词</div></div>
+        <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#93c5fd" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#93c5fd"/></svg></div>
+        <div class="fn c-blue fn-key"><div class="fn-main">mark-done 写入</div><div class="fn-sub">解锁下一篇</div></div>
+        <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#3b82f6" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#3b82f6"/></svg></div>
+        <div class="fn c-blue fn-result"><div class="fn-main">✓ 入库完成</div><div class="fn-sub">重建关键词索引</div></div>
+      </div>
+      <div class="note">⚡ <strong>mark-done 是节奏闸门</strong>：必须标记当前篇完成后才能看到下一篇。队列持久化到磁盘，上下文压缩或中断后可从断点继续，不依赖对话记忆。</div>
+    </div>
+  </div>
+
+  <!-- ══ 父目录批量入库 ══ -->
+  <div class="sp sp-green">
+    <div class="sp-head">
+      <span class="sp-icon">📂</span>
+      <span class="sp-name">父目录批量入库</span>
+      <span class="sp-tag" style="background:#d1fae5;color:#065f46">四阶段流水线</span>
+      <span class="sp-desc">提供一个学城父目录链接，系统扫描其下所有文档，由 Agent 逐篇评估并推荐，支持百篇以上规模。</span>
+    </div>
+    <div class="sp-body">
+      <div class="stage-wrap">
+
+        <div class="stage-row">
+          <span class="stage-lbl">扫描</span>
+          <div class="flow-row">
+            <div class="fn c-green"><div class="fn-main">父目录 URL</div><div class="fn-sub">学城链接</div></div>
+            <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#6ee7b7" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#6ee7b7"/></svg></div>
+            <div class="fn c-green"><div class="fn-main">遍历文档树</div><div class="fn-sub">获取全部子文档</div></div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <span class="stage-lbl">评估</span>
+          <div class="flow-row">
+            <div class="fn c-green fn-key" style="min-width:110px"><div class="fn-main">Agent 逐篇阅读评估</div><div class="fn-sub">推荐/不推荐 + 目标目录</div></div>
+            <div class="fa" style="padding:0 6px">
+              <div class="eval-badges">
+                <span class="eb eb-yes">✓ 推荐入库</span>
+                <span class="eb eb-no">✗ 不推荐</span>
+              </div>
+            </div>
+            <div class="fn c-green"><div class="fn-main">生成入库候选列表</div><div class="fn-sub">过滤后的推荐项</div></div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <span class="stage-lbl">入库</span>
+          <div class="flow-row">
+            <div class="fn c-green"><div class="fn-main">逐篇执行入库</div><div class="fn-sub">含元数据生成</div></div>
+            <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#059669" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#059669"/></svg></div>
+            <div class="fn c-green fn-result"><div class="fn-main">✓ 批量入库完成</div><div class="fn-sub">重建关键词索引</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="note">⚡ <strong>评估阶段</strong>是核心——Agent 每篇都给出"推荐/不推荐"和"建议放入哪个目录"，两个决策同时完成，不合格的文档在这一步就被过滤掉。支持随时中断、恢复执行。</div>
+    </div>
+  </div>
+
+  <!-- ══ 知识库冷启入库 ══ -->
+  <div class="sp sp-purple">
+    <div class="sp-head">
+      <span class="sp-icon">🏗️</span>
+      <span class="sp-name">知识库冷启入库</span>
+      <span class="sp-tag" style="background:#ede9fe;color:#6d28d9">五阶段 · 从零建档</span>
+      <span class="sp-desc">面对全新领域从零开始时使用。先建目录结构，再对文档做质量精判，最终生成结构化报告辅助决策。</span>
+    </div>
+    <div class="sp-body">
+      <div class="stage-wrap">
+
+        <div class="stage-row">
+          <span class="stage-lbl">粗筛</span>
+          <div class="flow-row">
+            <div class="fn c-purple"><div class="fn-main">大型父目录 URL</div><div class="fn-sub">新领域入口</div></div>
+            <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#c4b5fd" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#c4b5fd"/></svg></div>
+            <div class="fn c-purple"><div class="fn-main">扫描 + 元数据粗筛</div><div class="fn-sub">按时间/活跃度过滤</div></div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <span class="stage-lbl">建档</span>
+          <div class="flow-row">
+            <div class="fn c-purple fn-key" style="min-width:110px"><div class="fn-main">Agent 生成目录模板</div><div class="fn-sub">设计分类骨架</div></div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <span class="stage-lbl">精判</span>
+          <div class="flow-row">
+            <div class="fn c-purple fn-key" style="min-width:110px"><div class="fn-main">逐篇质量精判</div><div class="fn-sub">+ 建议入库目录</div></div>
+            <div class="fa" style="padding:0 6px">
+              <div class="quality-badges">
+                <span class="qb qb-high">高质量</span>
+                <span class="qb qb-mid">一般</span>
+                <span class="qb qb-low">时效性低</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <span class="stage-lbl">报告</span>
+          <div class="flow-row">
+            <div class="fn c-purple"><div class="fn-main">生成结构化报告</div><div class="fn-sub">可发布到学城</div></div>
+            <div class="fa"><svg width="18" height="10"><line x1="0" y1="5" x2="10" y2="5" stroke="#7c3aed" stroke-width="1.5"/><polygon points="10,2 18,5 10,8" fill="#7c3aed"/></svg></div>
+            <div class="fn c-purple fn-result"><div class="fn-main">✓ 选择性入库</div><div class="fn-sub">优先高质量文档</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="note">⚡ <strong>粗筛</strong>用文档更新时间和活跃度快速过滤一批明显失效的文档；<strong>精判</strong>才是重头，三档质量标注 + 目标目录建议，为入库决策提供依据。报告可直接发布到学城，作为领域知识建档进度的记录。</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow · 知识库可视化</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+
+.page-header { text-align: center; margin-bottom: 10px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── 统计条 ── */
+.stats-bar {
+  display: flex; gap: 0;
+  background: #f8fafc; border-radius: 8px;
+  border: 1.5px solid #e2e8f0; overflow: hidden;
+  margin-bottom: 10px;
+}
+.stat {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px 8px; gap: 3px;
+  border-right: 1px solid #e2e8f0;
+}
+.stat:last-child { border-right: none; }
+.stat-num { font-size: 22px; font-weight: 800; line-height: 1; }
+.stat-lbl { font-size: 11px; color: #64748b; text-align: center; }
+
+/* ── 图例 ── */
+.legend-bar {
+  display: flex; gap: 14px; align-items: center;
+  padding: 7px 12px; background: #f8fafc;
+  border: 1.5px solid #e2e8f0; border-radius: 8px;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-bar .hint { margin-left: auto; font-size: 11px; color: #94a3b8; }
+
+/* ── 树容器 ── */
+.tree-wrap {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.05);
+}
+.tree-header {
+  background: #f8fafc; padding: 8px 14px;
+  border-bottom: 1.5px solid #e2e8f0;
+  font-size: 11px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: #94a3b8;
+  display: flex; align-items: center; gap: 8px;
+}
+.tree-body { padding: 6px 0 10px; }
+
+/* ── 树节点行 ── */
+.nd {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 14px; cursor: pointer; user-select: none;
+  transition: background .12s; position: relative;
+}
+.nd:hover { background: #f1f5f9; }
+
+.toggle { width: 14px; font-size: 9px; color: #94a3b8; transition: transform .15s; text-align: center; flex-shrink: 0; }
+.toggle.open { transform: rotate(90deg); }
+.toggle.leaf { visibility: hidden; }
+
+.nd-icon { flex-shrink: 0; font-size: 13px; }
+
+.nd-name { font-size: 12.5px; font-weight: 600; color: #1e293b; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nd-name.domain { font-size: 13px; }
+
+/* 文档数角标 */
+.doc-count {
+  flex-shrink: 0; font-size: 10px; font-weight: 700;
+  padding: 1px 7px; border-radius: 10px; background: #f1f5f9;
+  color: #475569; border: 1px solid #e2e8f0;
+}
+
+/* 覆盖度条 */
+.cov-bar {
+  flex-shrink: 0; width: 60px; height: 6px;
+  background: #e2e8f0; border-radius: 3px; overflow: hidden;
+}
+.cov-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+/* 覆盖度标签 */
+.cov-tag {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700;
+  padding: 1px 6px; border-radius: 8px;
+}
+.ct-full  { background: #d1fae5; color: #065f46; }
+.ct-mid   { background: #fef3c7; color: #92400e; }
+.ct-low   { background: #fee2e2; color: #991b1b; }
+.ct-empty { background: #f1f5f9; color: #94a3b8; }
+
+/* 域色条 */
+.domain-stripe { width: 3px; height: 100%; position: absolute; left: 0; top: 0; border-radius: 0; }
+
+/* children wrapper */
+.children { overflow: hidden; }
+
+/* 空白提示 */
+.empty-badge {
+  display: inline-block; font-size: 9px; font-weight: 700;
+  padding: 1px 6px; border-radius: 6px;
+  background: #fee2e2; color: #991b1b; margin-left: 4px;
+}
+
+/* tooltip */
+.tooltip-wrap { position: relative; }
+.nd:hover .tip { display: block; }
+.tip {
+  display: none; position: absolute;
+  left: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+  background: #0f172a; color: #f1f5f9; font-size: 10.5px;
+  padding: 5px 9px; border-radius: 6px; white-space: nowrap;
+  z-index: 10; pointer-events: none; line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+.tip::before {
+  content: ''; position: absolute; right: 100%; top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent; border-right-color: #0f172a;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>knowledge-flow · 知识库可视化</h1>
+    <p>全景感知知识库的覆盖范围与文档密度分布</p>
+  </div>
+
+  <!-- 统计条 -->
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-num" style="color:#2563eb">49</span><span class="stat-lbl">文档总数</span></div>
+    <div class="stat"><span class="stat-num" style="color:#7c3aed">4</span><span class="stat-lbl">一级领域</span></div>
+    <div class="stat"><span class="stat-num" style="color:#0891b2">11</span><span class="stat-lbl">分类目录</span></div>
+    <div class="stat"><span class="stat-num" style="color:#059669">9</span><span class="stat-lbl">已覆盖</span></div>
+    <div class="stat"><span class="stat-num" style="color:#dc2626">2</span><span class="stat-lbl">待补充</span></div>
+  </div>
+
+  <!-- 图例 -->
+  <div class="legend-bar">
+    <div class="leg"><span class="leg-dot" style="background:#22c55e"></span>充分覆盖（≥6 篇）</div>
+    <div class="leg"><span class="leg-dot" style="background:#f59e0b"></span>一般覆盖（2-5 篇）</div>
+    <div class="leg"><span class="leg-dot" style="background:#ef4444"></span>覆盖薄弱（1 篇）</div>
+    <div class="leg"><span class="leg-dot" style="background:#e2e8f0"></span>尚无文档</div>
+    <span class="hint">← 点击展开目录</span>
+  </div>
+
+  <!-- 目录树 -->
+  <div class="tree-wrap">
+    <div class="tree-header">
+      📚 知识库目录树
+      <span style="font-weight:400;color:#cbd5e1;font-size:10px">（示例数据）</span>
+    </div>
+    <div class="tree-body" id="tree"></div>
+  </div>
+
+</div>
+<script>
+const DOMAINS = ['#2563eb','#7c3aed','#0891b2','#d97706'];
+const DATA = [
+  {
+    name:'系统知识', icon:'🏗️', count:18, open:true, color:DOMAINS[0],
+    children:[
+      { name:'架构设计',   count:8,  tip:'服务拓扑、模块设计、依赖关系' },
+      { name:'接口文档',   count:6,  tip:'API 规范、参数说明、错误码' },
+      { name:'部署运维',   count:4,  tip:'部署流程、环境配置、发布规范' },
+    ]
+  },
+  {
+    name:'实验记录', icon:'🧪', count:14, open:true, color:DOMAINS[1],
+    children:[
+      { name:'在线实验',   count:9, tip:'A/B 实验方案、流量配置、结果分析' },
+      { name:'离线评测',   count:5, tip:'评测集构建、指标对比、实验结论' },
+    ]
+  },
+  {
+    name:'业务知识', icon:'📋', count:11, open:true, color:DOMAINS[2],
+    children:[
+      { name:'核心流程',   count:7,  tip:'业务主链路、关键决策点说明' },
+      { name:'异常处理',   count:4,  tip:'常见异常、排查路径、处理 SOP' },
+      { name:'历史决策',   count:0,  tip:'暂无文档 — 建议补充决策背景' },
+    ]
+  },
+  {
+    name:'工程实践', icon:'⚙️', count:6, open:false, color:DOMAINS[3],
+    children:[
+      { name:'开发规范',   count:4,  tip:'代码规范、评审流程、分支管理' },
+      { name:'故障复盘',   count:1,  tip:'已有 1 篇复盘，建议持续沉淀' },
+      { name:'性能优化',   count:1,  tip:'已有 1 篇，覆盖较薄弱' },
+    ]
+  },
+];
+
+function covClass(n) {
+  if (n === 0) return 'ct-empty';
+  if (n === 1) return 'ct-low';
+  if (n <= 5)  return 'ct-mid';
+  return 'ct-full';
+}
+function covColor(n) {
+  if (n === 0) return '#e2e8f0';
+  if (n === 1) return '#ef4444';
+  if (n <= 5)  return '#f59e0b';
+  return '#22c55e';
+}
+function covWidth(n) { return Math.min(100, n * 12) + '%'; }
+function covLabel(n) {
+  if (n === 0) return '尚无文档';
+  if (n === 1) return '覆盖薄弱';
+  if (n <= 5)  return '一般覆盖';
+  return '充分覆盖';
+}
+
+function render(container) {
+  DATA.forEach((domain, di) => {
+    // domain row
+    const drow = document.createElement('div');
+    drow.className = 'nd';
+    drow.style.paddingLeft = '14px';
+    drow.innerHTML = `
+      <div class="domain-stripe" style="background:${domain.color}"></div>
+      <span class="toggle ${domain.open ? 'open' : ''}" id="tog-d${di}">▶</span>
+      <span class="nd-icon">${domain.icon}</span>
+      <span class="nd-name domain">${domain.name}</span>
+      <span class="doc-count">${domain.count} 篇</span>
+      <div class="cov-bar"><div class="cov-fill" style="width:${covWidth(domain.count)};background:${domain.color}40"></div></div>
+    `;
+
+    const children = document.createElement('div');
+    children.className = 'children';
+    children.id = 'ch-d' + di;
+    children.style.display = domain.open ? 'block' : 'none';
+
+    domain.children.forEach((cat, ci) => {
+      const crow = document.createElement('div');
+      crow.className = 'nd';
+      crow.style.paddingLeft = '34px';
+      crow.innerHTML = `
+        <span class="toggle leaf">▶</span>
+        <span class="nd-icon">${cat.count === 0 ? '📭' : '📄'}</span>
+        <span class="nd-name">${cat.name}${cat.count === 0 ? '<span class="empty-badge">待补充</span>' : ''}</span>
+        <span class="doc-count">${cat.count} 篇</span>
+        <div class="cov-bar"><div class="cov-fill" style="width:${covWidth(cat.count)};background:${covColor(cat.count)}"></div></div>
+        <span class="cov-tag ${covClass(cat.count)}">${covLabel(cat.count)}</span>
+        <div class="tip">${cat.tip}</div>
+      `;
+      children.appendChild(crow);
+    });
+
+    drow.addEventListener('click', () => {
+      domain.open = !domain.open;
+      document.getElementById('tog-d' + di).className = 'toggle ' + (domain.open ? 'open' : '');
+      children.style.display = domain.open ? 'block' : 'none';
+    });
+
+    container.appendChild(drow);
+    container.appendChild(children);
+  });
+}
+
+render(document.getElementById('tree'));
+</script>
+</body>
+</html>

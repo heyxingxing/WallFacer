@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>knowledge-flow 功能板块详览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #ffffff;
+    color: #1a1a2e;
+    margin: 0; padding: 0;
+  }
+  .page {
+    width: 858px;
+    padding: 18px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .page-header {
+    text-align: center;
+    padding: 9px 0 4px;
+  }
+  .page-header h1 {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: 0.5px;
+  }
+  .page-header p {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 3px;
+  }
+  .page-hint {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 5px;
+  }
+
+  /* 统计条 */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    overflow: hidden;
+  }
+  .stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 8px;
+    gap: 3px;
+    border-right: 1px solid #e2e8f0;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  /* Tab 颜色主题（每个 tab 一套主色） */
+  :root {
+    --c0: #2563eb; --c0-bg: #eff6ff; --c0-light: #dbeafe;
+    --c1: #7c3aed; --c1-bg: #f5f3ff; --c1-light: #ede9fe;
+    --c2: #0891b2; --c2-bg: #ecfeff; --c2-light: #cffafe;
+    --c3: #059669; --c3-bg: #ecfdf5; --c3-light: #d1fae5;
+    --c4: #d97706; --c4-bg: #fffbeb; --c4-light: #fde68a;
+  }
+
+  /* Tab 导航 */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0;
+    align-items: flex-end;
+  }
+  .tab-nav-hint {
+    margin-left: auto;
+    font-size: 11px;
+    color: #94a3b8;
+    padding-bottom: 8px;
+    white-space: nowrap;
+  }
+  .tab-btn {
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #64748b;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    border-radius: 4px 4px 0 0;
+  }
+  .tab-btn:hover { color: #334155; background: #f1f5f9; }
+
+  .tab-btn[data-tab="0"].active { color: var(--c0); border-bottom-color: var(--c0); background: var(--c0-bg); }
+  .tab-btn[data-tab="1"].active { color: var(--c1); border-bottom-color: var(--c1); background: var(--c1-bg); }
+  .tab-btn[data-tab="2"].active { color: var(--c2); border-bottom-color: var(--c2); background: var(--c2-bg); }
+  .tab-btn[data-tab="3"].active { color: var(--c3); border-bottom-color: var(--c3); background: var(--c3-bg); }
+  .tab-btn[data-tab="4"].active { color: var(--c4); border-bottom-color: var(--c4); background: var(--c4-bg); }
+
+  /* Tab 内容区 */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* 能力卡片网格 */
+  .cap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+    padding: 9px 0;
+  }
+
+  /* 分组标题行 */
+  .group-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 2px 2px;
+    margin-top: 4px;
+  }
+  .group-header:first-child { margin-top: 0; }
+  .group-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .group-line { flex: 1; height: 1px; background: #e2e8f0; }
+
+  /* 能力卡片 */
+  .cap-card {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 11px 13px;
+    border: 1.5px solid #e2e8f0;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cap-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  /* 卡片左侧色条 */
+  .cap-card { border-left-width: 3px; }
+
+  .tab-content[data-tab="0"] .cap-card { border-left-color: var(--c0); }
+  .tab-content[data-tab="0"] .cap-card:hover { border-color: var(--c0); border-left-width: 3px; background: var(--c0-bg); }
+  .tab-content[data-tab="1"] .cap-card { border-left-color: var(--c1); }
+  .tab-content[data-tab="1"] .cap-card:hover { border-color: var(--c1); border-left-width: 3px; background: var(--c1-bg); }
+  .tab-content[data-tab="2"] .cap-card { border-left-color: var(--c2); }
+  .tab-content[data-tab="2"] .cap-card:hover { border-color: var(--c2); border-left-width: 3px; background: var(--c2-bg); }
+  .tab-content[data-tab="3"] .cap-card { border-left-color: var(--c3); }
+  .tab-content[data-tab="3"] .cap-card:hover { border-color: var(--c3); border-left-width: 3px; background: var(--c3-bg); }
+  .tab-content[data-tab="4"] .cap-card { border-left-color: var(--c4); }
+  .tab-content[data-tab="4"] .cap-card:hover { border-color: var(--c4); border-left-width: 3px; background: var(--c4-bg); }
+
+  .cap-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .cap-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.55;
+    flex: 1;
+  }
+  .cap-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: #94a3b8;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1px 5px;
+    align-self: flex-start;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-header">
+    <h1>knowledge-flow 功能板块详览</h1>
+    <p>覆盖知识抽取 · 入库 · 检索 · 管理全生命周期</p>
+  </div>
+
+  <!-- 统计条 -->
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <!-- Tab 导航 -->
+  <div class="tab-nav" id="tab-nav"></div>
+
+  <!-- Tab 内容占位，由 JS 动态生成 -->
+  <div id="tab-container"></div>
+</div>
+
+<script>
+(function() {
+  var TABS = [
+    { icon: '🔍', label: '知识检索' },
+    { icon: '🧩', label: '知识抽取' },
+    { icon: '📥', label: '知识入库' },
+    { icon: '⚙️', label: '知识管理' },
+    { icon: '🛠', label: '其他' }
+  ];
+
+  var DATA = [
+    // ── 知识抽取（tab 0）──
+    {
+      tab: 1,
+      name: '代码库知识提取',
+      desc: '扫描服务代码，自动识别系统架构、核心业务流程、配置依赖关系，将隐藏在代码里的知识变成可检索的文档。',
+      tag: '代码 → 知识'
+    },
+    {
+      tab: 1,
+      name: 'XT ETL 任务提取',
+      desc: '从数据平台的 ETL 任务中读取业务含义、数据血缘和调度规则，让"数据从哪来、往哪去"变得一目了然。',
+      tag: 'ETL → 知识'
+    },
+    {
+      tab: 1,
+      name: 'TT 工单知识提取',
+      desc: '从历史工单中识别高频问题类型、排查路径和解决方案，将散落在工单系统里的经验聚合成可复用的知识条目。',
+      tag: '工单 → 知识'
+    },
+    {
+      tab: 1,
+      name: 'Agent 自主知识沉淀',
+      desc: 'AI 助手在日常工作中，主动识别哪些经验值得留存（成功排查的案例、反复用到的规律），无需人工触发即自动入库。',
+      tag: '会话 → 知识'
+    },
+    // ── 知识入库（tab 1）──
+    {
+      tab: 2,
+      name: '学城链接入库',
+      desc: '提供一个或几个学城文档链接，AI 自动读取内容、生成摘要和关键词，完成入库。适合零散文档的快速收录。',
+      tag: '单文档 / 少量'
+    },
+    {
+      tab: 2,
+      name: '父目录批量入库',
+      desc: '提供一个学城目录，AI 自动扫描其下所有文档，逐一评估质量和时效性，按推荐结果完成批量入库，支持百篇以上规模。',
+      tag: '批量 100+'
+    },
+    {
+      tab: 2,
+      name: '代码知识入库',
+      desc: '将代码库知识提取的产出物批量写入知识库，支持断点续传，适合大型服务代码库的一次性知识建档。',
+      tag: '代码知识 · 本地文件'
+    },
+    {
+      tab: 2,
+      name: 'XT 任务入库',
+      desc: '将 ETL 任务的业务语义和血缘信息写入知识库，让数据链路的来龙去脉在检索时随时可查。',
+      tag: 'ETL 任务'
+    },
+    {
+      tab: 2,
+      name: '会话日志入库',
+      desc: '对当前对话或历史日志文件中的知识进行提炼和整理，写入知识库指定目录，沉淀每次解决问题的经验。',
+      tag: '会话沉淀'
+    },
+    {
+      tab: 2,
+      name: '批量工单入库',
+      desc: '将经过分类整理的工单语料批量转化为学城文档并收录入库，适合一次性导入大量历史工单经验的场景。',
+      tag: '批量工单'
+    },
+    {
+      tab: 2,
+      name: '知识库冷启入库',
+      desc: '扫描大型父目录、生成目录模板、逐文档质量精判，帮助新领域知识库从零快速建档。',
+      tag: '冷启动'
+    },
+    // ── 知识检索（tab 2）──
+    {
+      tab: 0,
+      name: '核心检索',
+      desc: 'Agent 像翻目录一样逐层浏览知识库的分类结构，找到最相关的那篇文档后完整读取。精准可溯源，是整个检索体系的主力。',
+      tag: '三层检索 · 第一层'
+    },
+    {
+      tab: 0,
+      name: '辅助检索',
+      desc: '维护一份关键词到目录的快速索引，让 Agent 不用从根目录一层层翻，直接跳到候选分类，大幅缩短检索路径。',
+      tag: '三层检索 · 第二层'
+    },
+    {
+      tab: 0,
+      name: '兜底检索',
+      desc: '当本地知识库找不到答案时，自动扩展到学城全站搜索，确保不因知识库覆盖不足而漏掉有用信息。',
+      tag: '三层检索 · 第三层'
+    },
+    {
+      tab: 0,
+      name: '检索日志 & 质量追踪',
+      desc: '记录每次检索走过的路径、命中了哪些节点、最终是否找到答案，为后续分析哪些知识缺口最频繁提供数据依据。',
+      tag: '可观测性'
+    },
+    // ── 知识管理 · 结构治理（tab 3）──
+    {
+      tab: 3,
+      group: { label: '结构治理', isFirst: true },
+      name: '目录结构优化',
+      desc: '随着入库文档增多，AI 自动分析哪些目录需要拆分、合并或重命名，通过交互确认后执行，保持知识库结构合理。',
+      tag: '目录骨架'
+    },
+    {
+      tab: 3,
+      group: null,
+      name: '容器节点优化',
+      desc: '检测知识库中间目录的描述是否缺失、过短或使用了模板占位文字，由 AI 基于子目录内容重写，提升检索导航准确性。',
+      tag: '描述质量'
+    },
+    // ── 知识管理 · 知识质量（tab 3）──
+    {
+      tab: 3,
+      group: { label: '知识质量', isFirst: false },
+      name: '知识更新',
+      desc: '当源文档发生变化时，主动识别知识库里已过期的内容并完成替换，修复动作轻量、即时生效；同时定期扫描重复、混乱、失准等内部失修，让知识库长期保持健康。',
+      tag: '更新替换'
+    },
+    {
+      tab: 3,
+      group: null,
+      name: '矛盾检测',
+      desc: '扫描知识库中的重复条目和互相矛盾的说法，由 Agent 进行语义判断，帮助发现并消除知识库里的”自相矛盾”。',
+      tag: '质量门控'
+    },
+    {
+      tab: 3,
+      group: null,
+      name: '评测集构建',
+      desc: '扫描知识库中的文档，自动生成标准问答测试用例（cases.jsonl），覆盖各目录的典型检索意图，为后续持续评测奠定数据基础。',
+      tag: '质量度量'
+    },
+    {
+      tab: 3,
+      group: null,
+      name: '知识库评测',
+      desc: '基于评测集对知识库检索质量进行系统性测量，生成准确率报告，定位哪些目录或问题类型命中率偏低，驱动知识库针对性改进。',
+      tag: '质量度量'
+    },
+    // ── 知识管理 · 运营洞察（tab 3）──
+    {
+      tab: 3,
+      group: { label: '运营洞察', isFirst: false },
+      name: '知识库可视化',
+      desc: '生成一张可交互的知识库全景图，直观展示目录树、各领域的文档数量和覆盖深度，让使用者清楚"我的知识库里有什么、哪里还是空白"。',
+      tag: '全景感知'
+    },
+    {
+      tab: 3,
+      group: null,
+      name: '版本管理 & 团队共享',
+      desc: '将知识库托管在 Git 仓库，支持多人协同维护、版本回溯和冲突合并，让团队知识库像代码一样可管理。',
+      tag: '团队协作'
+    },
+    // ── 其他（tab 4）──
+    {
+      tab: 4,
+      name: '一键初始化配置',
+      desc: '新用户只需运行一个命令，即可完成所有必要配置（权限、路径、依赖工具），几分钟内开箱即用。',
+      tag: '初次使用'
+    },
+    {
+      tab: 4,
+      name: '能力速查手册',
+      desc: '通过自然语言提问（如"你能做什么"）或帮助命令，随时查看当前具备哪些能力及对应的使用方式。',
+      tag: '使用引导'
+    },
+    {
+      tab: 4,
+      name: '多知识库管理 & 切换',
+      desc: '维护一个知识库注册表，支持注册多个知识库（各有独立路径和 Git 远端），一键切换当前激活项，自动同步所有相关配置字段，无需手动修改配置文件。',
+      tag: '多库场景'
+    },
+    {
+      tab: 4,
+      name: '知识库目录模板（冷启）',
+      desc: '在新领域或新团队刚开始建设知识库时，提供一套预设的目录骨架，避免从零设计结构，降低冷启动门槛。',
+      tag: '冷启动'
+    }
+  ];
+
+  // 按 tab 分组统计
+  var tabCounts = TABS.map(function() { return 0; });
+  DATA.forEach(function(d) { tabCounts[d.tab]++; });
+  var total = DATA.length;
+
+  // 渲染统计条
+  var statsBar = document.getElementById('stats-bar');
+  var statDefs = [
+    { num: total, label: '能力项总计', color: '#1e293b' },
+    { num: tabCounts[0], label: '知识检索', color: 'var(--c0)' },
+    { num: tabCounts[1], label: '知识抽取', color: 'var(--c1)' },
+    { num: tabCounts[2], label: '知识入库', color: 'var(--c2)' },
+    { num: tabCounts[3], label: '知识管理', color: 'var(--c3)' },
+    { num: tabCounts[4], label: '其他', color: 'var(--c4)' }
+  ];
+  statDefs.forEach(function(s) {
+    var item = document.createElement('div');
+    item.className = 'stat-item';
+    item.innerHTML =
+      '<span class="stat-num" style="color:' + s.color + '">' + s.num + '</span>' +
+      '<span class="stat-label">' + s.label.replace('\n', '<br>') + '</span>';
+    statsBar.appendChild(item);
+  });
+
+  // 渲染 Tab 导航
+  var tabNav = document.getElementById('tab-nav');
+  var tabContainer = document.getElementById('tab-container');
+
+  TABS.forEach(function(t, i) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.dataset.tab = i;
+    btn.textContent = t.icon + ' ' + t.label;
+    tabNav.appendChild(btn);
+    if (i === TABS.length - 1) {
+      var hint = document.createElement('span');
+      hint.className = 'tab-nav-hint';
+      hint.textContent = '← 点击切换板块';
+      tabNav.appendChild(hint);
+    }
+
+    var content = document.createElement('div');
+    content.className = 'tab-content' + (i === 0 ? ' active' : '');
+    content.id = 'tab-' + i;
+    content.dataset.tab = i;
+    var grid = document.createElement('div');
+    grid.className = 'cap-grid';
+    grid.id = 'grid-' + i;
+    content.appendChild(grid);
+    tabContainer.appendChild(content);
+  });
+
+  // 渲染卡片
+  DATA.forEach(function(d) {
+    var grid = document.getElementById('grid-' + d.tab);
+    if (!grid) return;
+
+    if (d.group && d.group.label) {
+      var tabColor = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)','var(--c4)'][d.tab];
+      var gh = document.createElement('div');
+      gh.className = 'group-header';
+      gh.innerHTML =
+        '<span class="group-title" style="color:' + tabColor + '">' + d.group.label + '</span>' +
+        '<div class="group-line"></div>';
+      grid.appendChild(gh);
+    }
+
+    var card = document.createElement('div');
+    card.className = 'cap-card';
+    card.innerHTML =
+      '<div class="cap-name">' + d.name + '</div>' +
+      '<div class="cap-desc">' + d.desc + '</div>' +
+      '<span class="cap-tag">' + d.tag + '</span>';
+    grid.appendChild(card);
+  });
+
+  // Tab 切换
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabContents = document.querySelectorAll('.tab-content');
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      tabBtns.forEach(function(b) { b.classList.remove('active'); });
+      tabContents.forEach(function(c) { c.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

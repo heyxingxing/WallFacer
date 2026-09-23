@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工程 Agent 全托管需求迭代</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #ffffff; color: #1e293b;
+}
+.page { width: 858px; padding: 18px 20px 24px; }
+.page-header { text-align: center; margin-bottom: 14px; }
+.page-header h1 { font-size: 16.5px; font-weight: 700; color: #0f172a; letter-spacing: .5px; }
+.page-header p  { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+
+/* ── SDLC 流水线 ── */
+.pipeline-wrap {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  padding: 16px 16px 14px; margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04); background: #f8fafc;
+}
+.section-lbl {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 10px;
+}
+
+/* 阶段行 */
+.stages { display: flex; align-items: stretch; gap: 0; }
+.stage-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+/* 阶段卡 */
+.stage-box {
+  width: 100%; border-radius: 8px; border: 1.5px solid #c7d2fe;
+  background: #eef2ff; padding: 10px 8px; text-align: center;
+}
+.sb-icon { font-size: 18px; margin-bottom: 4px; }
+.sb-name { font-size: 11.5px; font-weight: 700; color: #3730a3; }
+
+/* 箭头 */
+.stage-arr {
+  flex: 0 0 28px; display: flex; align-items: center; justify-content: center;
+  color: #a5b4fc; font-size: 16px; padding-top: 10px;
+}
+
+/* KF 知识注入 */
+.kf-inject {
+  margin-top: 6px; width: 100%;
+  border: 1.5px dashed #a5b4fc; border-radius: 6px;
+  background: #fff; padding: 6px 8px;
+}
+.kfi-label { font-size: 9px; font-weight: 700; color: #818cf8; margin-bottom: 3px; letter-spacing: .4px; }
+.kfi-items { display: flex; flex-direction: column; gap: 2px; }
+.kfi-item  { font-size: 9.5px; color: #475569; line-height: 1.4; display: flex; gap: 4px; align-items: flex-start; }
+.kfi-dot   { width: 4px; height: 4px; border-radius: 50%; background: #a5b4fc; flex-shrink: 0; margin-top: 4px; }
+
+.no-inject { opacity: 0; pointer-events: none; }
+
+/* ── 知识层架构 ── */
+.layers-wrap {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.layers { display: flex; gap: 8px; }
+.layer {
+  flex: 1; border-radius: 8px; border: 1.5px solid;
+  padding: 10px 11px; display: flex; flex-direction: column; gap: 5px;
+}
+.l1 { border-color: #bfdbfe; background: #eff6ff; }
+.l2 { border-color: #818cf8; background: #eef2ff; border-width: 2px; }
+.l3 { border-color: #d1fae5; background: #ecfdf5; }
+
+.layer-head { display: flex; align-items: center; gap: 6px; }
+.layer-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.ln-l1 { background: #3b82f6; }
+.ln-l2 { background: #4f46e5; }
+.ln-l3 { background: #059669; }
+.layer-title { font-size: 11.5px; font-weight: 700; }
+.l1 .layer-title { color: #1e40af; }
+.l2 .layer-title { color: #3730a3; }
+.l3 .layer-title { color: #065f46; }
+.layer-scope { font-size: 9.5px; color: #64748b; }
+.layer-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.ltag {
+  font-size: 9.5px; font-weight: 600; padding: 1px 6px;
+  border-radius: 5px;
+}
+.l1 .ltag { background: #dbeafe; color: #1e40af; }
+.l2 .ltag { background: #e0e7ff; color: #3730a3; }
+.l3 .ltag { background: #d1fae5; color: #065f46; }
+.layer-mode {
+  font-size: 9px; font-weight: 600; padding: 2px 7px;
+  border-radius: 5px; align-self: flex-start; margin-top: 2px;
+}
+.l1 .layer-mode { background: #eff6ff; color: #64748b; border: 1px dashed #93c5fd; }
+.l2 .layer-mode { background: #eef2ff; color: #4f46e5; border: 1px solid #818cf8; }
+.l3 .layer-mode { background: #ecfdf5; color: #64748b; border: 1px dashed #6ee7b7; }
+.kf-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 7px;
+  border-radius: 8px; background: #4f46e5; color: #fff;
+  align-self: flex-start;
+}
+
+/* ── 沉淀反馈 ── */
+.feedback-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #faf5ff; border: 1.5px solid #ddd6fe; border-radius: 8px;
+  padding: 9px 14px;
+}
+.fb-icon { font-size: 16px; flex-shrink: 0; }
+.fb-text { font-size: 11.5px; color: #4c1d95; line-height: 1.6; flex: 1; }
+.fb-text strong { color: #3730a3; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>工程 Agent 全托管需求迭代</h1>
+    <p>让 Agent 像老员工一样，在遗留系统上完成需求交付</p>
+  </div>
+
+  <!-- ── SDLC 各阶段 + KF 注入点 ── -->
+  <div class="pipeline-wrap">
+    <div class="section-lbl">需求全链路 · knowledge-flow 的注入点</div>
+    <div class="stages">
+
+      <div class="stage-col">
+        <div class="stage-box">
+          <div class="sb-icon">📋</div>
+          <div class="sb-name">需求理解</div>
+        </div>
+        <div class="kf-inject">
+          <div class="kfi-label">KF 提供</div>
+          <div class="kfi-items">
+            <div class="kfi-item"><span class="kfi-dot"></span>同类需求的历史实现模式</div>
+            <div class="kfi-item"><span class="kfi-dot"></span>项目核心领域模型说明</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-arr">›</div>
+
+      <div class="stage-col">
+        <div class="stage-box">
+          <div class="sb-icon">🎨</div>
+          <div class="sb-name">方案设计</div>
+        </div>
+        <div class="kf-inject">
+          <div class="kfi-label">KF 提供</div>
+          <div class="kfi-items">
+            <div class="kfi-item"><span class="kfi-dot"></span>架构设计规范与红线</div>
+            <div class="kfi-item"><span class="kfi-dot"></span>相似需求的变更点参照</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-arr">›</div>
+
+      <div class="stage-col">
+        <div class="stage-box">
+          <div class="sb-icon">⌨️</div>
+          <div class="sb-name">编码实现</div>
+        </div>
+        <div class="kf-inject">
+          <div class="kfi-label">KF 提供</div>
+          <div class="kfi-items">
+            <div class="kfi-item"><span class="kfi-dot"></span>项目编码规范与隐式约定</div>
+            <div class="kfi-item"><span class="kfi-dot"></span>配置项语义与变更规范</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-arr">›</div>
+
+      <div class="stage-col">
+        <div class="stage-box">
+          <div class="sb-icon">🚀</div>
+          <div class="sb-name">部署上线</div>
+        </div>
+        <div class="kf-inject no-inject">
+          <div class="kfi-label">KF 提供</div>
+          <div class="kfi-items">
+            <div class="kfi-item"><span class="kfi-dot"></span>-</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 知识三层架构 ── -->
+  <div class="layers-wrap">
+    <div class="section-lbl" style="margin-bottom:10px">知识分层架构 · 三层按需加载</div>
+    <div class="layers">
+
+      <div class="layer l1">
+        <div class="layer-head">
+          <span class="layer-num ln-l1">L1</span>
+          <div>
+            <div class="layer-title">通用层</div>
+            <div class="layer-scope">跨项目通用规范</div>
+          </div>
+        </div>
+        <div class="layer-tags">
+          <span class="ltag">编码规范</span>
+          <span class="ltag">架构红线</span>
+          <span class="ltag">中间件用法</span>
+          <span class="ltag">框架规范</span>
+        </div>
+        <span class="layer-mode">编排器关键词匹配注入</span>
+      </div>
+
+      <div class="layer l2">
+        <div class="layer-head">
+          <span class="layer-num ln-l2">L2</span>
+          <div>
+            <div class="layer-title">项目层</div>
+            <div class="layer-scope">单项目专属知识</div>
+          </div>
+        </div>
+        <div class="layer-tags">
+          <span class="ltag">架构设计</span>
+          <span class="ltag">领域模型</span>
+          <span class="ltag">历史需求模式</span>
+          <span class="ltag">配置语义</span>
+          <span class="ltag">隐式约定</span>
+        </div>
+        <span class="kf-badge">knowledge-flow 按需检索</span>
+      </div>
+
+      <div class="layer l3">
+        <div class="layer-head">
+          <span class="layer-num ln-l3">L3</span>
+          <div>
+            <div class="layer-title">任务层</div>
+            <div class="layer-scope">当前任务上下文</div>
+          </div>
+        </div>
+        <div class="layer-tags">
+          <span class="ltag">当前 PRD</span>
+          <span class="ltag">阶段产物</span>
+          <span class="ltag">执行日志</span>
+        </div>
+        <span class="layer-mode">任务启动时加载</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 经验沉淀反馈 ── -->
+  <div class="feedback-row">
+    <span class="fb-icon">🔄</span>
+    <div class="fb-text">
+      每次需求交付完成后，本次的排查路径、关键决策、踩坑经验通过 <strong>Agent 自主知识沉淀</strong> 写回 L2 知识库。下一个类似需求进来时，这些经验会被检索到并直接复用，知识库随迭代持续积累，Agent 对项目的理解越来越深。
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
