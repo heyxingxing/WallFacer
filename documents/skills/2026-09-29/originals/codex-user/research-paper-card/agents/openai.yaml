@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Paper Card"
+  short_description: "Turn one paper into a traceable research card"
+  default_prompt: "Use $research-paper-card to deeply read this paper and create a claim-evidence-code card."

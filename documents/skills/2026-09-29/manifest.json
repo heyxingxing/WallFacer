@@ -1,0 +1,3834 @@
+{
+  "archive_date": "2026-09-29",
+  "selection": "P01, P02, A01-A08 plus high-value installed general skills; excludes employer ecosystem and work-specific content",
+  "installation_changed": false,
+  "packages": [
+    {
+      "id": "shared/frontend-design",
+      "name": "frontend-design",
+      "path": "originals/shared/frontend-design",
+      "kind": "original",
+      "source_location": "~/.agents/skills/frontend-design",
+      "source_skill_sha256": "e172d36e0cc81b094e3e3c91dc87e58d0a00d7b791df505748f973de986fbdf7",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "共享前端设计指导"
+    },
+    {
+      "id": "codex-system/skill-creator",
+      "name": "skill-creator",
+      "path": "originals/codex-system/skill-creator",
+      "kind": "original",
+      "source_location": "~/.codex/skills/.system/skill-creator",
+      "source_skill_sha256": "6656e54755638e8efcf275a472b9672eaa8a9a1b9e59dc210e275b03b59e1e66",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "Codex 技能结构、资源组织与校验"
+    },
+    {
+      "id": "codex-user/archify",
+      "name": "archify",
+      "path": "originals/codex-user/archify",
+      "kind": "original",
+      "source_location": "~/.codex/skills/archify",
+      "source_skill_sha256": "10094272d6d1b4ad0f2c2e0880cb646fe4991454a2dc3d854aecb27e7407ee1f",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A08",
+      "purpose": "架构、流程、时序与数据流可视化"
+    },
+    {
+      "id": "codex-user/research-critical-review",
+      "name": "research-critical-review",
+      "path": "originals/codex-user/research-critical-review",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-critical-review",
+      "source_skill_sha256": "db2a9260aa9b8e0095583b8b2aa9321b3d0d9fc2db121e0e60d99ece3f18104d",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A06",
+      "purpose": "证据驱动的研究审查"
+    },
+    {
+      "id": "codex-user/research-experiment-plan",
+      "name": "research-experiment-plan",
+      "path": "originals/codex-user/research-experiment-plan",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-experiment-plan",
+      "source_skill_sha256": "179a44037e458701cf5f83fcd816885752d15aa91f7b42f0ba907f5282050cd0",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A04",
+      "purpose": "主张驱动的实验设计"
+    },
+    {
+      "id": "codex-user/research-hypothesis",
+      "name": "research-hypothesis",
+      "path": "originals/codex-user/research-hypothesis",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-hypothesis",
+      "source_skill_sha256": "4e9b9d49209c4c1dbcb92ca1965af26376d392cd9cb3f899d273210727cdf24f",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "可证伪研究假设"
+    },
+    {
+      "id": "codex-user/research-numbers-audit",
+      "name": "research-numbers-audit",
+      "path": "originals/codex-user/research-numbers-audit",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-numbers-audit",
+      "source_skill_sha256": "91e8693fcf56251a1de46de1bdc7224772c61e2423c65ef2b2c77e5e41b4e526",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A07",
+      "purpose": "数字与结果来源核验"
+    },
+    {
+      "id": "codex-user/research-paper-card",
+      "name": "research-paper-card",
+      "path": "originals/codex-user/research-paper-card",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-paper-card",
+      "source_skill_sha256": "dfb90d723cd1d064ca2579f03af704412df85d06c7990d3c7ff0a088ad77ae7b",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A02",
+      "purpose": "论文主张—证据—代码卡片"
+    },
+    {
+      "id": "codex-user/research-reflection",
+      "name": "research-reflection",
+      "path": "originals/codex-user/research-reflection",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-reflection",
+      "source_skill_sha256": "17fd0d7a9504659ac8accfaf49ca2a4a4400324734c0dc36566174adbc7b0ee9",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "基于新证据更新研究判断"
+    },
+    {
+      "id": "codex-user/research-report-latex",
+      "name": "research-report-latex",
+      "path": "originals/codex-user/research-report-latex",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-report-latex",
+      "source_skill_sha256": "9ee1536aaf7c6554d51cddb1327223b20de260ad04105eb824fc7729b7ff341f",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "来源台账与 LaTeX 报告"
+    },
+    {
+      "id": "codex-user/research-reproduction-plan",
+      "name": "research-reproduction-plan",
+      "path": "originals/codex-user/research-reproduction-plan",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-reproduction-plan",
+      "source_skill_sha256": "86d1f02ebc56a6988e54c82632a40a81c745d21eb7218dae2d55e33ce782435c",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A03",
+      "purpose": "分阶段复现与验收"
+    },
+    {
+      "id": "codex-user/research-run-diagnosis",
+      "name": "research-run-diagnosis",
+      "path": "originals/codex-user/research-run-diagnosis",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-run-diagnosis",
+      "source_skill_sha256": "2e444a8527dabc828e3a778d25a2eb38230a0ab46811d3ee3774cd1cc9c04f49",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A05",
+      "purpose": "实现、数据、优化、评测与假设排障"
+    },
+    {
+      "id": "codex-user/research-survey",
+      "name": "research-survey",
+      "path": "originals/codex-user/research-survey",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-survey",
+      "source_skill_sha256": "e9262ac0a56eb04d5bb54208c22ad173535629e7c63e03361ad82f278ab2bd82",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "文献检索与方向地图"
+    },
+    {
+      "id": "codex-user/research-synthesis",
+      "name": "research-synthesis",
+      "path": "originals/codex-user/research-synthesis",
+      "kind": "original",
+      "source_location": "~/.codex/skills/research-synthesis",
+      "source_skill_sha256": "a975be8871f10a2aa2bae56ee9ddeeb059b5592f500c42beb988d860bce8d61d",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "已有论文的机制与证据综合"
+    },
+    {
+      "id": "codex-user/resume-experience-refiner",
+      "name": "resume-experience-refiner",
+      "path": "originals/codex-user/resume-experience-refiner",
+      "kind": "original",
+      "source_location": "~/.codex/skills/resume-experience-refiner",
+      "source_skill_sha256": "c1d6c35f28798782b8952405c6cdabd5c0ec2596435e823fb03da706876d78fc",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "基于事实提炼经历贡献"
+    },
+    {
+      "id": "openai-runtime/documents",
+      "name": "documents",
+      "path": "originals/openai-runtime/documents",
+      "kind": "original",
+      "source_location": "~/.codex/plugins/cache/openai-primary-runtime/documents/26.909.12148/skills/documents",
+      "source_skill_sha256": "db351f7db520a130f33227999e55d9cc61a95b93660e1506d9a9a9fe90c9f916",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "Word 文档与渲染检查"
+    },
+    {
+      "id": "openai-runtime/pdf",
+      "name": "pdf",
+      "path": "originals/openai-runtime/pdf",
+      "kind": "original",
+      "source_location": "~/.codex/plugins/cache/openai-primary-runtime/pdf/26.909.12148/skills/pdf",
+      "source_skill_sha256": "65f4a606b5ec8e564d6d9782254b34c2bb2ce0a573e9349fb46b1173449c72fa",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "PDF 读取、生成与视觉检查"
+    },
+    {
+      "id": "openai-runtime/presentations",
+      "name": "Presentations",
+      "path": "originals/openai-runtime/presentations",
+      "kind": "original",
+      "source_location": "~/.codex/plugins/cache/openai-primary-runtime/presentations/26.909.12148/skills/presentations",
+      "source_skill_sha256": "e0d28835f8ada4ef5f41ab0425dd818d9c9ab9a66a8e47df2cee5add15cce32f",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "演示文稿制作与检查"
+    },
+    {
+      "id": "openai-runtime/spreadsheets",
+      "name": "Spreadsheets",
+      "path": "originals/openai-runtime/spreadsheets",
+      "kind": "original",
+      "source_location": "~/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.909.12148/skills/spreadsheets",
+      "source_skill_sha256": "499172cadf77be41b6ec7d87981463aec0859e10aba9cc0b864143e42955474b",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "表格、公式与图表"
+    },
+    {
+      "id": "claude-market/skill-creator",
+      "name": "skill-creator",
+      "path": "originals/claude-market/skill-creator",
+      "kind": "original",
+      "source_location": "~/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator",
+      "source_skill_sha256": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "A01",
+      "purpose": "技能对照评测、评审与描述优化"
+    },
+    {
+      "id": "cursor-builtin/autopilot",
+      "name": "autopilot",
+      "path": "originals/cursor-builtin/autopilot",
+      "kind": "original",
+      "source_location": "~/.cursor/skills-cursor/autopilot",
+      "source_skill_sha256": "2f0fd7aebbcacfa81afb8ead8107b44e4202e45e23ad20e3778c9123cadb9589",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "PR 评论、冲突和 CI 维护"
+    },
+    {
+      "id": "cursor-builtin/split-to-prs",
+      "name": "split-to-prs",
+      "path": "originals/cursor-builtin/split-to-prs",
+      "kind": "original",
+      "source_location": "~/.cursor/skills-cursor/split-to-prs",
+      "source_skill_sha256": "796eb4bf3fd9a3cdde51a39979d14aed86f81aa3fd2c77bfeb33c0cc4456dd2f",
+      "usage": "source snapshot; runtime dependencies remain required",
+      "selection": "补充",
+      "purpose": "可审查的 PR 拆分"
+    },
+    {
+      "id": "project/rsibench-data-factory",
+      "name": "rsibench-data-factory",
+      "path": "originals/project/rsibench-data-factory",
+      "kind": "original",
+      "source_location": "RSIBench-Data/skills/rsibench-data-factory",
+      "source_repository": "https://github.com/evolvent-ai/RSIBench-Data",
+      "repository_head_observed": "4c807610243e7b481d382c5ed360c71c79a22f61",
+      "source_skill_sha256": "49fc9c9b39fd656dfb3d38b9d0a864bffe92a9c07465f7649cc1aabca0e3e6d7",
+      "context_path": "context/rsibench-data-factory",
+      "usage": "project-bound skill, not a standalone training runner; restore repository code and services separately; no environment/auth/run output copied",
+      "selection": "P02",
+      "purpose": "数据生成、SFT 与独立评测流程"
+    },
+    {
+      "id": "portable/skill-evolution-orchestrator",
+      "name": "skill-evolution-orchestrator",
+      "path": "adapted/portable/skill-evolution-orchestrator",
+      "kind": "adapted",
+      "source_label": "User-selected local P01 skill-evolution-orchestrator; source runtime adapters omitted",
+      "source_hashes": {
+        "SKILL.md": "f04250a1909c564381d85cceff886ba4c0035ccec3946048d71c0dd2d62a3ee9",
+        "references/contracts.md": "1b763a662330df8d9b36be7134257a5fc86f7c02e102659159d830e97702bb68",
+        "references/orchestration.md": "1cf13ccc6c11b119634ba04dd44c14767f0913029894cab29535d47d08c67cf1",
+        "references/runners.md": "6a43b6bc51961d0fd2a8fe475d492f2ae075e1d344428134941a7a83c178dfca"
+      },
+      "usage": "portable protocol instructions; no runner implementation or measured performance claim; source package not copied",
+      "selection": "P01 通用改写",
+      "purpose": "有证据约束的技能改进协议"
+    }
+  ],
+  "files": [
+    {
+      "path": "originals/shared/frontend-design/LICENSE.txt",
+      "package": "shared/frontend-design",
+      "kind": "original",
+      "sha256": "0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9",
+      "source_sha256": "0cec06e0e55fbc3dc5cee4fca9b607f66cb8f4e4dbcf3b3c013594dd156732e9",
+      "bytes": 10173
+    },
+    {
+      "path": "originals/shared/frontend-design/SKILL.md",
+      "package": "shared/frontend-design",
+      "kind": "original",
+      "sha256": "e172d36e0cc81b094e3e3c91dc87e58d0a00d7b791df505748f973de986fbdf7",
+      "source_sha256": "e172d36e0cc81b094e3e3c91dc87e58d0a00d7b791df505748f973de986fbdf7",
+      "bytes": 8261
+    },
+    {
+      "path": "originals/codex-system/skill-creator/SKILL.md",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "6656e54755638e8efcf275a472b9672eaa8a9a1b9e59dc210e275b03b59e1e66",
+      "source_sha256": "6656e54755638e8efcf275a472b9672eaa8a9a1b9e59dc210e275b03b59e1e66",
+      "bytes": 15311
+    },
+    {
+      "path": "originals/codex-system/skill-creator/agents/openai.yaml",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "d07d21b93fcf3d4dc8d9a3399c05fc226a49a333a96d3e1c68b451b8dd9eade6",
+      "source_sha256": "d07d21b93fcf3d4dc8d9a3399c05fc226a49a333a96d3e1c68b451b8dd9eade6",
+      "bytes": 183
+    },
+    {
+      "path": "originals/codex-system/skill-creator/assets/skill-creator-small.svg",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "6591bf8ea9bb9435890dbdea299e0d2bd05f3aa893a335d26e4c535e93c8e7fb",
+      "source_sha256": "6591bf8ea9bb9435890dbdea299e0d2bd05f3aa893a335d26e4c535e93c8e7fb",
+      "bytes": 1319
+    },
+    {
+      "path": "originals/codex-system/skill-creator/assets/skill-creator.png",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "a4024b0306ddb05847e1012879d37aaf1e658205199da596f5145ed7a88d9162",
+      "source_sha256": "a4024b0306ddb05847e1012879d37aaf1e658205199da596f5145ed7a88d9162",
+      "bytes": 1563
+    },
+    {
+      "path": "originals/codex-system/skill-creator/license.txt",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "source_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358
+    },
+    {
+      "path": "originals/codex-system/skill-creator/references/openai_yaml.md",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "ffac39318e408108141d40f820968e59f70434a891694f9bf1d25be8237b150c",
+      "source_sha256": "ffac39318e408108141d40f820968e59f70434a891694f9bf1d25be8237b150c",
+      "bytes": 2356
+    },
+    {
+      "path": "originals/codex-system/skill-creator/scripts/generate_openai_yaml.py",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "816df12072d74faf924d802a6599a139997e1441e90bfe4869ec304f2e5e2851",
+      "source_sha256": "816df12072d74faf924d802a6599a139997e1441e90bfe4869ec304f2e5e2851",
+      "bytes": 6669
+    },
+    {
+      "path": "originals/codex-system/skill-creator/scripts/init_skill.py",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "bf0656a5f9d8d8cdecf0245eaf27e1df8e0e9b6d40ccdda814eb8e3d5f6992c8",
+      "source_sha256": "bf0656a5f9d8d8cdecf0245eaf27e1df8e0e9b6d40ccdda814eb8e3d5f6992c8",
+      "bytes": 10314
+    },
+    {
+      "path": "originals/codex-system/skill-creator/scripts/quick_validate.py",
+      "package": "codex-system/skill-creator",
+      "kind": "original",
+      "sha256": "ee6dba90f44d37171c5a6edb8095979c54919ff6822c1a907afca2e78c48738c",
+      "source_sha256": "ee6dba90f44d37171c5a6edb8095979c54919ff6822c1a907afca2e78c48738c",
+      "bytes": 4249
+    },
+    {
+      "path": "originals/codex-user/archify/LICENSE",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b799ab081703e7821ae5096d2c1abdf14bbdc75e8ea1c4045998c36ed6db9706",
+      "source_sha256": "b799ab081703e7821ae5096d2c1abdf14bbdc75e8ea1c4045998c36ed6db9706",
+      "bytes": 1102
+    },
+    {
+      "path": "originals/codex-user/archify/SKILL.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "10094272d6d1b4ad0f2c2e0880cb646fe4991454a2dc3d854aecb27e7407ee1f",
+      "source_sha256": "10094272d6d1b4ad0f2c2e0880cb646fe4991454a2dc3d854aecb27e7407ee1f",
+      "bytes": 16396
+    },
+    {
+      "path": "originals/codex-user/archify/THIRD_PARTY_NOTICES.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0b7fb59365dc21c93b0f62526d74ee913aeec9ae532c112bc76afa7edcd56e14",
+      "source_sha256": "0b7fb59365dc21c93b0f62526d74ee913aeec9ae532c112bc76afa7edcd56e14",
+      "bytes": 5248
+    },
+    {
+      "path": "originals/codex-user/archify/assets/JetBrainsMono-OFL.txt",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c1ab7c666206842a02b35b30770dac0d7a10156ed401c9defc3f02a754d89e90",
+      "source_sha256": "c1ab7c666206842a02b35b30770dac0d7a10156ed401c9defc3f02a754d89e90",
+      "bytes": 4398
+    },
+    {
+      "path": "originals/codex-user/archify/assets/template.html",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b3583470b9ec789418207963405252141c710b1b8a5c08a6cfd03156712f3f7d",
+      "source_sha256": "b3583470b9ec789418207963405252141c710b1b8a5c08a6cfd03156712f3f7d",
+      "bytes": 773132
+    },
+    {
+      "path": "originals/codex-user/archify/bin/archify.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "cb00a6a60cff395f1728722ce6c41b7721b484c5349ae82111ee16719a672721",
+      "source_sha256": "cb00a6a60cff395f1728722ce6c41b7721b484c5349ae82111ee16719a672721",
+      "bytes": 76056
+    },
+    {
+      "path": "originals/codex-user/archify/bin/open-artifact.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "add1722186683c12770c575585bbb8774919c15b87361e10d2fe834623223159",
+      "source_sha256": "add1722186683c12770c575585bbb8774919c15b87361e10d2fe834623223159",
+      "bytes": 2225
+    },
+    {
+      "path": "originals/codex-user/archify/bin/preview.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "6d41e491d42070c05b5e278548714da1fcef6e6adfd84a0391ab2bf12f47373c",
+      "source_sha256": "6d41e491d42070c05b5e278548714da1fcef6e6adfd84a0391ab2bf12f47373c",
+      "bytes": 23722
+    },
+    {
+      "path": "originals/codex-user/archify/bin/visual-check.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "8fa8c6f233f3598f4f22e58c48a4de6f45b3b072ad8e7aee4731c49b4bfbdc52",
+      "source_sha256": "8fa8c6f233f3598f4f22e58c48a4de6f45b3b072ad8e7aee4731c49b4bfbdc52",
+      "bytes": 33390
+    },
+    {
+      "path": "originals/codex-user/archify/brand-marks/README.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "8b771a16322ce9ea47fdc00b9935e33adf0f3af608f2d735235443e15ef622e2",
+      "source_sha256": "8b771a16322ce9ea47fdc00b9935e33adf0f3af608f2d735235443e15ef622e2",
+      "bytes": 1449
+    },
+    {
+      "path": "originals/codex-user/archify/brand-marks/catalog.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e1a6c555cbf8ea36fb8100a4a25824e7ab87bebe9871e450ba05b6dea3b036d6",
+      "source_sha256": "e1a6c555cbf8ea36fb8100a4a25824e7ab87bebe9871e450ba05b6dea3b036d6",
+      "bytes": 14162
+    },
+    {
+      "path": "originals/codex-user/archify/delta/architecture-delta.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ccff0af2cf5dbaaca90fe761fc28fd885fd4e4b2811d6314c74a6e0960f79046",
+      "source_sha256": "ccff0af2cf5dbaaca90fe761fc28fd885fd4e4b2811d6314c74a6e0960f79046",
+      "bytes": 72823
+    },
+    {
+      "path": "originals/codex-user/archify/examples/agent-run.lifecycle.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7c0ad72ee7affbd6c6e4758b7520d61ddd4508c917acf36beabcad3ee7ca3ba7",
+      "source_sha256": "7c0ad72ee7affbd6c6e4758b7520d61ddd4508c917acf36beabcad3ee7ca3ba7",
+      "bytes": 4044
+    },
+    {
+      "path": "originals/codex-user/archify/examples/agent-tool-call.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4d3f6c23de2ca7d306e05d0041a9506833bb5a164a2bddc2d1984cf4da3ee90c",
+      "source_sha256": "4d3f6c23de2ca7d306e05d0041a9506833bb5a164a2bddc2d1984cf4da3ee90c",
+      "bytes": 5687
+    },
+    {
+      "path": "originals/codex-user/archify/examples/async-job-roundtrip.sequence.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "545f20920c89b69c2bb1f15508d5543fddbeb15cffba61e102206e04bd5a5cd9",
+      "source_sha256": "545f20920c89b69c2bb1f15508d5543fddbeb15cffba61e102206e04bd5a5cd9",
+      "bytes": 4370
+    },
+    {
+      "path": "originals/codex-user/archify/examples/brand-aware-delivery.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "d4f0df8114b3524756ffa49529c015e00757b0594a357183490c1edeb341e3c6",
+      "source_sha256": "d4f0df8114b3524756ffa49529c015e00757b0594a357183490c1edeb341e3c6",
+      "bytes": 3271
+    },
+    {
+      "path": "originals/codex-user/archify/examples/cache-miss-request.sequence.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "9a799a3661c16cd6ab4f6373ff6a04da95a9ab70d93b0a349b668466f4912fd7",
+      "source_sha256": "9a799a3661c16cd6ab4f6373ff6a04da95a9ab70d93b0a349b668466f4912fd7",
+      "bytes": 4374
+    },
+    {
+      "path": "originals/codex-user/archify/examples/checkout-platform.base.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c112195e7285e3e4aedaeab3e1f85f5891d30fccc2c260aebe4e1da12c80cf84",
+      "source_sha256": "c112195e7285e3e4aedaeab3e1f85f5891d30fccc2c260aebe4e1da12c80cf84",
+      "bytes": 2234
+    },
+    {
+      "path": "originals/codex-user/archify/examples/checkout-platform.head.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e3aaf47f77afeadafc81c6ce853dc1df68cc1e6932dec972cf478f4008fdda99",
+      "source_sha256": "e3aaf47f77afeadafc81c6ce853dc1df68cc1e6932dec972cf478f4008fdda99",
+      "bytes": 2368
+    },
+    {
+      "path": "originals/codex-user/archify/examples/dataflow-product-analytics.html",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c75c04344269b16e25c72551101e706d05004ee93d298e8d0c4c5bd93d4050e9",
+      "source_sha256": "c75c04344269b16e25c72551101e706d05004ee93d298e8d0c4c5bd93d4050e9",
+      "bytes": 815337
+    },
+    {
+      "path": "originals/codex-user/archify/examples/deployment-release.lifecycle.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "735c2c5819266e6ea2a71775b6eefce98b53030ce90cb721dc8e1d022ce5be71",
+      "source_sha256": "735c2c5819266e6ea2a71775b6eefce98b53030ce90cb721dc8e1d022ce5be71",
+      "bytes": 4274
+    },
+    {
+      "path": "originals/codex-user/archify/examples/event-stream.dataflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a92d6597ddbe164f395da32a7d4b33cfae08edd7d9600a6fb45a2058e5bbb43e",
+      "source_sha256": "a92d6597ddbe164f395da32a7d4b33cfae08edd7d9600a6fb45a2058e5bbb43e",
+      "bytes": 5433
+    },
+    {
+      "path": "originals/codex-user/archify/examples/incident-response.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "5c760c82eee545dfb7da38a4e628059d7891af4cfbfc13c8a7009ea64f69aa1b",
+      "source_sha256": "5c760c82eee545dfb7da38a4e628059d7891af4cfbfc13c8a7009ea64f69aa1b",
+      "bytes": 5375
+    },
+    {
+      "path": "originals/codex-user/archify/examples/lifecycle-agent-run.html",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "87b43a172dd3c9292fbc12fb37bcdadc9580171473cec33cffcd5d81b2deea25",
+      "source_sha256": "87b43a172dd3c9292fbc12fb37bcdadc9580171473cec33cffcd5d81b2deea25",
+      "bytes": 808440
+    },
+    {
+      "path": "originals/codex-user/archify/examples/product-analytics.dataflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "91411404fb4828a3b7ea358f3a7b9877781c9e9dc9c04b42b6eb4a757281b59f",
+      "source_sha256": "91411404fb4828a3b7ea358f3a7b9877781c9e9dc9c04b42b6eb4a757281b59f",
+      "bytes": 5618
+    },
+    {
+      "path": "originals/codex-user/archify/examples/production-deployment.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ec484aa8576664fdb207b543fa49486b23273faccb7a5071e1a0becfb48c22eb",
+      "source_sha256": "ec484aa8576664fdb207b543fa49486b23273faccb7a5071e1a0becfb48c22eb",
+      "bytes": 5476
+    },
+    {
+      "path": "originals/codex-user/archify/examples/release-delivery.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e5c880417eac1623923c3dd5461e0c78acd762e1621a28bd53fc14a84cad6a91",
+      "source_sha256": "e5c880417eac1623923c3dd5461e0c78acd762e1621a28bd53fc14a84cad6a91",
+      "bytes": 5164
+    },
+    {
+      "path": "originals/codex-user/archify/examples/sequence-cache-miss-request.html",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7c5c8f5c39c10dc8148591f654cd79a05ff49bb70166a4c45607414ca02cbe3a",
+      "source_sha256": "7c5c8f5c39c10dc8148591f654cd79a05ff49bb70166a4c45607414ca02cbe3a",
+      "bytes": 813020
+    },
+    {
+      "path": "originals/codex-user/archify/examples/web-app-rendered.html",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "acfb4794ff836ca93ed4139345cce763cdf62514a10133e4a8a32ef1a69066d1",
+      "source_sha256": "acfb4794ff836ca93ed4139345cce763cdf62514a10133e4a8a32ef1a69066d1",
+      "bytes": 810075
+    },
+    {
+      "path": "originals/codex-user/archify/examples/web-app.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "483350f5297df682aba4e4a0fa491307ce3d3abd725ae4df07fab177490752cf",
+      "source_sha256": "483350f5297df682aba4e4a0fa491307ce3d3abd725ae4df07fab177490752cf",
+      "bytes": 3793
+    },
+    {
+      "path": "originals/codex-user/archify/examples/workflow-agent-tool-call-rendered.html",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fc7643fa7f3b0c85250f781f9927a905f518a5b4a8c28ec08afd6f3889f435e4",
+      "source_sha256": "fc7643fa7f3b0c85250f781f9927a905f518a5b4a8c28ec08afd6f3889f435e4",
+      "bytes": 817897
+    },
+    {
+      "path": "originals/codex-user/archify/migrations/workflow-v2.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "77aadc38460e5e778344901f492cc00f16f74e8fe1def14b01e6d6d346b9f4c7",
+      "source_sha256": "77aadc38460e5e778344901f492cc00f16f74e8fe1def14b01e6d6d346b9f4c7",
+      "bytes": 9168
+    },
+    {
+      "path": "originals/codex-user/archify/package-lock.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f875c29b190f6f5dc14bea7e56879ad2282c0a5212253b24937f77b4f6198054",
+      "source_sha256": "f875c29b190f6f5dc14bea7e56879ad2282c0a5212253b24937f77b4f6198054",
+      "bytes": 4923
+    },
+    {
+      "path": "originals/codex-user/archify/package.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7fe2a96f0d6730b2d35811d7d4f5e7e969c166a47a0c87543cdf667a221815be",
+      "source_sha256": "7fe2a96f0d6730b2d35811d7d4f5e7e969c166a47a0c87543cdf667a221815be",
+      "bytes": 1478
+    },
+    {
+      "path": "originals/codex-user/archify/recipes/scenarios.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e77d31d5b65b921799f4f560287fbac24feb3cd683bee8cabe49ed1ddde1a8ac",
+      "source_sha256": "e77d31d5b65b921799f4f560287fbac24feb3cd683bee8cabe49ed1ddde1a8ac",
+      "bytes": 32073
+    },
+    {
+      "path": "originals/codex-user/archify/references/authoring-contract.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "873494557cf9be91d9eed8ecce37072886c0e98b851ad59ab8938f405c6fbc5e",
+      "source_sha256": "873494557cf9be91d9eed8ecce37072886c0e98b851ad59ab8938f405c6fbc5e",
+      "bytes": 13962
+    },
+    {
+      "path": "originals/codex-user/archify/references/brand-marks.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "8010869da70677e686ecb312d9c3eec2d20723a44f817ab2bbf5525361c8a136",
+      "source_sha256": "8010869da70677e686ecb312d9c3eec2d20723a44f817ab2bbf5525361c8a136",
+      "bytes": 2179
+    },
+    {
+      "path": "originals/codex-user/archify/references/delivery-contract.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a614c31f41d270995a5aee99036532470a43722f8208fdc8ef922805914d1d01",
+      "source_sha256": "a614c31f41d270995a5aee99036532470a43722f8208fdc8ef922805914d1d01",
+      "bytes": 8604
+    },
+    {
+      "path": "originals/codex-user/archify/references/viewer-runtime.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "dc0d9ffe6b9987d73d2d48710fce5ab4c120bbf1940ff1eb9355259c5d4f32b6",
+      "source_sha256": "dc0d9ffe6b9987d73d2d48710fce5ab4c120bbf1940ff1eb9355259c5d4f32b6",
+      "bytes": 4243
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/architecture/grid.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f6de99c32436feed3378b0ddef516bb4732ff27a89c543b50635d4d14a15a55a",
+      "source_sha256": "f6de99c32436feed3378b0ddef516bb4732ff27a89c543b50635d4d14a15a55a",
+      "bytes": 2071
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/architecture/render-architecture.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f57077cb9fa64a8412ab0af705cb31e2e7a920114b31852882c04a76840365dc",
+      "source_sha256": "f57077cb9fa64a8412ab0af705cb31e2e7a920114b31852882c04a76840365dc",
+      "bytes": 45546
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/dataflow/README.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "18c4f86ba62fcee371d9fe38094625b3a68cc76231c36ab8c8124acb4c1ffa42",
+      "source_sha256": "18c4f86ba62fcee371d9fe38094625b3a68cc76231c36ab8c8124acb4c1ffa42",
+      "bytes": 4202
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/dataflow/render-dataflow.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "5a5da505e5c68041990de92847f53a38215efb9212bc36fc911774e8829335c9",
+      "source_sha256": "5a5da505e5c68041990de92847f53a38215efb9212bc36fc911774e8829335c9",
+      "bytes": 21194
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/lifecycle/README.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f8ef88dc859189bb18bad7bb2e27d997cbc9d30936cf20f8bf401bae7f57deec",
+      "source_sha256": "f8ef88dc859189bb18bad7bb2e27d997cbc9d30936cf20f8bf401bae7f57deec",
+      "bytes": 5197
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/lifecycle/render-lifecycle.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "23720729a14495b4085839653ec0622f2465be3b1e8c9eb556b602ab3f4a8cda",
+      "source_sha256": "23720729a14495b4085839653ec0622f2465be3b1e8c9eb556b602ab3f4a8cda",
+      "bytes": 24285
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/sequence/README.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a442335dcf44b1587d3ad88809e31b001a4fafdf7a134040e8b1927455af4206",
+      "source_sha256": "a442335dcf44b1587d3ad88809e31b001a4fafdf7a134040e8b1927455af4206",
+      "bytes": 4828
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/sequence/render-sequence.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "230c0fb79775badb4beb6fd74f45ed1ffbb70e932c3641a24bedcc61f912bddf",
+      "source_sha256": "230c0fb79775badb4beb6fd74f45ed1ffbb70e932c3641a24bedcc61f912bddf",
+      "bytes": 21734
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/brand-marks.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4557b7f3eec25a3dba66a0f5da1c5dca6ec607e2a68e9be51cd697cefe9e6425",
+      "source_sha256": "4557b7f3eec25a3dba66a0f5da1c5dca6ec607e2a68e9be51cd697cefe9e6425",
+      "bytes": 22582
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/cli.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "2a6b8fa11234451627a70bca71985d80362a4c52401a90a21840d6e2ae3012d9",
+      "source_sha256": "2a6b8fa11234451627a70bca71985d80362a4c52401a90a21840d6e2ae3012d9",
+      "bytes": 10188
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/desktop-readability.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b36203a11df348706e541f309266a0f9b914dac6a7eb8ba804e3abe8f8d6c710",
+      "source_sha256": "b36203a11df348706e541f309266a0f9b914dac6a7eb8ba804e3abe8f8d6c710",
+      "bytes": 1089
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/diagnostics.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "855fea15daf2beb5be7fad0d54b72a63a4af8595f227facf845ba1852b3b365a",
+      "source_sha256": "855fea15daf2beb5be7fad0d54b72a63a4af8595f227facf845ba1852b3b365a",
+      "bytes": 4561
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/engineering-profiles.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7e99f9d5423f66cc9ab6224da56dc2d5aa6c6faec29178034794e9db6b5b2889",
+      "source_sha256": "7e99f9d5423f66cc9ab6224da56dc2d5aa6c6faec29178034794e9db6b5b2889",
+      "bytes": 6936
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/generated-brand-marks.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0f157d229c12df6f53763a3b88684baa5803a52484c49c4d34ec40b8743beea2",
+      "source_sha256": "0f157d229c12df6f53763a3b88684baa5803a52484c49c4d34ec40b8743beea2",
+      "bytes": 163612
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/generated-validators.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a1843e5612916e7ff71511d8577cdbea9a1355eee0ed1379de0ffd668992387f",
+      "source_sha256": "a1843e5612916e7ff71511d8577cdbea9a1355eee0ed1379de0ffd668992387f",
+      "bytes": 431711
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/geometry.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "161785af32241fc96df051c9be4f2bb9c3b897418d708f4a051b63f1c44952cf",
+      "source_sha256": "161785af32241fc96df051c9be4f2bb9c3b897418d708f4a051b63f1c44952cf",
+      "bytes": 57175
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/i18n.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0d9e839c3e5346160b0028d07fcf78c86671189e0714ea069dc99913e859fcdb",
+      "source_sha256": "0d9e839c3e5346160b0028d07fcf78c86671189e0714ea069dc99913e859fcdb",
+      "bytes": 48475
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/layout-report.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "44c2f74a20e483dd37dae6791ede39284ce3bac1a2a13872d2912999e8504df5",
+      "source_sha256": "44c2f74a20e483dd37dae6791ede39284ce3bac1a2a13872d2912999e8504df5",
+      "bytes": 1015
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/legend.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4c8b37f10fb5c783a28bff6aa35bc3966155213ee32f64a8252eab5b9e64a747",
+      "source_sha256": "4c8b37f10fb5c783a28bff6aa35bc3966155213ee32f64a8252eab5b9e64a747",
+      "bytes": 8652
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/output-path.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "44a5f63239703a0a56623711bb9565272488c540650cb8c3f0a3aac57928d1cf",
+      "source_sha256": "44a5f63239703a0a56623711bb9565272488c540650cb8c3f0a3aac57928d1cf",
+      "bytes": 11645
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/repository-evidence.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ce3c358093aee12790d5567de6c887ce7b9ce7961bfc742d2cf9f36eab2d4dd5",
+      "source_sha256": "ce3c358093aee12790d5567de6c887ce7b9ce7961bfc742d2cf9f36eab2d4dd5",
+      "bytes": 12411
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/repository-location.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e82fa68ab46e71566eb7aefdb48f6df67b34fd27ce36489e7787410dbfba05ce",
+      "source_sha256": "e82fa68ab46e71566eb7aefdb48f6df67b34fd27ce36489e7787410dbfba05ce",
+      "bytes": 3453
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/text-fit.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "35b6ef2c64d88c1ea4e5aab2af7c4e8a2c2e1be62db71263787d39a9797e7dea",
+      "source_sha256": "35b6ef2c64d88c1ea4e5aab2af7c4e8a2c2e1be62db71263787d39a9797e7dea",
+      "bytes": 2191
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/utils.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "20124265300eb286db184a053561005cc32b6128dc1bc1b3f9520ffa8d43a241",
+      "source_sha256": "20124265300eb286db184a053561005cc32b6128dc1bc1b3f9520ffa8d43a241",
+      "bytes": 11603
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/shared/validator.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7460d7fcbcdf710649256c5e96142ae26d807a655d3296ee8caf7f5e158622cc",
+      "source_sha256": "7460d7fcbcdf710649256c5e96142ae26d807a655d3296ee8caf7f5e158622cc",
+      "bytes": 3508
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/workflow/README.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7e1bd65cc5cc38206304ae2f61f4f0f493da98d71a111a61d0754c9da362c5c9",
+      "source_sha256": "7e1bd65cc5cc38206304ae2f61f4f0f493da98d71a111a61d0754c9da362c5c9",
+      "bytes": 10386
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/workflow/render-workflow.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "83be05d1efd1816c527fccdf3ebbd4a0f1454c6cb0c9f7554c6702eb40d9c540",
+      "source_sha256": "83be05d1efd1816c527fccdf3ebbd4a0f1454c6cb0c9f7554c6702eb40d9c540",
+      "bytes": 1153
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/workflow/workflow-compiler.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "06dc97f67041037d71fd8731934d4833ece95ac1a4278e3ef875b0e51e516104",
+      "source_sha256": "06dc97f67041037d71fd8731934d4833ece95ac1a4278e3ef875b0e51e516104",
+      "bytes": 171396
+    },
+    {
+      "path": "originals/codex-user/archify/renderers/workflow/workflow-migration-geometry.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ebfc5085dd008ae63802f500402fb7bf8ca0ae28460997d867f45e5493b8fbe6",
+      "source_sha256": "ebfc5085dd008ae63802f500402fb7bf8ca0ae28460997d867f45e5493b8fbe6",
+      "bytes": 5299
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/README.md",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f4ca94ec18cf60ad02211f2c5bb64e9c26a87467a22215e06db34dbfc5d6145f",
+      "source_sha256": "f4ca94ec18cf60ad02211f2c5bb64e9c26a87467a22215e06db34dbfc5d6145f",
+      "bytes": 11462
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/architecture.schema.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "94568c7ca72c07ac0ee02ee76bd39392874b3a13bb796a127962be68d0f5bc90",
+      "source_sha256": "94568c7ca72c07ac0ee02ee76bd39392874b3a13bb796a127962be68d0f5bc90",
+      "bytes": 6753
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/common.schema.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "2630c958314eeebb92e0f6f6330475f1a2bc48f8c1b53201ba3b58889b319c80",
+      "source_sha256": "2630c958314eeebb92e0f6f6330475f1a2bc48f8c1b53201ba3b58889b319c80",
+      "bytes": 3096
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/dataflow.schema.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "09d238a6a18f2e074ec69c8f905f58a44d3a0b68fc6a925b8346c484a912af90",
+      "source_sha256": "09d238a6a18f2e074ec69c8f905f58a44d3a0b68fc6a925b8346c484a912af90",
+      "bytes": 5907
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/lifecycle.schema.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "05b46c0db95ee7ed44305b61496a96bb4f69342b20f9903d6534d952ebc65083",
+      "source_sha256": "05b46c0db95ee7ed44305b61496a96bb4f69342b20f9903d6534d952ebc65083",
+      "bytes": 6597
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/sequence.schema.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c9fec3fad087f14d55c0bb2d34446246e3405f0238c292c1cb6bef28d1120fcb",
+      "source_sha256": "c9fec3fad087f14d55c0bb2d34446246e3405f0238c292c1cb6bef28d1120fcb",
+      "bytes": 5642
+    },
+    {
+      "path": "originals/codex-user/archify/schemas/workflow.schema.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "2128e82afd2b971fcb7d80ada86fa836bb4a5035b504053b87d3aeefec380e3c",
+      "source_sha256": "2128e82afd2b971fcb7d80ada86fa836bb4a5035b504053b87d3aeefec380e3c",
+      "bytes": 9752
+    },
+    {
+      "path": "originals/codex-user/archify/scripts/check-render-output.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "cd70eeb43b07b6a669e10e35f06e4e2e4ce1f7e7a6afcfcf349d75d00e0721a5",
+      "source_sha256": "cd70eeb43b07b6a669e10e35f06e4e2e4ce1f7e7a6afcfcf349d75d00e0721a5",
+      "bytes": 32498
+    },
+    {
+      "path": "originals/codex-user/archify/scripts/check-update.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7c7f47b35a55754fd85468c5e1cfc467bb2e1b9dd5c683dd60172844882b1970",
+      "source_sha256": "7c7f47b35a55754fd85468c5e1cfc467bb2e1b9dd5c683dd60172844882b1970",
+      "bytes": 56369
+    },
+    {
+      "path": "originals/codex-user/archify/scripts/generate-brand-marks.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0434c31903b831382a91e85a329bcbcb39b32f29c656273a273f896b3b0a42e7",
+      "source_sha256": "0434c31903b831382a91e85a329bcbcb39b32f29c656273a273f896b3b0a42e7",
+      "bytes": 5136
+    },
+    {
+      "path": "originals/codex-user/archify/scripts/generate-validators.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a5f5f67d3cd4675b16fa620043a5463f3c15aad89afb1b0c7cf42cf35e883f9a",
+      "source_sha256": "a5f5f67d3cd4675b16fa620043a5463f3c15aad89afb1b0c7cf42cf35e883f9a",
+      "bytes": 2400
+    },
+    {
+      "path": "originals/codex-user/archify/scripts/render-examples.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a173a053fb26c0ac3cd72eb9b4e50411e67ca8c50bec57f05d4ca8ba79db2c0b",
+      "source_sha256": "a173a053fb26c0ac3cd72eb9b4e50411e67ca8c50bec57f05d4ca8ba79db2c0b",
+      "bytes": 1178
+    },
+    {
+      "path": "originals/codex-user/archify/scripts/update-contract.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7c5d34c5fa2e08fcd0b42e33a0f3b4685fcecf3ac88f1ed820528df8fdc46cbc",
+      "source_sha256": "7c5d34c5fa2e08fcd0b42e33a0f3b4685fcecf3ac88f1ed820528df8fdc46cbc",
+      "bytes": 6750
+    },
+    {
+      "path": "originals/codex-user/archify/skill-release.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "269772492c38663b5d19730a54e5d7ad973ef04e47eb4f75b6dfa2e249614097",
+      "source_sha256": "269772492c38663b5d19730a54e5d7ad973ef04e47eb4f75b6dfa2e249614097",
+      "bytes": 272
+    },
+    {
+      "path": "originals/codex-user/archify/test/adaptive-reader-layout.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "80ba934f6c8398b321387e55b0aa858a928ea66c0a4125e7ad72b6f58a1669c5",
+      "source_sha256": "80ba934f6c8398b321387e55b0aa858a928ea66c0a4125e7ad72b6f58a1669c5",
+      "bytes": 4875
+    },
+    {
+      "path": "originals/codex-user/archify/test/animation.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f53265be97ca6e59a6902c68a4cd2690a7ed931ab89cb83ad071030d80e17398",
+      "source_sha256": "f53265be97ca6e59a6902c68a4cd2690a7ed931ab89cb83ad071030d80e17398",
+      "bytes": 8891
+    },
+    {
+      "path": "originals/codex-user/archify/test/architecture-delta.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "635816a7b89f7b6e0de92c79bb0226313249962f2bdf4bc42165f925ce2e78fc",
+      "source_sha256": "635816a7b89f7b6e0de92c79bb0226313249962f2bdf4bc42165f925ce2e78fc",
+      "bytes": 28886
+    },
+    {
+      "path": "originals/codex-user/archify/test/artifact-receipt-flush.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "666118920612f0b2c479c0521e86bcc1a4be1e46f0972fbf53f9bac77c80dce7",
+      "source_sha256": "666118920612f0b2c479c0521e86bcc1a4be1e46f0972fbf53f9bac77c80dce7",
+      "bytes": 5299
+    },
+    {
+      "path": "originals/codex-user/archify/test/authored-reachability.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b243c1568c8470a28cfbebc6b9db4dfe0302e7f37f5c451ccffec53de23fd01b",
+      "source_sha256": "b243c1568c8470a28cfbebc6b9db4dfe0302e7f37f5c451ccffec53de23fd01b",
+      "bytes": 4486
+    },
+    {
+      "path": "originals/codex-user/archify/test/authoring-safety-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "1454a57493576d4afa9fd3f8640e064c86e5cdcaac2de1890fcedce84d0fce24",
+      "source_sha256": "1454a57493576d4afa9fd3f8640e064c86e5cdcaac2de1890fcedce84d0fce24",
+      "bytes": 2892
+    },
+    {
+      "path": "originals/codex-user/archify/test/automatic-port-spread.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "138508bc4ca7b28b003400897caba5484fb6e2c28ff4a7be9d0bcbdef7391aab",
+      "source_sha256": "138508bc4ca7b28b003400897caba5484fb6e2c28ff4a7be9d0bcbdef7391aab",
+      "bytes": 16458
+    },
+    {
+      "path": "originals/codex-user/archify/test/base-input-compatibility.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0cc0ec480aa23620adfb493b0c102a744c72c8799e3e837ef4c31f26980551d5",
+      "source_sha256": "0cc0ec480aa23620adfb493b0c102a744c72c8799e3e837ef4c31f26980551d5",
+      "bytes": 1318
+    },
+    {
+      "path": "originals/codex-user/archify/test/brand-marks.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "00730eb26b9a126a45c529bbb7101b13e3e6f14258c53c4633eb2b290ce30226",
+      "source_sha256": "00730eb26b9a126a45c529bbb7101b13e3e6f14258c53c4633eb2b290ce30226",
+      "bytes": 30758
+    },
+    {
+      "path": "originals/codex-user/archify/test/chapter-delta-preview.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "834fab9360c66e333e028879d12c751e540e26618ee39cdcb6def1699376dbe3",
+      "source_sha256": "834fab9360c66e333e028879d12c751e540e26618ee39cdcb6def1699376dbe3",
+      "bytes": 7538
+    },
+    {
+      "path": "originals/codex-user/archify/test/chapter-handoff.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "384683b85c8181b9be6a54f24dc00e739d5347b86b1a878d2d9a865a650b4f3e",
+      "source_sha256": "384683b85c8181b9be6a54f24dc00e739d5347b86b1a878d2d9a865a650b4f3e",
+      "bytes": 5031
+    },
+    {
+      "path": "originals/codex-user/archify/test/chapter-rail.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a95d33c9d19e400954aa93e8585788828dba40698b7a9ada9648430872da8f9c",
+      "source_sha256": "a95d33c9d19e400954aa93e8585788828dba40698b7a9ada9648430872da8f9c",
+      "bytes": 4342
+    },
+    {
+      "path": "originals/codex-user/archify/test/checkout-line-endings.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fe0c70cdf0088cbf63460c9df3aee998ecba96bf778333bd17e101ea805d2888",
+      "source_sha256": "fe0c70cdf0088cbf63460c9df3aee998ecba96bf778333bd17e101ea805d2888",
+      "bytes": 3682
+    },
+    {
+      "path": "originals/codex-user/archify/test/clean-skill-staging.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "bb74344a259e5e14364c0b601fcad58f5d10450e6ad488d0a44e4115e479e47d",
+      "source_sha256": "bb74344a259e5e14364c0b601fcad58f5d10450e6ad488d0a44e4115e479e47d",
+      "bytes": 13427
+    },
+    {
+      "path": "originals/codex-user/archify/test/cli-output-types.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a2f601413cee7c5312663c137742c196a2c7182affe20d108b5007d3d1f6802a",
+      "source_sha256": "a2f601413cee7c5312663c137742c196a2c7182affe20d108b5007d3d1f6802a",
+      "bytes": 8737
+    },
+    {
+      "path": "originals/codex-user/archify/test/cli.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "990e62cb9b84e8fe2320e52558513cfbfac31319f0f5733e40d9fe0777c2b336",
+      "source_sha256": "990e62cb9b84e8fe2320e52558513cfbfac31319f0f5733e40d9fe0777c2b336",
+      "bytes": 39992
+    },
+    {
+      "path": "originals/codex-user/archify/test/community-proof-intake.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "90cdf0600a87a67b65ab02a90830dadd63de8bc28183fac6784ad3d5c35e4d4e",
+      "source_sha256": "90cdf0600a87a67b65ab02a90830dadd63de8bc28183fac6784ad3d5c35e4d4e",
+      "bytes": 4836
+    },
+    {
+      "path": "originals/codex-user/archify/test/cursor-onboarding.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "eda54bcffd77ffc238f1c45cf8094a203697a44a7bb4587196ee2c8cb59124b6",
+      "source_sha256": "eda54bcffd77ffc238f1c45cf8094a203697a44a7bb4587196ee2c8cb59124b6",
+      "bytes": 3555
+    },
+    {
+      "path": "originals/codex-user/archify/test/degraded.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b7cdbd22d594c627a4d8b0b6403e403a0599df9229c561c9bb435ce200ce1344",
+      "source_sha256": "b7cdbd22d594c627a4d8b0b6403e403a0599df9229c561c9bb435ce200ce1344",
+      "bytes": 7011
+    },
+    {
+      "path": "originals/codex-user/archify/test/delivery-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b3e0f39ed7ca788d7e40b05a53eef68f9696acdea9f2d0b2ea24e2740d00ee61",
+      "source_sha256": "b3e0f39ed7ca788d7e40b05a53eef68f9696acdea9f2d0b2ea24e2740d00ee61",
+      "bytes": 3088
+    },
+    {
+      "path": "originals/codex-user/archify/test/desktop-reader-browser.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "142d118ffeb61adf9be7f86dbb903ff75ae048cd5e73ef7c2ade2679b8aab879",
+      "source_sha256": "142d118ffeb61adf9be7f86dbb903ff75ae048cd5e73ef7c2ade2679b8aab879",
+      "bytes": 3925
+    },
+    {
+      "path": "originals/codex-user/archify/test/diagram-guide.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "52c057417736299482f3ca270992d87a4eae4807062b78c760d85cce5ef8aa3e",
+      "source_sha256": "52c057417736299482f3ca270992d87a4eae4807062b78c760d85cce5ef8aa3e",
+      "bytes": 4835
+    },
+    {
+      "path": "originals/codex-user/archify/test/engineering-profile.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "d5419dc45da1927a2cac1b998fdd5d1bbdbc68369ccb17cffaf4d98a90e0e242",
+      "source_sha256": "d5419dc45da1927a2cac1b998fdd5d1bbdbc68369ccb17cffaf4d98a90e0e242",
+      "bytes": 10281
+    },
+    {
+      "path": "originals/codex-user/archify/test/finder.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "10683c42d6d9e3d20e2c7b48006e0f4c0bb16094f8aa5c76ebaa105be531585c",
+      "source_sha256": "10683c42d6d9e3d20e2c7b48006e0f4c0bb16094f8aa5c76ebaa105be531585c",
+      "bytes": 5448
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/automatic-routing-node-border-clearance.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7c3ede1070394a94c565b7a80e0d5ca2cba4f041aaac85777c74df48bf71e933",
+      "source_sha256": "7c3ede1070394a94c565b7a80e0d5ca2cba4f041aaac85777c74df48bf71e933",
+      "bytes": 855
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/fail-migration-cleanup.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ffd6eb76aa7efa70778704176c55c327f288d9e60607a89d5077b916ebb93fdd",
+      "source_sha256": "ffd6eb76aa7efa70778704176c55c327f288d9e60607a89d5077b916ebb93fdd",
+      "bytes": 580
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/issue-126/custom-widths.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "7701a2f6271b9d02d9477d5fb02d52e70738ff14be824956cf77ff466c1c1013",
+      "source_sha256": "7701a2f6271b9d02d9477d5fb02d52e70738ff14be824956cf77ff466c1c1013",
+      "bytes": 528
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/issue-126/explicit-route.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "985ba9146664598785cc3a5008e847259ac66caf4c2c5570e32477f384f31b21",
+      "source_sha256": "985ba9146664598785cc3a5008e847259ac66caf4c2c5570e32477f384f31b21",
+      "bytes": 703
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/issue-126/explicit-viewbox.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "520071d14b748aa184589bac22fc548e501c78fb9cf2c8bdceba4bf715620c3f",
+      "source_sha256": "520071d14b748aa184589bac22fc548e501c78fb9cf2c8bdceba4bf715620c3f",
+      "bytes": 533
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/issue-126/labels.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "496ea86f39914458688f0c3b4277c03c3dedc8eedf1ba35a11e8c99a4a323d08",
+      "source_sha256": "496ea86f39914458688f0c3b4277c03c3dedc8eedf1ba35a11e8c99a4a323d08",
+      "bytes": 520
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/agent-run.lifecycle.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b2264f4b2eff23e69b3dc79922062e942fc64ed0bec4f939fa53dda3cacd82d6",
+      "source_sha256": "b2264f4b2eff23e69b3dc79922062e942fc64ed0bec4f939fa53dda3cacd82d6",
+      "bytes": 3538
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/agent-tool-call.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4903056b3634e02cce9fd7c71b61fb27e6db455480c8d776a7005346b3afc564",
+      "source_sha256": "4903056b3634e02cce9fd7c71b61fb27e6db455480c8d776a7005346b3afc564",
+      "bytes": 5360
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/cache-miss-request.sequence.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "047914c4dc4ed753b6b9f100ebaf6e7f15f9b72af0913e3a8e7a223bdef39aaa",
+      "source_sha256": "047914c4dc4ed753b6b9f100ebaf6e7f15f9b72af0913e3a8e7a223bdef39aaa",
+      "bytes": 3550
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/event-stream.dataflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a92d6597ddbe164f395da32a7d4b33cfae08edd7d9600a6fb45a2058e5bbb43e",
+      "source_sha256": "a92d6597ddbe164f395da32a7d4b33cfae08edd7d9600a6fb45a2058e5bbb43e",
+      "bytes": 5433
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/product-analytics.dataflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "6da9959f729d81c4cdf8895fb6611080ff0368c3cde48b00b0081495a006140d",
+      "source_sha256": "6da9959f729d81c4cdf8895fb6611080ff0368c3cde48b00b0081495a006140d",
+      "bytes": 4827
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/production-deployment.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "738e9c7f22e4e6e88f5aafc087dc58409105927daa9a79aaf240c8393654494f",
+      "source_sha256": "738e9c7f22e4e6e88f5aafc087dc58409105927daa9a79aaf240c8393654494f",
+      "bytes": 5454
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-baseline/web-app.architecture.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "5fb15d0e0f7e5ed3a1a3f2e7ee406fb50aae126818c58db24f77236b07dd63f6",
+      "source_sha256": "5fb15d0e0f7e5ed3a1a3f2e7ee406fb50aae126818c58db24f77236b07dd63f6",
+      "bytes": 3021
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-workflow-700x400.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "74a9bf3424c656b47a757b39cc1bd69c27ae553c264d3186799bdc5d080b5509",
+      "source_sha256": "74a9bf3424c656b47a757b39cc1bd69c27ae553c264d3186799bdc5d080b5509",
+      "bytes": 915
+    },
+    {
+      "path": "originals/codex-user/archify/test/fixtures/v1-workflow-explicit-coordinates.workflow.json",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4f1140e720fdfbae7f7efed9fb9fdffb581fef849798697db9df7fa56b2131af",
+      "source_sha256": "4f1140e720fdfbae7f7efed9fb9fdffb581fef849798697db9df7fa56b2131af",
+      "bytes": 1432
+    },
+    {
+      "path": "originals/codex-user/archify/test/gallery.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f30d8e759e16b793c0c7755779718cb0680b95be14bf7a8b5827105cfad7f4b5",
+      "source_sha256": "f30d8e759e16b793c0c7755779718cb0680b95be14bf7a8b5827105cfad7f4b5",
+      "bytes": 7206
+    },
+    {
+      "path": "originals/codex-user/archify/test/generate-validators.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "df9b0bb98f564eb0fcc358a7f2fc7fb8136387bd1d6ab1981cd7335e0ca69136",
+      "source_sha256": "df9b0bb98f564eb0fcc358a7f2fc7fb8136387bd1d6ab1981cd7335e0ca69136",
+      "bytes": 2300
+    },
+    {
+      "path": "originals/codex-user/archify/test/generated-artifact-xml.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e44204d5e48ae6806f96e62627c72ca086ef3b543a7e4227bc6ba02116e2a201",
+      "source_sha256": "e44204d5e48ae6806f96e62627c72ca086ef3b543a7e4227bc6ba02116e2a201",
+      "bytes": 3754
+    },
+    {
+      "path": "originals/codex-user/archify/test/geometry.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "8a341c048bf86dda21e19337729f7709ea3645b6f311a3eb3b795ef10fef7131",
+      "source_sha256": "8a341c048bf86dda21e19337729f7709ea3645b6f311a3eb3b795ef10fef7131",
+      "bytes": 32303
+    },
+    {
+      "path": "originals/codex-user/archify/test/golden.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ad0a1e34a43d4ab07a97fbca5c2d2358162a240fabda3a69d419bce6631ea6b7",
+      "source_sha256": "ad0a1e34a43d4ab07a97fbca5c2d2358162a240fabda3a69d419bce6631ea6b7",
+      "bytes": 9400
+    },
+    {
+      "path": "originals/codex-user/archify/test/grid.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ebf1cd47535148c43b578eb10df0260f0f55cb6811d06c01375fbb408bf2cf6b",
+      "source_sha256": "ebf1cd47535148c43b578eb10df0260f0f55cb6811d06c01375fbb408bf2cf6b",
+      "bytes": 1751
+    },
+    {
+      "path": "originals/codex-user/archify/test/guide-page.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f8aae11961f7b91fe9bd05eccf4b46e6924d43ade3994f393551cedc8c518e8b",
+      "source_sha256": "f8aae11961f7b91fe9bd05eccf4b46e6924d43ade3994f393551cedc8c518e8b",
+      "bytes": 2492
+    },
+    {
+      "path": "originals/codex-user/archify/test/guide.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "8c0d8db6ba3a79d902fdb89d77c75518b232a52153794ec70e28056d3d2e2b68",
+      "source_sha256": "8c0d8db6ba3a79d902fdb89d77c75518b232a52153794ec70e28056d3d2e2b68",
+      "bytes": 3353
+    },
+    {
+      "path": "originals/codex-user/archify/test/guided-views.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fbed156af01082f3bbde7b0c0b6675664613c47644e14a33fad3fbd1b8dc062e",
+      "source_sha256": "fbed156af01082f3bbde7b0c0b6675664613c47644e14a33fad3fbd1b8dc062e",
+      "bytes": 7547
+    },
+    {
+      "path": "originals/codex-user/archify/test/helpers/offline-fonts.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "dde831f79dc0e6145283a8970336cd7060f4df900f3625ef90f6f08b7f6b6ec0",
+      "source_sha256": "dde831f79dc0e6145283a8970336cd7060f4df900f3625ef90f6f08b7f6b6ec0",
+      "bytes": 5252
+    },
+    {
+      "path": "originals/codex-user/archify/test/helpers/xml.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "21c8c86df4feaf0f3e9411ccf4f53574714d27c85fa9750fe794aadaccdba813",
+      "source_sha256": "21c8c86df4feaf0f3e9411ccf4f53574714d27c85fa9750fe794aadaccdba813",
+      "bytes": 1273
+    },
+    {
+      "path": "originals/codex-user/archify/test/i18n.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "12a6b17fcde1fddbf496f46e15bfd76db931e4f0c9c832e772a12a0ee0d02b17",
+      "source_sha256": "12a6b17fcde1fddbf496f46e15bfd76db931e4f0c9c832e772a12a0ee0d02b17",
+      "bytes": 17690
+    },
+    {
+      "path": "originals/codex-user/archify/test/intent-trace.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "055a23bed7698ba3273dddc602bc76d8b0bc01298ed2ac9c91600991334bf7f6",
+      "source_sha256": "055a23bed7698ba3273dddc602bc76d8b0bc01298ed2ac9c91600991334bf7f6",
+      "bytes": 5747
+    },
+    {
+      "path": "originals/codex-user/archify/test/landing.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b8bdaf3f2494394c1ae4d300567ecef03a834ea1186ab6b93419d15c8b14979e",
+      "source_sha256": "b8bdaf3f2494394c1ae4d300567ecef03a834ea1186ab6b93419d15c8b14979e",
+      "bytes": 5558
+    },
+    {
+      "path": "originals/codex-user/archify/test/layout-rules.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ad5831146f900e237ea3a41f99a5f4baa15082e26d937b6aa6066ea41b1bb5c1",
+      "source_sha256": "ad5831146f900e237ea3a41f99a5f4baa15082e26d937b6aa6066ea41b1bb5c1",
+      "bytes": 64653
+    },
+    {
+      "path": "originals/codex-user/archify/test/legend-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "99abc8fb61a3b8fa1971378ba0107205554b16ca5bbe3f068a6a8900f9e26197",
+      "source_sha256": "99abc8fb61a3b8fa1971378ba0107205554b16ca5bbe3f068a6a8900f9e26197",
+      "bytes": 17144
+    },
+    {
+      "path": "originals/codex-user/archify/test/motion-governor.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "02609189ef79e6b44f9b5b6c1a5c1716886201714fb16212eeb038ab12785b8c",
+      "source_sha256": "02609189ef79e6b44f9b5b6c1a5c1716886201714fb16212eeb038ab12785b8c",
+      "bytes": 6425
+    },
+    {
+      "path": "originals/codex-user/archify/test/offline-font-browser.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "331e49e54538ad36102bf4c0e507327721c06b8fe74981f56c7ee929489025d6",
+      "source_sha256": "331e49e54538ad36102bf4c0e507327721c06b8fe74981f56c7ee929489025d6",
+      "bytes": 12385
+    },
+    {
+      "path": "originals/codex-user/archify/test/offline-self-containment.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "1d21a47d50c6178f8412c13af48912e12694159cd51c66dcd709df16e6fbc500",
+      "source_sha256": "1d21a47d50c6178f8412c13af48912e12694159cd51c66dcd709df16e6fbc500",
+      "bytes": 5488
+    },
+    {
+      "path": "originals/codex-user/archify/test/open-artifact.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fab9d65f5ed0844182b0ee62ced9412e364179960ef65fee020b0d23d977eb55",
+      "source_sha256": "fab9d65f5ed0844182b0ee62ced9412e364179960ef65fee020b0d23d977eb55",
+      "bytes": 3128
+    },
+    {
+      "path": "originals/codex-user/archify/test/ordinary-model-floor.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4927b007f21a926b638ce33704450c0b3515f649c137bddfa6fdbd938fe158e6",
+      "source_sha256": "4927b007f21a926b638ce33704450c0b3515f649c137bddfa6fdbd938fe158e6",
+      "bytes": 41774
+    },
+    {
+      "path": "originals/codex-user/archify/test/output-path.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "d20122bdc38c0b097f65d95aef866dd43af43759ff622e6fcc6d921b6080279e",
+      "source_sha256": "d20122bdc38c0b097f65d95aef866dd43af43759ff622e6fcc6d921b6080279e",
+      "bytes": 23923
+    },
+    {
+      "path": "originals/codex-user/archify/test/presentation.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "9c0fd988a3123762218093ddb8b8189998272318695347ed6fb924cec490280a",
+      "source_sha256": "9c0fd988a3123762218093ddb8b8189998272318695347ed6fb924cec490280a",
+      "bytes": 3268
+    },
+    {
+      "path": "originals/codex-user/archify/test/preset-tryon.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "92c45df6deac7ccefcb8c1c38ad0f0ba7f42ddd737e5ef0baa9d15aa57ef1719",
+      "source_sha256": "92c45df6deac7ccefcb8c1c38ad0f0ba7f42ddd737e5ef0baa9d15aa57ef1719",
+      "bytes": 5476
+    },
+    {
+      "path": "originals/codex-user/archify/test/preview-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fab520b1c709e23b6393684f57db76fcf1aff5425bef838652efa355e63cccd3",
+      "source_sha256": "fab520b1c709e23b6393684f57db76fcf1aff5425bef838652efa355e63cccd3",
+      "bytes": 2066
+    },
+    {
+      "path": "originals/codex-user/archify/test/preview.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c7a8a5f4ac26082ca362e75fc3f7e183c2219612f47754f94aec1d0e669958a4",
+      "source_sha256": "c7a8a5f4ac26082ca362e75fc3f7e183c2219612f47754f94aec1d0e669958a4",
+      "bytes": 24185
+    },
+    {
+      "path": "originals/codex-user/archify/test/proof-aperture.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f393b9935bb9d915e301a1bf974b67faa72161a2717d6b65077e1060280e9af2",
+      "source_sha256": "f393b9935bb9d915e301a1bf974b67faa72161a2717d6b65077e1060280e9af2",
+      "bytes": 4540
+    },
+    {
+      "path": "originals/codex-user/archify/test/reach-share-card.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b94cc337cacc3e412ff08d00e88078d975e1fa2c32ad7d72a37fcffe151a8832",
+      "source_sha256": "b94cc337cacc3e412ff08d00e88078d975e1fa2c32ad7d72a37fcffe151a8832",
+      "bytes": 8431
+    },
+    {
+      "path": "originals/codex-user/archify/test/readme-showcase.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e4eae9219429148c3bc45c818f0aa43906127bc355601e178ee9657c63614b34",
+      "source_sha256": "e4eae9219429148c3bc45c818f0aa43906127bc355601e178ee9657c63614b34",
+      "bytes": 14989
+    },
+    {
+      "path": "originals/codex-user/archify/test/real-repository-proof.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "6ce5dc9a9ad0e1109ec40480e959e077a0a21ff931758ab072bfa5cbee7c24ed",
+      "source_sha256": "6ce5dc9a9ad0e1109ec40480e959e077a0a21ff931758ab072bfa5cbee7c24ed",
+      "bytes": 9086
+    },
+    {
+      "path": "originals/codex-user/archify/test/relationship-direct-explorer.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "1411a6540f608a99f328c0bdbdc542795fb6f296e80be3af1bf0740d55dae7b2",
+      "source_sha256": "1411a6540f608a99f328c0bdbdc542795fb6f296e80be3af1bf0740d55dae7b2",
+      "bytes": 6442
+    },
+    {
+      "path": "originals/codex-user/archify/test/relationship-lens.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f344bd3cfe7329715b2c422afa9158e8668b7798b9fc8251e69f3b9cdc02f857",
+      "source_sha256": "f344bd3cfe7329715b2c422afa9158e8668b7798b9fc8251e69f3b9cdc02f857",
+      "bytes": 7313
+    },
+    {
+      "path": "originals/codex-user/archify/test/relationship-permalink.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c2425e42a1b78b8a9714b675a2330352c78cc59880ab5d3ac7628c794490e3c6",
+      "source_sha256": "c2425e42a1b78b8a9714b675a2330352c78cc59880ab5d3ac7628c794490e3c6",
+      "bytes": 6605
+    },
+    {
+      "path": "originals/codex-user/archify/test/relationship-pulse.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c15ac8f463ca7978dd48c18698b8700ae408ae05a9eebfd334425d74fad96c18",
+      "source_sha256": "c15ac8f463ca7978dd48c18698b8700ae408ae05a9eebfd334425d74fad96c18",
+      "bytes": 6730
+    },
+    {
+      "path": "originals/codex-user/archify/test/release-identity.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "5a55ab3abc7e5da7764a7fdb414f8cb8db21c1d83688a1aa68c69ab3423979f1",
+      "source_sha256": "5a55ab3abc7e5da7764a7fdb414f8cb8db21c1d83688a1aa68c69ab3423979f1",
+      "bytes": 21361
+    },
+    {
+      "path": "originals/codex-user/archify/test/release-package-gates.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f8c91f00b381d1f8a4c786b9d917c47c5e7f69dfec533dc57057fe940092c7bb",
+      "source_sha256": "f8c91f00b381d1f8a4c786b9d917c47c5e7f69dfec533dc57057fe940092c7bb",
+      "bytes": 30859
+    },
+    {
+      "path": "originals/codex-user/archify/test/render-output-checks.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "637757de7c46ddf00739db371cb84ff9236691ae31fd308cb034ea7053b8744d",
+      "source_sha256": "637757de7c46ddf00739db371cb84ff9236691ae31fd308cb034ea7053b8744d",
+      "bytes": 25590
+    },
+    {
+      "path": "originals/codex-user/archify/test/repair-receipt.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "f0618c73c372d11dc68e9706e6995cc0d5cfde2a13614a12c8f5ff4e9ae0a522",
+      "source_sha256": "f0618c73c372d11dc68e9706e6995cc0d5cfde2a13614a12c8f5ff4e9ae0a522",
+      "bytes": 8065
+    },
+    {
+      "path": "originals/codex-user/archify/test/repository-evidence.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a078539c8b61f26f3694c44dced2e83eb58d3f5ad16556d23d6bcf3ea594fd0b",
+      "source_sha256": "a078539c8b61f26f3694c44dced2e83eb58d3f5ad16556d23d6bcf3ea594fd0b",
+      "bytes": 32813
+    },
+    {
+      "path": "originals/codex-user/archify/test/repository-language-metadata.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "91e3e8c298031a1e117ee8974d41681402701c16a872acd57ae9fa341e8ead7c",
+      "source_sha256": "91e3e8c298031a1e117ee8974d41681402701c16a872acd57ae9fa341e8ead7c",
+      "bytes": 1668
+    },
+    {
+      "path": "originals/codex-user/archify/test/route-journey.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b00d943fc8762dc062b5bc0981b0fb612233b948ca590eee50070c898bfac264",
+      "source_sha256": "b00d943fc8762dc062b5bc0981b0fb612233b948ca590eee50070c898bfac264",
+      "bytes": 8156
+    },
+    {
+      "path": "originals/codex-user/archify/test/route-probe.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "3bc76e9426254f5589466e1fa3d10c826b4e5e883f6b7f67bc371061c3405f25",
+      "source_sha256": "3bc76e9426254f5589466e1fa3d10c826b4e5e883f6b7f67bc371061c3405f25",
+      "bytes": 6334
+    },
+    {
+      "path": "originals/codex-user/archify/test/route-share-card.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "da8a73f42167d6fa47041f818aa6e8bde4fe6b614ad3441a9a7ac30c15db1709",
+      "source_sha256": "da8a73f42167d6fa47041f818aa6e8bde4fe6b614ad3441a9a7ac30c15db1709",
+      "bytes": 9588
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-camera.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "2f547c8eee6519371ebe72343428ee1bf0f94f7a072b8c1eae02a7c73fde327e",
+      "source_sha256": "2f547c8eee6519371ebe72343428ee1bf0f94f7a072b8c1eae02a7c73fde327e",
+      "bytes": 4862
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-flow.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "305dad25e06dc01825f01cb6889411cc7a6db36ceaac624f7bc6c6136ce53a76",
+      "source_sha256": "305dad25e06dc01825f01cb6889411cc7a6db36ceaac624f7bc6c6136ce53a76",
+      "bytes": 4797
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-legend-gateway.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "a2aaf49464f2d5a48612dc3dcb60bb557de85da5c11ca9f6fea3373c011fd820",
+      "source_sha256": "a2aaf49464f2d5a48612dc3dcb60bb557de85da5c11ca9f6fea3373c011fd820",
+      "bytes": 7720
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-lens.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "d7a5532c3df8fa2e95d5b5d7b3648a8e95b6974ab379846a6e15e12b89c8795b",
+      "source_sha256": "d7a5532c3df8fa2e95d5b5d7b3648a8e95b6974ab379846a6e15e12b89c8795b",
+      "bytes": 5573
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-passport.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4d1b5e2c4d30c05ebdb8093f7577b63e855a1651620e81da1570a25bc2a95029",
+      "source_sha256": "4d1b5e2c4d30c05ebdb8093f7577b63e855a1651620e81da1570a25bc2a95029",
+      "bytes": 5818
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-radar.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0b5e17d85af6fbc5e84c95b0187ec635191b1909020e537e1d1beb6c839963ba",
+      "source_sha256": "0b5e17d85af6fbc5e84c95b0187ec635191b1909020e537e1d1beb6c839963ba",
+      "bytes": 27807
+    },
+    {
+      "path": "originals/codex-user/archify/test/semantic-zoom.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "c92a4e0e480ceac71bccad78fafe2fac9a4f74b72213ea3824ff53e8646e216a",
+      "source_sha256": "c92a4e0e480ceac71bccad78fafe2fac9a4f74b72213ea3824ff53e8646e216a",
+      "bytes": 4439
+    },
+    {
+      "path": "originals/codex-user/archify/test/sequence-column-fit.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e3de2b0837390d31481c2d0533aed467de0263439b494843eff992060e5b0dd6",
+      "source_sha256": "e3de2b0837390d31481c2d0533aed467de0263439b494843eff992060e5b0dd6",
+      "bytes": 6033
+    },
+    {
+      "path": "originals/codex-user/archify/test/settled-flow.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e079d492252d77612439fc055a6d79ef545829b12539aefac496f796ac90165e",
+      "source_sha256": "e079d492252d77612439fc055a6d79ef545829b12539aefac496f796ac90165e",
+      "bytes": 5297
+    },
+    {
+      "path": "originals/codex-user/archify/test/share-card-export.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "635ebf918753136fd8dad6f40e01676fd993b64a5869d7a40620253959c8ec2e",
+      "source_sha256": "635ebf918753136fd8dad6f40e01676fd993b64a5869d7a40620253959c8ec2e",
+      "bytes": 7039
+    },
+    {
+      "path": "originals/codex-user/archify/test/site-language-continuity.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "9a9bc4ce25a5573b64534aa9d9ccc37b6b4c2874886f072790c450d70dff1c9c",
+      "source_sha256": "9a9bc4ce25a5573b64534aa9d9ccc37b6b4c2874886f072790c450d70dff1c9c",
+      "bytes": 25614
+    },
+    {
+      "path": "originals/codex-user/archify/test/site-language-integration.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fa1ea2ceeecfb4c675e07e07fe614d6c1a1aa0d28fd9cef3d3df978b694580d7",
+      "source_sha256": "fa1ea2ceeecfb4c675e07e07fe614d6c1a1aa0d28fd9cef3d3df978b694580d7",
+      "bytes": 377
+    },
+    {
+      "path": "originals/codex-user/archify/test/skill-metadata.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "fbb258131c5b5eb7450d7c4abcedad4fc2724dc1a899093222971198ed5f41eb",
+      "source_sha256": "fbb258131c5b5eb7450d7c4abcedad4fc2724dc1a899093222971198ed5f41eb",
+      "bytes": 4862
+    },
+    {
+      "path": "originals/codex-user/archify/test/stable-update-manifest.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "15e15dfb5bd45852fb1f00acde4270695c99eefbbc14db75b465028fa5134ef5",
+      "source_sha256": "15e15dfb5bd45852fb1f00acde4270695c99eefbbc14db75b465028fa5134ef5",
+      "bytes": 6634
+    },
+    {
+      "path": "originals/codex-user/archify/test/start-page.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ecd6628cd8336068782a9f67ee72d415d06e494cb953d029ea4320ebbfa7d7c6",
+      "source_sha256": "ecd6628cd8336068782a9f67ee72d415d06e494cb953d029ea4320ebbfa7d7c6",
+      "bytes": 14020
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-beat-navigator.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "6b6c0ab5b396e8a608d337cd8e351d4118a75678a5d90620943249b1bc53d7b0",
+      "source_sha256": "6b6c0ab5b396e8a608d337cd8e351d4118a75678a5d90620943249b1bc53d7b0",
+      "bytes": 6583
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-carrier.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "05143cd9c5f28ac5041fcb46daddf830ac171c0bf72335a8f9623a14916bf8bc",
+      "source_sha256": "05143cd9c5f28ac5041fcb46daddf830ac171c0bf72335a8f9623a14916bf8bc",
+      "bytes": 4838
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-director-strip.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "8ab2e1ff83cb63384ef9d2b459f7d86b2e7de767a30173b845009a02d26a7cce",
+      "source_sha256": "8ab2e1ff83cb63384ef9d2b459f7d86b2e7de767a30173b845009a02d26a7cce",
+      "bytes": 5099
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-follow-camera.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "edc511d606a6eb18e41d8110a6fb9c9c0958c5638dce109ffb7968151cc709d7",
+      "source_sha256": "edc511d606a6eb18e41d8110a6fb9c9c0958c5638dce109ffb7968151cc709d7",
+      "bytes": 5952
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-horizon.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "4136e9b4e296048e422f44d64e3d10f9d81884d1a6f099d5eb0c33c4c1e5d8dd",
+      "source_sha256": "4136e9b4e296048e422f44d64e3d10f9d81884d1a6f099d5eb0c33c4c1e5d8dd",
+      "bytes": 5294
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-moment-link.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "acd13d838b3af58058a68dca90b7f4aad81a4d2fea7e6a89afd3a21345aa2207",
+      "source_sha256": "acd13d838b3af58058a68dca90b7f4aad81a4d2fea7e6a89afd3a21345aa2207",
+      "bytes": 5771
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-shelf.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b734d038ca09136f46b5b514d1f19b8ca8bfa3377839d27cbcc338179c7da210",
+      "source_sha256": "b734d038ca09136f46b5b514d1f19b8ca8bfa3377839d27cbcc338179c7da210",
+      "bytes": 4836
+    },
+    {
+      "path": "originals/codex-user/archify/test/story-trail.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "9ec4a06fcd365cc7a4ecc31927a004d98a62bab0eb6f3dd9feefa4e9f7ae009b",
+      "source_sha256": "9ec4a06fcd365cc7a4ecc31927a004d98a62bab0eb6f3dd9feefa4e9f7ae009b",
+      "bytes": 4226
+    },
+    {
+      "path": "originals/codex-user/archify/test/toolbar-polish.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "09903e134954fa7dccfafc164e25cd2f3680b7323d5b92c6e06abf8f6b572bb2",
+      "source_sha256": "09903e134954fa7dccfafc164e25cd2f3680b7323d5b92c6e06abf8f6b572bb2",
+      "bytes": 4060
+    },
+    {
+      "path": "originals/codex-user/archify/test/update-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "b4b98e73569308570f2a7f598d1e251487007739aeee761010884bc352b2dd13",
+      "source_sha256": "b4b98e73569308570f2a7f598d1e251487007739aeee761010884bc352b2dd13",
+      "bytes": 4862
+    },
+    {
+      "path": "originals/codex-user/archify/test/update-notifier.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "af92b7847bc4212958b8f5a2cda22a1cb88d0597f4755387071b725e0a935313",
+      "source_sha256": "af92b7847bc4212958b8f5a2cda22a1cb88d0597f4755387071b725e0a935313",
+      "bytes": 123824
+    },
+    {
+      "path": "originals/codex-user/archify/test/v1-compatibility.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "5c8e25a164419fb1b959b29dbc6870be37872baad99a6cbdc2f5beb0b7c45bf7",
+      "source_sha256": "5c8e25a164419fb1b959b29dbc6870be37872baad99a6cbdc2f5beb0b7c45bf7",
+      "bytes": 12765
+    },
+    {
+      "path": "originals/codex-user/archify/test/vertical-edge.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "0fe432c075babf181f1a80253882cd96234f22fc408f8109f90ffde3e8c9b436",
+      "source_sha256": "0fe432c075babf181f1a80253882cd96234f22fc408f8109f90ffde3e8c9b436",
+      "bytes": 2773
+    },
+    {
+      "path": "originals/codex-user/archify/test/viewer-chrome-layout.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "5ad88141fb74fea23c8a960be5502f42b08dd63ccd9b40dbdc9bc163d9d77ed0",
+      "source_sha256": "5ad88141fb74fea23c8a960be5502f42b08dd63ccd9b40dbdc9bc163d9d77ed0",
+      "bytes": 41514
+    },
+    {
+      "path": "originals/codex-user/archify/test/visual-check.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ea7a694b966cb661d694f86b9cce17c3be9ac4199d461e5bb30da1fbade07607",
+      "source_sha256": "ea7a694b966cb661d694f86b9cce17c3be9ac4199d461e5bb30da1fbade07607",
+      "bytes": 16230
+    },
+    {
+      "path": "originals/codex-user/archify/test/webm-artifact.smoke.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "99444dd6a61ec307c8bb3d18378233bf67cd9ee4e025e2f46007c69c0115a502",
+      "source_sha256": "99444dd6a61ec307c8bb3d18378233bf67cd9ee4e025e2f46007c69c0115a502",
+      "bytes": 99943
+    },
+    {
+      "path": "originals/codex-user/archify/test/workflow-compiler-hard-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "e5c114a7ab2e3e5db07c82c6a08c6ec16b7cd4a6e371c49ae98fc7b6ca94cc2f",
+      "source_sha256": "e5c114a7ab2e3e5db07c82c6a08c6ec16b7cd4a6e371c49ae98fc7b6ca94cc2f",
+      "bytes": 87025
+    },
+    {
+      "path": "originals/codex-user/archify/test/workflow-compiler.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "41c052e70a1cce95f220e5c2a472d9d8f5d9cf39febb050a057d48fdff4ba2bf",
+      "source_sha256": "41c052e70a1cce95f220e5c2a472d9d8f5d9cf39febb050a057d48fdff4ba2bf",
+      "bytes": 44138
+    },
+    {
+      "path": "originals/codex-user/archify/test/workflow-migration.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "cb41f629c99b35384d93f94cd9984da2cfc83225c058cb65938633dd1c67d1fb",
+      "source_sha256": "cb41f629c99b35384d93f94cd9984da2cfc83225c058cb65938633dd1c67d1fb",
+      "bytes": 25724
+    },
+    {
+      "path": "originals/codex-user/archify/test/workflow-semantic-contract.test.mjs",
+      "package": "codex-user/archify",
+      "kind": "original",
+      "sha256": "ea3ee45fcc037045c2d8b0ff1776a6ea1afb01c73858af64e7c39bb1bd16ae1e",
+      "source_sha256": "ea3ee45fcc037045c2d8b0ff1776a6ea1afb01c73858af64e7c39bb1bd16ae1e",
+      "bytes": 4565
+    },
+    {
+      "path": "originals/codex-user/research-critical-review/SKILL.md",
+      "package": "codex-user/research-critical-review",
+      "kind": "original",
+      "sha256": "db2a9260aa9b8e0095583b8b2aa9321b3d0d9fc2db121e0e60d99ece3f18104d",
+      "source_sha256": "db2a9260aa9b8e0095583b8b2aa9321b3d0d9fc2db121e0e60d99ece3f18104d",
+      "bytes": 2647
+    },
+    {
+      "path": "originals/codex-user/research-critical-review/agents/openai.yaml",
+      "package": "codex-user/research-critical-review",
+      "kind": "original",
+      "sha256": "31ba4e2549c3d2ea2d3bc151df13112378474c7f76fa4d4652dae8584a953b21",
+      "source_sha256": "31ba4e2549c3d2ea2d3bc151df13112378474c7f76fa4d4652dae8584a953b21",
+      "bytes": 266
+    },
+    {
+      "path": "originals/codex-user/research-experiment-plan/SKILL.md",
+      "package": "codex-user/research-experiment-plan",
+      "kind": "original",
+      "sha256": "179a44037e458701cf5f83fcd816885752d15aa91f7b42f0ba907f5282050cd0",
+      "source_sha256": "179a44037e458701cf5f83fcd816885752d15aa91f7b42f0ba907f5282050cd0",
+      "bytes": 2741
+    },
+    {
+      "path": "originals/codex-user/research-experiment-plan/agents/openai.yaml",
+      "package": "codex-user/research-experiment-plan",
+      "kind": "original",
+      "sha256": "e3bf44c0ad3cc7a0873e03e7ab7bcaaa5431fd6170edaec3901f9068c68eca60",
+      "source_sha256": "e3bf44c0ad3cc7a0873e03e7ab7bcaaa5431fd6170edaec3901f9068c68eca60",
+      "bytes": 257
+    },
+    {
+      "path": "originals/codex-user/research-experiment-plan/references/experiment-contract.md",
+      "package": "codex-user/research-experiment-plan",
+      "kind": "original",
+      "sha256": "1b1f2ff6e7fcb444ceb11db1e64b9d0bdb65b86c01492e69ad28471c6d45d17b",
+      "source_sha256": "1b1f2ff6e7fcb444ceb11db1e64b9d0bdb65b86c01492e69ad28471c6d45d17b",
+      "bytes": 1703
+    },
+    {
+      "path": "originals/codex-user/research-hypothesis/SKILL.md",
+      "package": "codex-user/research-hypothesis",
+      "kind": "original",
+      "sha256": "4e9b9d49209c4c1dbcb92ca1965af26376d392cd9cb3f899d273210727cdf24f",
+      "source_sha256": "4e9b9d49209c4c1dbcb92ca1965af26376d392cd9cb3f899d273210727cdf24f",
+      "bytes": 2272
+    },
+    {
+      "path": "originals/codex-user/research-hypothesis/agents/openai.yaml",
+      "package": "codex-user/research-hypothesis",
+      "kind": "original",
+      "sha256": "224b5038649b218e6e1461573401d3f5497d1a493d875bfc61832123fcb59f6e",
+      "source_sha256": "224b5038649b218e6e1461573401d3f5497d1a493d875bfc61832123fcb59f6e",
+      "bytes": 237
+    },
+    {
+      "path": "originals/codex-user/research-numbers-audit/SKILL.md",
+      "package": "codex-user/research-numbers-audit",
+      "kind": "original",
+      "sha256": "91e8693fcf56251a1de46de1bdc7224772c61e2423c65ef2b2c77e5e41b4e526",
+      "source_sha256": "91e8693fcf56251a1de46de1bdc7224772c61e2423c65ef2b2c77e5e41b4e526",
+      "bytes": 2545
+    },
+    {
+      "path": "originals/codex-user/research-numbers-audit/agents/openai.yaml",
+      "package": "codex-user/research-numbers-audit",
+      "kind": "original",
+      "sha256": "538422da3ab26cdb768486e7a551d965eb7e6c263b132a3b35788f96b689b0c6",
+      "source_sha256": "538422da3ab26cdb768486e7a551d965eb7e6c263b132a3b35788f96b689b0c6",
+      "bytes": 258
+    },
+    {
+      "path": "originals/codex-user/research-numbers-audit/references/limitations.md",
+      "package": "codex-user/research-numbers-audit",
+      "kind": "original",
+      "sha256": "bf50ae3218667e71080ca36b643824135adc896344af84c795e3e13b9be4d4c5",
+      "source_sha256": "bf50ae3218667e71080ca36b643824135adc896344af84c795e3e13b9be4d4c5",
+      "bytes": 1758
+    },
+    {
+      "path": "originals/codex-user/research-numbers-audit/scripts/build_registry.py",
+      "package": "codex-user/research-numbers-audit",
+      "kind": "original",
+      "sha256": "325636a99232f6774e6aeaac4e45308a33c1c8280e44bb8290a1b9a9753783c4",
+      "source_sha256": "325636a99232f6774e6aeaac4e45308a33c1c8280e44bb8290a1b9a9753783c4",
+      "bytes": 2805
+    },
+    {
+      "path": "originals/codex-user/research-numbers-audit/scripts/extract_numbers.py",
+      "package": "codex-user/research-numbers-audit",
+      "kind": "original",
+      "sha256": "d08ac8e30e0a3ef0ee9215cc6739cbec76077c15974e4b3fcc4f329c8761222b",
+      "source_sha256": "d08ac8e30e0a3ef0ee9215cc6739cbec76077c15974e4b3fcc4f329c8761222b",
+      "bytes": 7821
+    },
+    {
+      "path": "originals/codex-user/research-numbers-audit/scripts/verify.py",
+      "package": "codex-user/research-numbers-audit",
+      "kind": "original",
+      "sha256": "c8edbc1fa027bb693b879a960d9b2455c012c1af1c0304337b4248a4403a1d5a",
+      "source_sha256": "c8edbc1fa027bb693b879a960d9b2455c012c1af1c0304337b4248a4403a1d5a",
+      "bytes": 10808
+    },
+    {
+      "path": "originals/codex-user/research-paper-card/SKILL.md",
+      "package": "codex-user/research-paper-card",
+      "kind": "original",
+      "sha256": "dfb90d723cd1d064ca2579f03af704412df85d06c7990d3c7ff0a088ad77ae7b",
+      "source_sha256": "dfb90d723cd1d064ca2579f03af704412df85d06c7990d3c7ff0a088ad77ae7b",
+      "bytes": 2799
+    },
+    {
+      "path": "originals/codex-user/research-paper-card/agents/openai.yaml",
+      "package": "codex-user/research-paper-card",
+      "kind": "original",
+      "sha256": "88e6225fef1a8ca43ce5448aa6c033fedbec8aeedfd8c959e69b44cd2d1b988a",
+      "source_sha256": "88e6225fef1a8ca43ce5448aa6c033fedbec8aeedfd8c959e69b44cd2d1b988a",
+      "bytes": 228
+    },
+    {
+      "path": "originals/codex-user/research-reflection/SKILL.md",
+      "package": "codex-user/research-reflection",
+      "kind": "original",
+      "sha256": "17fd0d7a9504659ac8accfaf49ca2a4a4400324734c0dc36566174adbc7b0ee9",
+      "source_sha256": "17fd0d7a9504659ac8accfaf49ca2a4a4400324734c0dc36566174adbc7b0ee9",
+      "bytes": 2039
+    },
+    {
+      "path": "originals/codex-user/research-reflection/agents/openai.yaml",
+      "package": "codex-user/research-reflection",
+      "kind": "original",
+      "sha256": "980deae765be9ee5c8dfc3ce109d591e3359d8ad53102ba0fe0eae9a4c4ce809",
+      "source_sha256": "980deae765be9ee5c8dfc3ce109d591e3359d8ad53102ba0fe0eae9a4c4ce809",
+      "bytes": 243
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/SKILL.md",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "9ee1536aaf7c6554d51cddb1327223b20de260ad04105eb824fc7729b7ff341f",
+      "source_sha256": "9ee1536aaf7c6554d51cddb1327223b20de260ad04105eb824fc7729b7ff341f",
+      "bytes": 6331
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/agents/openai.yaml",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "56ffdc64e6bbf0958f9e7ac6402c3ec2fc5871f93ced7c6b5f3c04495b6917d3",
+      "source_sha256": "56ffdc64e6bbf0958f9e7ac6402c3ec2fc5871f93ced7c6b5f3c04495b6917d3",
+      "bytes": 310
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/assets/report-template/main.tex",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "68fafc3b3ef061b7d280e9ca2b7cbd255f4aaed830fbbfe939a72020f6d03dcf",
+      "source_sha256": "68fafc3b3ef061b7d280e9ca2b7cbd255f4aaed830fbbfe939a72020f6d03dcf",
+      "bytes": 7271
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/assets/report-template/references.bib",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "68a4007f612b49be770deb3301322666eb247b8a7e41a73d7e3b6bc3c07b1c09",
+      "source_sha256": "68a4007f612b49be770deb3301322666eb247b8a7e41a73d7e3b6bc3c07b1c09",
+      "bytes": 151
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/references/evidence-schema.md",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "42796510e3bdeeb6a05ffcbbec1b3db96214a31e2d9caf01e4806e324c052ded",
+      "source_sha256": "42796510e3bdeeb6a05ffcbbec1b3db96214a31e2d9caf01e4806e324c052ded",
+      "bytes": 3011
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/references/evidence-workflow.md",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "8df148a2281146c331f20ac3adc89d9777cd8eebabc2eb7108af9fedd974f013",
+      "source_sha256": "8df148a2281146c331f20ac3adc89d9777cd8eebabc2eb7108af9fedd974f013",
+      "bytes": 3828
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/references/latex-authoring.md",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "660f5871ec1a7553394b36c4b5dc66b1fd0e320b1acfd8040c2a83a7328aa924",
+      "source_sha256": "660f5871ec1a7553394b36c4b5dc66b1fd0e320b1acfd8040c2a83a7328aa924",
+      "bytes": 4437
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/scripts/compile_report.py",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "30da88396549c02c8f1c657d9422d8da52a9f80c12b4aede5e9756aad3d0afd6",
+      "source_sha256": "30da88396549c02c8f1c657d9422d8da52a9f80c12b4aede5e9756aad3d0afd6",
+      "bytes": 22791
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/scripts/init_report.py",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "250d65464e568d949eb849be03f730cc28c5f20c7477bb0ecee39152c66ade4e",
+      "source_sha256": "250d65464e568d949eb849be03f730cc28c5f20c7477bb0ecee39152c66ade4e",
+      "bytes": 3483
+    },
+    {
+      "path": "originals/codex-user/research-report-latex/scripts/validate_evidence.py",
+      "package": "codex-user/research-report-latex",
+      "kind": "original",
+      "sha256": "5d0a5b91de0548d802ce90ba538848de92cefe671ab5a564096c62e53d461bf1",
+      "source_sha256": "5d0a5b91de0548d802ce90ba538848de92cefe671ab5a564096c62e53d461bf1",
+      "bytes": 9352
+    },
+    {
+      "path": "originals/codex-user/research-reproduction-plan/SKILL.md",
+      "package": "codex-user/research-reproduction-plan",
+      "kind": "original",
+      "sha256": "86d1f02ebc56a6988e54c82632a40a81c745d21eb7218dae2d55e33ce782435c",
+      "source_sha256": "86d1f02ebc56a6988e54c82632a40a81c745d21eb7218dae2d55e33ce782435c",
+      "bytes": 3048
+    },
+    {
+      "path": "originals/codex-user/research-reproduction-plan/agents/openai.yaml",
+      "package": "codex-user/research-reproduction-plan",
+      "kind": "original",
+      "sha256": "400c865239300b9870dfbd23d78f52d899f0bb3644ccfaf75b01983460df4dbe",
+      "source_sha256": "400c865239300b9870dfbd23d78f52d899f0bb3644ccfaf75b01983460df4dbe",
+      "bytes": 248
+    },
+    {
+      "path": "originals/codex-user/research-reproduction-plan/references/output-contract.md",
+      "package": "codex-user/research-reproduction-plan",
+      "kind": "original",
+      "sha256": "ee5e79250786ea5e1dca1bcd5946aef630e2249eb2b2936388ce6ca5b401352a",
+      "source_sha256": "ee5e79250786ea5e1dca1bcd5946aef630e2249eb2b2936388ce6ca5b401352a",
+      "bytes": 1768
+    },
+    {
+      "path": "originals/codex-user/research-run-diagnosis/SKILL.md",
+      "package": "codex-user/research-run-diagnosis",
+      "kind": "original",
+      "sha256": "2e444a8527dabc828e3a778d25a2eb38230a0ab46811d3ee3774cd1cc9c04f49",
+      "source_sha256": "2e444a8527dabc828e3a778d25a2eb38230a0ab46811d3ee3774cd1cc9c04f49",
+      "bytes": 2769
+    },
+    {
+      "path": "originals/codex-user/research-run-diagnosis/agents/openai.yaml",
+      "package": "codex-user/research-run-diagnosis",
+      "kind": "original",
+      "sha256": "08c12f98299bdef62cd1da8a07450a0c8cb48e3f8ca688c59d403919e709f0cb",
+      "source_sha256": "08c12f98299bdef62cd1da8a07450a0c8cb48e3f8ca688c59d403919e709f0cb",
+      "bytes": 245
+    },
+    {
+      "path": "originals/codex-user/research-survey/SKILL.md",
+      "package": "codex-user/research-survey",
+      "kind": "original",
+      "sha256": "e9262ac0a56eb04d5bb54208c22ad173535629e7c63e03361ad82f278ab2bd82",
+      "source_sha256": "e9262ac0a56eb04d5bb54208c22ad173535629e7c63e03361ad82f278ab2bd82",
+      "bytes": 3274
+    },
+    {
+      "path": "originals/codex-user/research-survey/agents/openai.yaml",
+      "package": "codex-user/research-survey",
+      "kind": "original",
+      "sha256": "37d34a00d51c30f5c6d548bfadacdb122a5ce4edd7a5e98376e474a0c6f1df09",
+      "source_sha256": "37d34a00d51c30f5c6d548bfadacdb122a5ce4edd7a5e98376e474a0c6f1df09",
+      "bytes": 225
+    },
+    {
+      "path": "originals/codex-user/research-synthesis/SKILL.md",
+      "package": "codex-user/research-synthesis",
+      "kind": "original",
+      "sha256": "a975be8871f10a2aa2bae56ee9ddeeb059b5592f500c42beb988d860bce8d61d",
+      "source_sha256": "a975be8871f10a2aa2bae56ee9ddeeb059b5592f500c42beb988d860bce8d61d",
+      "bytes": 2201
+    },
+    {
+      "path": "originals/codex-user/research-synthesis/agents/openai.yaml",
+      "package": "codex-user/research-synthesis",
+      "kind": "original",
+      "sha256": "d659e64902bad30981c78a05311316b9020bd755c064fc70e7f1da18676ecf9e",
+      "source_sha256": "d659e64902bad30981c78a05311316b9020bd755c064fc70e7f1da18676ecf9e",
+      "bytes": 241
+    },
+    {
+      "path": "originals/codex-user/resume-experience-refiner/SKILL.md",
+      "package": "codex-user/resume-experience-refiner",
+      "kind": "original",
+      "sha256": "c1d6c35f28798782b8952405c6cdabd5c0ec2596435e823fb03da706876d78fc",
+      "source_sha256": "c1d6c35f28798782b8952405c6cdabd5c0ec2596435e823fb03da706876d78fc",
+      "bytes": 7944
+    },
+    {
+      "path": "originals/codex-user/resume-experience-refiner/agents/openai.yaml",
+      "package": "codex-user/resume-experience-refiner",
+      "kind": "original",
+      "sha256": "f773eac8b5af0d1394e2daae1a6de5aacda2b67e24dd6ab5fe38c1cf450058a1",
+      "source_sha256": "f773eac8b5af0d1394e2daae1a6de5aacda2b67e24dd6ab5fe38c1cf450058a1",
+      "bytes": 382
+    },
+    {
+      "path": "originals/codex-user/resume-experience-refiner/references/technical-examples.md",
+      "package": "codex-user/resume-experience-refiner",
+      "kind": "original",
+      "sha256": "c0bab51273a5a5153a0ded26f14a8299f2a6305e16639b9ef835baebcc93d290",
+      "source_sha256": "c0bab51273a5a5153a0ded26f14a8299f2a6305e16639b9ef835baebcc93d290",
+      "bytes": 4251
+    },
+    {
+      "path": "originals/openai-runtime/documents/LICENSE.txt",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "8813425a1a5e8b7e85ab614e67ccdba9887dd24eddd5c23ec7a65774fd9512e6",
+      "source_sha256": "8813425a1a5e8b7e85ab614e67ccdba9887dd24eddd5c23ec7a65774fd9512e6",
+      "bytes": 1418
+    },
+    {
+      "path": "originals/openai-runtime/documents/SKILL.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "db351f7db520a130f33227999e55d9cc61a95b93660e1506d9a9a9fe90c9f916",
+      "source_sha256": "db351f7db520a130f33227999e55d9cc61a95b93660e1506d9a9a9fe90c9f916",
+      "bytes": 41509
+    },
+    {
+      "path": "originals/openai-runtime/documents/agents/openai.yaml",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "9cb59671d78ffbf1bded814c436a80f37235f22cfe1104a2777f758b5027881d",
+      "source_sha256": "9cb59671d78ffbf1bded814c436a80f37235f22cfe1104a2777f758b5027881d",
+      "bytes": 314
+    },
+    {
+      "path": "originals/openai-runtime/documents/assets/file-document.png",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "faec8ad51ed2c8db6bb7ba51aa4be1d5d88b80974f7f3c167d56781fbb8d3218",
+      "source_sha256": "faec8ad51ed2c8db6bb7ba51aa4be1d5d88b80974f7f3c167d56781fbb8d3218",
+      "bytes": 10876
+    },
+    {
+      "path": "originals/openai-runtime/documents/container_tools/mark_artifact_operation_started.mjs",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "47346366f9978dbfb5f4a24defe00c130685d0f75aeb34505a32a66dea63a28e",
+      "source_sha256": "47346366f9978dbfb5f4a24defe00c130685d0f75aeb34505a32a66dea63a28e",
+      "bytes": 714
+    },
+    {
+      "path": "originals/openai-runtime/documents/examples/end_to_end_smoke_test.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "f22a157a989b179c0837ee125e224989d53f6d69430ab27fd47bc52a2bb7ddd8",
+      "source_sha256": "f22a157a989b179c0837ee125e224989d53f6d69430ab27fd47bc52a2bb7ddd8",
+      "bytes": 930
+    },
+    {
+      "path": "originals/openai-runtime/documents/manifest.txt",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "50f5eba22f13e0e0cabbb0d77f3d455e6102a5b1b0580fcbaa9b99bcde070ad8",
+      "source_sha256": "50f5eba22f13e0e0cabbb0d77f3d455e6102a5b1b0580fcbaa9b99bcde070ad8",
+      "bytes": 2068
+    },
+    {
+      "path": "originals/openai-runtime/documents/ooxml/comments.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "92b0eb16648d904794849bdafe1839c92546183b07086e0152569ee3189f8581",
+      "source_sha256": "92b0eb16648d904794849bdafe1839c92546183b07086e0152569ee3189f8581",
+      "bytes": 1879
+    },
+    {
+      "path": "originals/openai-runtime/documents/ooxml/hyperlinks_and_fields.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "470b6c722d12f614fdd8bd9da66aa9983a3f5c4494c76b5def6ebec668327af6",
+      "source_sha256": "470b6c722d12f614fdd8bd9da66aa9983a3f5c4494c76b5def6ebec668327af6",
+      "bytes": 2505
+    },
+    {
+      "path": "originals/openai-runtime/documents/ooxml/rels_and_content_types.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "0ced7d74f478f6b0ce22648c0f3191b89e863c86af3347288872bb2444e1e365",
+      "source_sha256": "0ced7d74f478f6b0ce22648c0f3191b89e863c86af3347288872bb2444e1e365",
+      "bytes": 1381
+    },
+    {
+      "path": "originals/openai-runtime/documents/ooxml/tracked_changes.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "ce323acd138ed056b3a3fcee8825db14737fc881a4a10af1f74fead0e4e2d77c",
+      "source_sha256": "ce323acd138ed056b3a3fcee8825db14737fc881a4a10af1f74fead0e4e2d77c",
+      "bytes": 1653
+    },
+    {
+      "path": "originals/openai-runtime/documents/references/template-elicitation.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "2353c874fc94c7a87116a1ecda4c8119fa3ba5e0e053e6b82115be42bbc6eabc",
+      "source_sha256": "2353c874fc94c7a87116a1ecda4c8119fa3ba5e0e053e6b82115be42bbc6eabc",
+      "bytes": 1482
+    },
+    {
+      "path": "originals/openai-runtime/documents/render_docx.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "876d5993324e2faaaa96a68a4f7504642e9a07e6df265b385b2baa03b231369e",
+      "source_sha256": "876d5993324e2faaaa96a68a4f7504642e9a07e6df265b385b2baa03b231369e",
+      "bytes": 19702
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/a11y_audit.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "f79d0c4a9c95bee33c40a9cffffc2132ee8f040060c762e8d77b93b887307c5d",
+      "source_sha256": "f79d0c4a9c95bee33c40a9cffffc2132ee8f040060c762e8d77b93b887307c5d",
+      "bytes": 12835
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/accept_tracked_changes.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "44c51cf86cb731c1a8823512dbf609556b51b3761e6f5785ac92d1a684095d88",
+      "source_sha256": "44c51cf86cb731c1a8823512dbf609556b51b3761e6f5785ac92d1a684095d88",
+      "bytes": 5547
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/add_tracked_replacements.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "0570b107023c5f474ff70e6f1d692906da275fb19e584284d7ad3ad799c7bf2f",
+      "source_sha256": "0570b107023c5f474ff70e6f1d692906da275fb19e584284d7ad3ad799c7bf2f",
+      "bytes": 5861
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/apply_template_styles.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "9b7c26dbaf86d0cbb6bf025f838be21d10227585c22edbdd46819d55fe862382",
+      "source_sha256": "9b7c26dbaf86d0cbb6bf025f838be21d10227585c22edbdd46819d55fe862382",
+      "bytes": 4049
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/captions_and_crossrefs.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "edd301fbbef36124231fc8b554bf2e04c41564fd97158e3351ea7eeeefd3b6d0",
+      "source_sha256": "edd301fbbef36124231fc8b554bf2e04c41564fd97158e3351ea7eeeefd3b6d0",
+      "bytes": 9678
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/comments_add.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "3bdd93009ce708d7c743175f570c81af7e443c5c8d1daa3eb58ad2276b073841",
+      "source_sha256": "3bdd93009ce708d7c743175f570c81af7e443c5c8d1daa3eb58ad2276b073841",
+      "bytes": 8644
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/comments_apply_patch.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "a4e883b291186614242e8d4a05af7e5566dadb1af83ce23d6bc23e4ef50db005",
+      "source_sha256": "a4e883b291186614242e8d4a05af7e5566dadb1af83ce23d6bc23e4ef50db005",
+      "bytes": 4926
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/comments_extract.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "7dbe95897a260bdf1be924dcaee9c297114a5b98beddb6966cbc3b107a58ddb6",
+      "source_sha256": "7dbe95897a260bdf1be924dcaee9c297114a5b98beddb6966cbc3b107a58ddb6",
+      "bytes": 5421
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/comments_strip.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "ebfb3b200d687bbcc3c9dfec02af2d71fec212a8aa2cafe7d002ebc14846ead2",
+      "source_sha256": "ebfb3b200d687bbcc3c9dfec02af2d71fec212a8aa2cafe7d002ebc14846ead2",
+      "bytes": 4856
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/content_controls.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "db91dd3ebccca52b101d4d21f2ee521d461d9e72f12bc0bcf8bc730f8362e38b",
+      "source_sha256": "db91dd3ebccca52b101d4d21f2ee521d461d9e72f12bc0bcf8bc730f8362e38b",
+      "bytes": 11493
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/docx_ooxml_patch.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "81139a0bee721b382af03770b4c0940236b8983d999800c4cab1f865f07d529b",
+      "source_sha256": "81139a0bee721b382af03770b4c0940236b8983d999800c4cab1f865f07d529b",
+      "bytes": 22103
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/docx_table_to_csv.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "09aa8765e93343cc9d3de9640b95d6bb55491c8f2400c0cbc1f24eb18a8ddd15",
+      "source_sha256": "09aa8765e93343cc9d3de9640b95d6bb55491c8f2400c0cbc1f24eb18a8ddd15",
+      "bytes": 2106
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/fields_materialize.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "edcff5cc4fb6a41225dc61363fab4f2455f5394e57973605e100f44a7c1ab78f",
+      "source_sha256": "edcff5cc4fb6a41225dc61363fab4f2455f5394e57973605e100f44a7c1ab78f",
+      "bytes": 10494
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/fields_report.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "7ebcfc4762b8a1747dc6eb3eed1e3a5ca0f986ac032044cb8a52b0e40b73eb14",
+      "source_sha256": "7ebcfc4762b8a1747dc6eb3eed1e3a5ca0f986ac032044cb8a52b0e40b73eb14",
+      "bytes": 5685
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/flatten_ref_fields.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "a4b9ae631a7715e21ea0cfb6ffd8ea154daf82b5d146249a4ee722962ca30981",
+      "source_sha256": "a4b9ae631a7715e21ea0cfb6ffd8ea154daf82b5d146249a4ee722962ca30981",
+      "bytes": 4718
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/footnotes_report.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "ee266dbdee950cba86277d665e89e52c74156b63f5173391fddfa1419f3ab68e",
+      "source_sha256": "ee266dbdee950cba86277d665e89e52c74156b63f5173391fddfa1419f3ab68e",
+      "bytes": 2905
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/google_docs_title_sanitize.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b74bf8b9f9bfde7964626eed0a80934b2f0cf2ada5edb8388adc47b49a2043fa",
+      "source_sha256": "b74bf8b9f9bfde7964626eed0a80934b2f0cf2ada5edb8388adc47b49a2043fa",
+      "bytes": 10066
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/heading_audit.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "9d2404ff9f942dd0daa428e79a0b806b56562053c1022932d80d47aa65c40953",
+      "source_sha256": "9d2404ff9f942dd0daa428e79a0b806b56562053c1022932d80d47aa65c40953",
+      "bytes": 3227
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/images_audit.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "7cca37d683392df99571ef5fdc916c8de99e289099c804344eb5b2548582baf6",
+      "source_sha256": "7cca37d683392df99571ef5fdc916c8de99e289099c804344eb5b2548582baf6",
+      "bytes": 5839
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/insert_note.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "6e38b070952d234b38a5e2c483d54be31458a87be617fcd018a6b926f93bc5f5",
+      "source_sha256": "6e38b070952d234b38a5e2c483d54be31458a87be617fcd018a6b926f93bc5f5",
+      "bytes": 9025
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/insert_ref_fields.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "05092d89dffb78ce372edab1209d6e687ba1b04a1f42de18ffafaeb3493dbfd9",
+      "source_sha256": "05092d89dffb78ce372edab1209d6e687ba1b04a1f42de18ffafaeb3493dbfd9",
+      "bytes": 7114
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/insert_toc.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "64a6f75c8bdad0f587bf17a6837ecf41a0e32f9a80640f37410890581cdb0742",
+      "source_sha256": "64a6f75c8bdad0f587bf17a6837ecf41a0e32f9a80640f37410890581cdb0742",
+      "bytes": 5088
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/internal_nav.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "e2952c87a98a51470624375b7303b671191e185421d082f0199a90e4d8efe285",
+      "source_sha256": "e2952c87a98a51470624375b7303b671191e185421d082f0199a90e4d8efe285",
+      "bytes": 11970
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/make_fixtures.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "712ee1c5974b5ff9a68f936d4cc07161b99c7bf217fdf3101265bf2ee98a65f2",
+      "source_sha256": "712ee1c5974b5ff9a68f936d4cc07161b99c7bf217fdf3101265bf2ee98a65f2",
+      "bytes": 8670
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/merge_docx_append.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "f0a9a2df6e2d4c8658336280953ab314524fa719cc58d8e0a917d3c6e8f84ccf",
+      "source_sha256": "f0a9a2df6e2d4c8658336280953ab314524fa719cc58d8e0a917d3c6e8f84ccf",
+      "bytes": 3842
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/privacy_scrub.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "3fe272d94eb1cfc3eb9b320e1f353cab67717310a2c2f1dde0dfb84580703013",
+      "source_sha256": "3fe272d94eb1cfc3eb9b320e1f353cab67717310a2c2f1dde0dfb84580703013",
+      "bytes": 5675
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/redact_docx.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b710db4bebbbcd131cb2195b7207b618633325b4d8218eb23c132b6f4803e8df",
+      "source_sha256": "b710db4bebbbcd131cb2195b7207b618633325b4d8218eb23c132b6f4803e8df",
+      "bytes": 9508
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/render_and_diff.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "ea05e15461d14cf7361492f011364fbc18b257b99e3b96b61ca783bf65058f07",
+      "source_sha256": "ea05e15461d14cf7361492f011364fbc18b257b99e3b96b61ca783bf65058f07",
+      "bytes": 4823
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/section_audit.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "ad3d11349bd30bbf430734a2db06fd9c8fd373b63640cfa5335176e467e7c2bd",
+      "source_sha256": "ad3d11349bd30bbf430734a2db06fd9c8fd373b63640cfa5335176e467e7c2bd",
+      "bytes": 2706
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/set_protection.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "a5b52f017c7ff51ab943e6c91388f66b8e5e6d0237b16c30e2ca40b8396937d2",
+      "source_sha256": "a5b52f017c7ff51ab943e6c91388f66b8e5e6d0237b16c30e2ca40b8396937d2",
+      "bytes": 4992
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/style_lint.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "52d762eb3535e641c547fbca458a5b6f2a252c4216d55d840a109d9215ffe4f8",
+      "source_sha256": "52d762eb3535e641c547fbca458a5b6f2a252c4216d55d840a109d9215ffe4f8",
+      "bytes": 5416
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/style_normalize.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "c18a2512a0220b4f2b2ba7627c19c34b9d5df637bba1a02a28a56eff895bcb20",
+      "source_sha256": "c18a2512a0220b4f2b2ba7627c19c34b9d5df637bba1a02a28a56eff895bcb20",
+      "bytes": 5661
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/table_geometry.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "4c54a00d7b489c88be096b09faf8431e1d0caa1787e2fec25ddcd1ada4212278",
+      "source_sha256": "4c54a00d7b489c88be096b09faf8431e1d0caa1787e2fec25ddcd1ada4212278",
+      "bytes": 9796
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/watermark_add.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "9e4deeb2f19e546216cf5aea38a8b22f32a479858aa08cecfa9ebfbf6ac1b9cb",
+      "source_sha256": "9e4deeb2f19e546216cf5aea38a8b22f32a479858aa08cecfa9ebfbf6ac1b9cb",
+      "bytes": 5322
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/watermark_audit_remove.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "3d3e79b6d8d901228ef05e7a6cfd0b6f61c33efa71658180ace3429e2688b4be",
+      "source_sha256": "3d3e79b6d8d901228ef05e7a6cfd0b6f61c33efa71658180ace3429e2688b4be",
+      "bytes": 4668
+    },
+    {
+      "path": "originals/openai-runtime/documents/scripts/xlsx_to_docx_table.py",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "dc80fa6575f95bd44d76c68a137cc7d838b04db49954b9c34815aa63d43db6b0",
+      "source_sha256": "dc80fa6575f95bd44d76c68a137cc7d838b04db49954b9c34815aa63d43db6b0",
+      "bytes": 5664
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/accessibility_a11y.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "de0497cb7a985230f1242bd5431c83bbc4e991936ef0ce55b2586689c52ee116",
+      "source_sha256": "de0497cb7a985230f1242bd5431c83bbc4e991936ef0ce55b2586689c52ee116",
+      "bytes": 1964
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/captions_crossrefs.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "609915b650b0dffc0e464313c5af5d23d28ce7912405f7132ef1533f4467edf0",
+      "source_sha256": "609915b650b0dffc0e464313c5af5d23d28ce7912405f7132ef1533f4467edf0",
+      "bytes": 3803
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/clean_tracked_changes.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "c6da6ee2286845978c3a42b37b6fcfeb0a81d47f73e849c9bb718290f7d13d39",
+      "source_sha256": "c6da6ee2286845978c3a42b37b6fcfeb0a81d47f73e849c9bb718290f7d13d39",
+      "bytes": 1669
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/comments_manage.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "0d7481ea7dc02d30b2c449570404663ff3843988c4296238e91a732707965014",
+      "source_sha256": "0d7481ea7dc02d30b2c449570404663ff3843988c4296238e91a732707965014",
+      "bytes": 2931
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/compare_diff.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "7d4b790e225c85fbcdfb35f38a13bd00af7c4e46cad4cc8e4c1a38364ca1afdd",
+      "source_sha256": "7d4b790e225c85fbcdfb35f38a13bd00af7c4e46cad4cc8e4c1a38364ca1afdd",
+      "bytes": 1172
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/create_edit.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "f5e4712c6eebd0b8aa7cf94c65bb4e9e7a63b5ba4a8d96215c56209946e2397b",
+      "source_sha256": "f5e4712c6eebd0b8aa7cf94c65bb4e9e7a63b5ba4a8d96215c56209946e2397b",
+      "bytes": 1740
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/equations.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b47c2806369f47440b95a2e6ac5c254d419faa69e8bb98da446aa9dd4594ca74",
+      "source_sha256": "b47c2806369f47440b95a2e6ac5c254d419faa69e8bb98da446aa9dd4594ca74",
+      "bytes": 4571
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/fields_update.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "7ebf8e25e9f32e7264489cb5e3a3f07e678cc6731552eeadd5bc270e9f00a7fb",
+      "source_sha256": "7ebf8e25e9f32e7264489cb5e3a3f07e678cc6731552eeadd5bc270e9f00a7fb",
+      "bytes": 2363
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/fixtures_edge_cases.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "8f6876d3e21ae5fd7ceb698209bdedae510d608e1a43484ddaafcf862c907777",
+      "source_sha256": "8f6876d3e21ae5fd7ceb698209bdedae510d608e1a43484ddaafcf862c907777",
+      "bytes": 1707
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/footnotes_endnotes.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "c81995c6a552102c01ad222a68e23b2367441bfb47b96d100889268df76b1109",
+      "source_sha256": "c81995c6a552102c01ad222a68e23b2367441bfb47b96d100889268df76b1109",
+      "bytes": 1850
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/forms_content_controls.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "061e0f4aee979d06712478031449928488d3c1d7d1f666a4d5740bf8f5c2a4d6",
+      "source_sha256": "061e0f4aee979d06712478031449928488d3c1d7d1f666a4d5740bf8f5c2a4d6",
+      "bytes": 2054
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/headings_numbering.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "2ab97eb4f50358e9839f7fa5a91632c2b7e673356a20104e588ef54c67b9ca0b",
+      "source_sha256": "2ab97eb4f50358e9839f7fa5a91632c2b7e673356a20104e588ef54c67b9ca0b",
+      "bytes": 1858
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/images_figures.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b6ed689a4ab0395421332ee04835fde24c6696559883e69d32ebc179730e0450",
+      "source_sha256": "b6ed689a4ab0395421332ee04835fde24c6696559883e69d32ebc179730e0450",
+      "bytes": 1383
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/multi_doc_merge.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "3f515b84a9221ecc80ecf1794bf54c3415fbd60d3b14477d96b8ef1eaee5c0d1",
+      "source_sha256": "3f515b84a9221ecc80ecf1794bf54c3415fbd60d3b14477d96b8ef1eaee5c0d1",
+      "bytes": 1506
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/navigation_internal_links.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "73bd1a3a9eff83f2c92b209e6e4643df7afe033f27559babf233547f073f6705",
+      "source_sha256": "73bd1a3a9eff83f2c92b209e6e4643df7afe033f27559babf233547f073f6705",
+      "bytes": 2090
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/privacy_scrub_metadata.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "addca3e2431464692bd38b9172c315e88f17db830aae2280942daaddfa8a5ead",
+      "source_sha256": "addca3e2431464692bd38b9172c315e88f17db830aae2280942daaddfa8a5ead",
+      "bytes": 840
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/protection_restrict_editing.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b009fddecd27766b7797b73352ec1e1c07ee256e06a804758a3dd380da1ff841",
+      "source_sha256": "b009fddecd27766b7797b73352ec1e1c07ee256e06a804758a3dd380da1ff841",
+      "bytes": 1196
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/read_review.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "3345256289dfe6e4c77a59e26ba0ef9f781296a9633e5769a88090c1ac24ee83",
+      "source_sha256": "3345256289dfe6e4c77a59e26ba0ef9f781296a9633e5769a88090c1ac24ee83",
+      "bytes": 2526
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/redaction_anonymization.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "fbf82b9051e0a0859eb697be5cee7245f0fa3375edbb46a31e8a6f0db7b92dfc",
+      "source_sha256": "fbf82b9051e0a0859eb697be5cee7245f0fa3375edbb46a31e8a6f0db7b92dfc",
+      "bytes": 2364
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/sections_layout.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "02b82fe5e0bb797d6eaae85c4698ce5878b2ae80f99c95f1a4bf1312412d6df0",
+      "source_sha256": "02b82fe5e0bb797d6eaae85c4698ce5878b2ae80f99c95f1a4bf1312412d6df0",
+      "bytes": 2220
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/style_lint_normalize.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "6b7deee2a1d272ac3efc3001f0cb0a065cce84d2b68972e981cd26b846700369",
+      "source_sha256": "6b7deee2a1d272ac3efc3001f0cb0a065cce84d2b68972e981cd26b846700369",
+      "bytes": 2577
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/tables_spreadsheets.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b8e412d299aaedfb92e86cdda1384ffc0c58ff4b341d3242fd90542fc0479807",
+      "source_sha256": "b8e412d299aaedfb92e86cdda1384ffc0c58ff4b341d3242fd90542fc0479807",
+      "bytes": 1117
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/templates_style_packs.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "f6fb8d8cf8970f9c07a7a81e085781ea3f37c2060ea146dea5efaedb6fcc03da",
+      "source_sha256": "f6fb8d8cf8970f9c07a7a81e085781ea3f37c2060ea146dea5efaedb6fcc03da",
+      "bytes": 1268
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/toc_workflow.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "2f2a4627e321cd3c8a8695059c18c0ff3d04bf02f8e94eb4000a6cb4eb4bc8c4",
+      "source_sha256": "2f2a4627e321cd3c8a8695059c18c0ff3d04bf02f8e94eb4000a6cb4eb4bc8c4",
+      "bytes": 1951
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/verify_render.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "101feb9bdd4906d38a4d3493b93d4afface2e1beb16a7607a498f63477cc7dbf",
+      "source_sha256": "101feb9bdd4906d38a4d3493b93d4afface2e1beb16a7607a498f63477cc7dbf",
+      "bytes": 2429
+    },
+    {
+      "path": "originals/openai-runtime/documents/tasks/watermarks_background.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "be60c53ac12c10128cdcc3ff436e48fe73b9b79f90c16f584d133a9e69b8c6aa",
+      "source_sha256": "be60c53ac12c10128cdcc3ff436e48fe73b9b79f90c16f584d133a9e69b8c6aa",
+      "bytes": 1331
+    },
+    {
+      "path": "originals/openai-runtime/documents/template-create.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "ed6bd38d3fcedb33ca481f9337bf14a9b7b236ef7151c8f6034fab33e05440f0",
+      "source_sha256": "ed6bd38d3fcedb33ca481f9337bf14a9b7b236ef7151c8f6034fab33e05440f0",
+      "bytes": 5084
+    },
+    {
+      "path": "originals/openai-runtime/documents/template-distill.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "f9b829cd868732d56c3218473a1afa234ceca4aa808fbe0f96a1ab5470d768a1",
+      "source_sha256": "f9b829cd868732d56c3218473a1afa234ceca4aa808fbe0f96a1ab5470d768a1",
+      "bytes": 4286
+    },
+    {
+      "path": "originals/openai-runtime/documents/troubleshooting/libreoffice_headless.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "75fae2e3069b84d112e61a8d97d5776002492d083fe351a746571af1339b19d8",
+      "source_sha256": "75fae2e3069b84d112e61a8d97d5776002492d083fe351a746571af1339b19d8",
+      "bytes": 1625
+    },
+    {
+      "path": "originals/openai-runtime/documents/troubleshooting/run_splitting.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "b593437135fc973fdf2ec4234befe8e115fd6077995428c983ad89f824a9883e",
+      "source_sha256": "b593437135fc973fdf2ec4234befe8e115fd6077995428c983ad89f824a9883e",
+      "bytes": 821
+    },
+    {
+      "path": "originals/openai-runtime/documents/writing_quality.md",
+      "package": "openai-runtime/documents",
+      "kind": "original",
+      "sha256": "30baf502bdea6b565d41344f87e46bf04840e1b99f84a11009992bf6e63596e8",
+      "source_sha256": "30baf502bdea6b565d41344f87e46bf04840e1b99f84a11009992bf6e63596e8",
+      "bytes": 19192
+    },
+    {
+      "path": "originals/openai-runtime/pdf/SKILL.md",
+      "package": "openai-runtime/pdf",
+      "kind": "original",
+      "sha256": "65f4a606b5ec8e564d6d9782254b34c2bb2ce0a573e9349fb46b1173449c72fa",
+      "source_sha256": "65f4a606b5ec8e564d6d9782254b34c2bb2ce0a573e9349fb46b1173449c72fa",
+      "bytes": 7918
+    },
+    {
+      "path": "originals/openai-runtime/pdf/agents/openai.yaml",
+      "package": "openai-runtime/pdf",
+      "kind": "original",
+      "sha256": "74623eb0387951f4c6d0d02e6daf1c8a2dd449599c92a0edcafd12a2049c1a00",
+      "source_sha256": "74623eb0387951f4c6d0d02e6daf1c8a2dd449599c92a0edcafd12a2049c1a00",
+      "bytes": 295
+    },
+    {
+      "path": "originals/openai-runtime/pdf/assets/file-document.png",
+      "package": "openai-runtime/pdf",
+      "kind": "original",
+      "sha256": "bbb3c29874cb3bc706eef9ba4436c7ef8ef33462a173c4c3d4deeec774e4da79",
+      "source_sha256": "bbb3c29874cb3bc706eef9ba4436c7ef8ef33462a173c4c3d4deeec774e4da79",
+      "bytes": 1550
+    },
+    {
+      "path": "originals/openai-runtime/pdf/container_tools/mark_artifact_operation_started.mjs",
+      "package": "openai-runtime/pdf",
+      "kind": "original",
+      "sha256": "e0578762dc2a8f44a26323062c8afcf6c72ef197649f349c8b40e9f2a03c8942",
+      "source_sha256": "e0578762dc2a8f44a26323062c8afcf6c72ef197649f349c8b40e9f2a03c8942",
+      "bytes": 713
+    },
+    {
+      "path": "originals/openai-runtime/presentations/SKILL.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "e0d28835f8ada4ef5f41ab0425dd818d9c9ab9a66a8e47df2cee5add15cce32f",
+      "source_sha256": "e0d28835f8ada4ef5f41ab0425dd818d9c9ab9a66a8e47df2cee5add15cce32f",
+      "bytes": 28594
+    },
+    {
+      "path": "originals/openai-runtime/presentations/agents/openai.yaml",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "13700be18c1cfbcfdf2d2439b73b5bebca744818ebfe3e634bfdf2bc14589e6f",
+      "source_sha256": "13700be18c1cfbcfdf2d2439b73b5bebca744818ebfe3e634bfdf2bc14589e6f",
+      "bytes": 310
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/API_QUICK_START.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "842d8992fea5cab418f2cf8761f3879cdae33a895df1e9519721e5d0ca72605b",
+      "source_sha256": "842d8992fea5cab418f2cf8761f3879cdae33a895df1e9519721e5d0ca72605b",
+      "bytes": 3713
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/API_DOCS.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "101b31fbdc754e3027ef8f15b2e4edf5924259fea8a98a03c5628353d44f153b",
+      "source_sha256": "101b31fbdc754e3027ef8f15b2e4edf5924259fea8a98a03c5628353d44f153b",
+      "bytes": 12484
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/auto-layout.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "1158c8d99e36490083667300874be6c6feee53164228d89e6aa04c8f4e973d0f",
+      "source_sha256": "1158c8d99e36490083667300874be6c6feee53164228d89e6aa04c8f4e973d0f",
+      "bytes": 2032
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/charts.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "864d8f08c51d6c1b7c26ce6cca140c1c69f3f233c2132c45868b68d5da223461",
+      "source_sha256": "864d8f08c51d6c1b7c26ce6cca140c1c69f3f233c2132c45868b68d5da223461",
+      "bytes": 8825
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/comments.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "77f912d23576761e341c2b525375b260ae7b7fba6e4eb3a98d78458a36c8a59d",
+      "source_sha256": "77f912d23576761e341c2b525375b260ae7b7fba6e4eb3a98d78458a36c8a59d",
+      "bytes": 2154
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/connectors.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "58c47a02d500cecdb6b308fb87e16cc3f77eaefd8b407373a93a46e459e9ff08",
+      "source_sha256": "58c47a02d500cecdb6b308fb87e16cc3f77eaefd8b407373a93a46e459e9ff08",
+      "bytes": 5437
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/cookbook/imported-deck.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "827e213edb391c88706dce1d717df061a47e46f173867d36a6b010c8487487ae",
+      "source_sha256": "827e213edb391c88706dce1d717df061a47e46f173867d36a6b010c8487487ae",
+      "bytes": 5549
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/cookbook/layout.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "c415a7f976c823bc7ca82328e9f21a5a91007107777253ff9eb4c7ca8986379e",
+      "source_sha256": "c415a7f976c823bc7ca82328e9f21a5a91007107777253ff9eb4c7ca8986379e",
+      "bytes": 12942
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/fill.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "2ebd96d5866392e0b059d9bf116d1a4ed0c1cf73076ab1c39290fb7ff4f282af",
+      "source_sha256": "2ebd96d5866392e0b059d9bf116d1a4ed0c1cf73076ab1c39290fb7ff4f282af",
+      "bytes": 4989
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/help.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "45d43b4459863c1bccf7a6c180983bc3fdd3ca00a92a8d3f126b2021f54ea18e",
+      "source_sha256": "45d43b4459863c1bccf7a6c180983bc3fdd3ca00a92a8d3f126b2021f54ea18e",
+      "bytes": 6627
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/images.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "1afab90f32db0b1057d4407852bff25a307d76bc78e1fa83118894b0bb82c9d7",
+      "source_sha256": "1afab90f32db0b1057d4407852bff25a307d76bc78e1fa83118894b0bb82c9d7",
+      "bytes": 6402
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/inspect.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "41d577d303a1693453baf230e8a38f17f1028d3d379fdf9fa3688662808eadf1",
+      "source_sha256": "41d577d303a1693453baf230e8a38f17f1028d3d379fdf9fa3688662808eadf1",
+      "bytes": 5327
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/jsx.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "44b919446e1e80017fc6465fae7ccfeef4bc261c1a9ae7ecb74416f955d8beb4",
+      "source_sha256": "44b919446e1e80017fc6465fae7ccfeef4bc261c1a9ae7ecb74416f955d8beb4",
+      "bytes": 10064
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/layout.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "8a255dff959b0cea02fdf96b90d60b7cf35a324f6691f492576f9f2d1004f313",
+      "source_sha256": "8a255dff959b0cea02fdf96b90d60b7cf35a324f6691f492576f9f2d1004f313",
+      "bytes": 2250
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/master.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "8d786bd0a851e05e4ea18570a264ceb172c4e936a4e3f6944ff87a8e3a89be4a",
+      "source_sha256": "8d786bd0a851e05e4ea18570a264ceb172c4e936a4e3f6944ff87a8e3a89be4a",
+      "bytes": 1442
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/presentation.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "d641988283973a5c5d7b051d5cad5d6aa23f4d681bcefd6699e6f68f2547ac4d",
+      "source_sha256": "d641988283973a5c5d7b051d5cad5d6aa23f4d681bcefd6699e6f68f2547ac4d",
+      "bytes": 5033
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/rich-text.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "94c4327faac99db8171f5bc5d79df1c9ba2e3c5a34fdc0bcf106cd04c1ff50e7",
+      "source_sha256": "94c4327faac99db8171f5bc5d79df1c9ba2e3c5a34fdc0bcf106cd04c1ff50e7",
+      "bytes": 6118
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/shapes.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "608be137e5fa769aafd236c21c5e492d246f9137193401927c829758498c3587",
+      "source_sha256": "608be137e5fa769aafd236c21c5e492d246f9137193401927c829758498c3587",
+      "bytes": 5628
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/slide.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "050a7f9328f8a33a386d79b2e9206be57e8547d3c0c34e82310f59003bd10cd0",
+      "source_sha256": "050a7f9328f8a33a386d79b2e9206be57e8547d3c0c34e82310f59003bd10cd0",
+      "bytes": 4663
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/speaker-notes.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "4a867521dab1afd93a7064dc77ad98d3f7841330aac744b9055d914abfd7d9fe",
+      "source_sha256": "4a867521dab1afd93a7064dc77ad98d3f7841330aac744b9055d914abfd7d9fe",
+      "bytes": 1072
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/styles.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "c27a25f32184d65466d6051256afd8e29144bc87eccc04e486fb845758518f8e",
+      "source_sha256": "c27a25f32184d65466d6051256afd8e29144bc87eccc04e486fb845758518f8e",
+      "bytes": 2029
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/tables.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "6566fef366936b7cff0ae42c58efd4c3297f2732f634d1e4437d418813968b83",
+      "source_sha256": "6566fef366936b7cff0ae42c58efd4c3297f2732f634d1e4437d418813968b83",
+      "bytes": 3944
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/theme.spec.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "5a21a71ef053df3136e13141d5aca0a588a720f3e3e3052a62e424e87b987e30",
+      "source_sha256": "5a21a71ef053df3136e13141d5aca0a588a720f3e3e3052a62e424e87b987e30",
+      "bytes": 1657
+    },
+    {
+      "path": "originals/openai-runtime/presentations/artifact_tool_docs/api/references/tokens.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "55326b4322f942a16d02caa79aebd60c2c97156008fd3eb69012bda327bbcc96",
+      "source_sha256": "55326b4322f942a16d02caa79aebd60c2c97156008fd3eb69012bda327bbcc96",
+      "bytes": 11456
+    },
+    {
+      "path": "originals/openai-runtime/presentations/assets/file-presentation.png",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "a3c03edcadfe5af5a06c709b264d276d7e8ac6e150d69729c502459998b2a680",
+      "source_sha256": "a3c03edcadfe5af5a06c709b264d276d7e8ac6e150d69729c502459998b2a680",
+      "bytes": 11787
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/artifact_tool_utils.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "7f3be49b701c385ee180cad5858135297482264039f950d542c22aa9c602645d",
+      "source_sha256": "7f3be49b701c385ee180cad5858135297482264039f950d542c22aa9c602645d",
+      "bytes": 54327
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/create_montage.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "4e992386bab29f9b8b16b1705d2692f8e8b8fd27112d41e7cb56c886859711e0",
+      "source_sha256": "4e992386bab29f9b8b16b1705d2692f8e8b8fd27112d41e7cb56c886859711e0",
+      "bytes": 10335
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/ensure_raster_image.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "88a5783010907a474fb41e7bfb8d31d0056641fcf38fbc1fc60d58e3a7d0f39f",
+      "source_sha256": "88a5783010907a474fb41e7bfb8d31d0056641fcf38fbc1fc60d58e3a7d0f39f",
+      "bytes": 7108
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/inspect_presentation_layout_geometry.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "171ce664e04705abfef280bf201c7783cfe273747002b2fd04a195b7f447c4eb",
+      "source_sha256": "171ce664e04705abfef280bf201c7783cfe273747002b2fd04a195b7f447c4eb",
+      "bytes": 99333
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/inspect_presentation_package_integrity.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "0211c115805642094652fb1d464838559b95e4615d15170d22b29d4a23cc9f9f",
+      "source_sha256": "0211c115805642094652fb1d464838559b95e4615d15170d22b29d4a23cc9f9f",
+      "bytes": 28785
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/mark_artifact_operation_started.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "93a0b2fd9f9d6f52204a581f218f3e2d0acd4e1d404d13d91ab78a06f5a7159d",
+      "source_sha256": "93a0b2fd9f9d6f52204a581f218f3e2d0acd4e1d404d13d91ab78a06f5a7159d",
+      "bytes": 721
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/materialize_literal_chart_workbooks.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "c29d18483e26dc61ea5ea48245f8fe2625317f5511f8e8af82506760140051da",
+      "source_sha256": "c29d18483e26dc61ea5ea48245f8fe2625317f5511f8e8af82506760140051da",
+      "bytes": 36008
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/native_chart_title_gate.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "752e88d019c5ee1618ec9ad0bcb111409f39ca4c68da571f0f29967c7773c078",
+      "source_sha256": "752e88d019c5ee1618ec9ad0bcb111409f39ca4c68da571f0f29967c7773c078",
+      "bytes": 5992
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/native_quantitative_chart_gate.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "7dde6fdda947365731cd8fbc89ede5b718c57c84e285a20af1a675fc9e27cab3",
+      "source_sha256": "7dde6fdda947365731cd8fbc89ede5b718c57c84e285a20af1a675fc9e27cab3",
+      "bytes": 44221
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/native_table_arithmetic_gate.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "de3db1596db2fea90261990e867c9713510f3133b65a7dc36269991de5783976",
+      "source_sha256": "de3db1596db2fea90261990e867c9713510f3133b65a7dc36269991de5783976",
+      "bytes": 20740
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/rasterize_svg.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "95e973b2750820e1c0c2a63d403bd227c8f0197ae215d0a67bff1cbe12be694a",
+      "source_sha256": "95e973b2750820e1c0c2a63d403bd227c8f0197ae215d0a67bff1cbe12be694a",
+      "bytes": 1560
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/render_presentation.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "edd464cd7bb79bcf7528637ae201c716f1c6b74b135d674302e77552736c38c9",
+      "source_sha256": "edd464cd7bb79bcf7528637ae201c716f1c6b74b135d674302e77552736c38c9",
+      "bytes": 3220
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/render_slides.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "ab4965cd3e7338767c83217780ed0efadc219b38f1ca7e824765400fbcf69705",
+      "source_sha256": "ab4965cd3e7338767c83217780ed0efadc219b38f1ca7e824765400fbcf69705",
+      "bytes": 8411
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/runtime_helpers.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "7125e9f9e4c2b1c22c2a1acc2f96cc20aadd663b37a23857280a47e6013871b9",
+      "source_sha256": "7125e9f9e4c2b1c22c2a1acc2f96cc20aadd663b37a23857280a47e6013871b9",
+      "bytes": 1598
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/runtime_helpers.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "0524d854d0518e562613590a293dd23da8c2622e08c82026b0da469752c3ceff",
+      "source_sha256": "0524d854d0518e562613590a293dd23da8c2622e08c82026b0da469752c3ceff",
+      "bytes": 3513
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/slides_test.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "f192e85ba17a9f7634908074e2149a277a30684c0e38d459f9c1d0245bfd6cc1",
+      "source_sha256": "f192e85ba17a9f7634908074e2149a277a30684c0e38d459f9c1d0245bfd6cc1",
+      "bytes": 6360
+    },
+    {
+      "path": "originals/openai-runtime/presentations/container_tools/template_source_fidelity_gate.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "7f6b5085834ed8001862cf712589d994ddc5cbca8207cab5af52fa5ca25f91df",
+      "source_sha256": "7f6b5085834ed8001862cf712589d994ddc5cbca8207cab5af52fa5ca25f91df",
+      "bytes": 21661
+    },
+    {
+      "path": "originals/openai-runtime/presentations/domain_guidance/finance.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "3c027850a25ca1eab480d4c93cba95d3a0fea290944d97250320449b3261677b",
+      "source_sha256": "3c027850a25ca1eab480d4c93cba95d3a0fea290944d97250320449b3261677b",
+      "bytes": 1812
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/cover_art_direction.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "c74334268be2e7021429612df0c606b88c0b640dd7acab2c92160bf8cbe38f91",
+      "source_sha256": "c74334268be2e7021429612df0c606b88c0b640dd7acab2c92160bf8cbe38f91",
+      "bytes": 1353
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/finalization.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "24e1dfe83c9a0373b9139f818a93683ebdc21dfff06ec6e89557488bb637b243",
+      "source_sha256": "24e1dfe83c9a0373b9139f818a93683ebdc21dfff06ec6e89557488bb637b243",
+      "bytes": 6034
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/implementation.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "45a8c01663a4b1dad6e80e1112223b8a19529b32be5f46a47a2dbc058806f55d",
+      "source_sha256": "45a8c01663a4b1dad6e80e1112223b8a19529b32be5f46a47a2dbc058806f55d",
+      "bytes": 3462
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/native_bullets.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "db01c76bd7edbb93f3130473cbd911d3b8f717c29817d66f5d05a7cf523d83c8",
+      "source_sha256": "db01c76bd7edbb93f3130473cbd911d3b8f717c29817d66f5d05a7cf523d83c8",
+      "bytes": 1531
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/native_evidence.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "b200c212c97c8f933a1f16d6f9fb1e1fd91b6b77e42ff5301216a92ebe3c480d",
+      "source_sha256": "b200c212c97c8f933a1f16d6f9fb1e1fd91b6b77e42ff5301216a92ebe3c480d",
+      "bytes": 3178
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/template-elicitation.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "320b64453f88d78302445ac3751f6c70a3077ec16a161aa6227db2838b55319c",
+      "source_sha256": "320b64453f88d78302445ac3751f6c70a3077ec16a161aa6227db2838b55319c",
+      "bytes": 1494
+    },
+    {
+      "path": "originals/openai-runtime/presentations/references/template_following.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "edc138c824924085041391a2118874d21f6f8d020324e2c0d934793ad023bd0a",
+      "source_sha256": "edc138c824924085041391a2118874d21f6f8d020324e2c0d934793ad023bd0a",
+      "bytes": 2547
+    },
+    {
+      "path": "originals/openai-runtime/presentations/routing/google_slides.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "83636a3fd11959f6d6252d258e2051995a68327b29b4042d8272f8f2dda6605e",
+      "source_sha256": "83636a3fd11959f6d6252d258e2051995a68327b29b4042d8272f8f2dda6605e",
+      "bytes": 1205
+    },
+    {
+      "path": "originals/openai-runtime/presentations/style_guidelines.md",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "c863ad07834e9801151c4d6cb3a2bba75c36d2d2830cfef5d94db7d30ba3dd58",
+      "source_sha256": "c863ad07834e9801151c4d6cb3a2bba75c36d2d2830cfef5d94db7d30ba3dd58",
+      "bytes": 3159
+    },
+    {
+      "path": "originals/openai-runtime/presentations/template_following_scripts/check_template_fidelity.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "7dc9f198a617a456cf645ef68d3991ef2960f092f4bf995ecf629ab1fa48f8ee",
+      "source_sha256": "7dc9f198a617a456cf645ef68d3991ef2960f092f4bf995ecf629ab1fa48f8ee",
+      "bytes": 17599
+    },
+    {
+      "path": "originals/openai-runtime/presentations/template_following_scripts/inspect_template_deck.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "c901e0c9d632f276293f5d86439b73fc5209f2cb6b2639b8232e0ddae946844e",
+      "source_sha256": "c901e0c9d632f276293f5d86439b73fc5209f2cb6b2639b8232e0ddae946844e",
+      "bytes": 8733
+    },
+    {
+      "path": "originals/openai-runtime/presentations/template_following_scripts/make_contact_sheet.py",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "b929a3d3d27dceb14d630da33bfd6218fba2e2b0b9e4ae5a28acdd2134f38322",
+      "source_sha256": "b929a3d3d27dceb14d630da33bfd6218fba2e2b0b9e4ae5a28acdd2134f38322",
+      "bytes": 1723
+    },
+    {
+      "path": "originals/openai-runtime/presentations/template_following_scripts/prepare_template_starter_deck.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "e8137b68bd2687f9de573467dac8eb5e6c1bea8099071aaaafcc9046f9e5937f",
+      "source_sha256": "e8137b68bd2687f9de573467dac8eb5e6c1bea8099071aaaafcc9046f9e5937f",
+      "bytes": 10877
+    },
+    {
+      "path": "originals/openai-runtime/presentations/template_following_scripts/validate_template_plan.mjs",
+      "package": "openai-runtime/presentations",
+      "kind": "original",
+      "sha256": "6eb67f339358247f500f92261f6bece2c6c055dd59a0ed25bc6bf00da4f0f6b1",
+      "source_sha256": "6eb67f339358247f500f92261f6bece2c6c055dd59a0ed25bc6bf00da4f0f6b1",
+      "bytes": 18804
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/SKILL.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "499172cadf77be41b6ec7d87981463aec0859e10aba9cc0b864143e42955474b",
+      "source_sha256": "499172cadf77be41b6ec7d87981463aec0859e10aba9cc0b864143e42955474b",
+      "bytes": 64729
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/agents/openai.yaml",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "8dc6dfa3a1c6fd33ecb3088fe4d4e24689fc47685c43a9bac360fcee2af02a40",
+      "source_sha256": "8dc6dfa3a1c6fd33ecb3088fe4d4e24689fc47685c43a9bac360fcee2af02a40",
+      "bytes": 364
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/artifact_tool_docs/API_QUICK_START.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "2795943c6a356a6bb94767526acb53a6aec8599be1d15fdbe54458bc799d5f4a",
+      "source_sha256": "2795943c6a356a6bb94767526acb53a6aec8599be1d15fdbe54458bc799d5f4a",
+      "bytes": 25830
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/artifact_tool_docs/DATA_TABLES.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "f87542406b8a2282521233c11fec87087eb2889628a1f20944977c0ad9c68488",
+      "source_sha256": "f87542406b8a2282521233c11fec87087eb2889628a1f20944977c0ad9c68488",
+      "bytes": 3586
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/artifact_tool_docs/SPARKLINES.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "d3926fac25653829837c03136124126e1d1be192de6d62bf1f77e29300d97c1f",
+      "source_sha256": "d3926fac25653829837c03136124126e1d1be192de6d62bf1f77e29300d97c1f",
+      "bytes": 1646
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/assets/file-spreadsheet.png",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "3a1c5e6c52a1877942b8ef8654247fbe1c4a82f6df8ef464dc99983fc72cd6fb",
+      "source_sha256": "3a1c5e6c52a1877942b8ef8654247fbe1c4a82f6df8ef464dc99983fc72cd6fb",
+      "bytes": 11988
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/container_tools/mark_artifact_operation_started.mjs",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "20c5a86e596154c0541c7bfc4c52c17d928e22e27c6f0ff936c1c3fe16873c10",
+      "source_sha256": "20c5a86e596154c0541c7bfc4c52c17d928e22e27c6f0ff936c1c3fe16873c10",
+      "bytes": 743
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/domain_guidance/financial_models.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "ff163c47d4bcb14a9bf21cbb8e6fa5d73f407100e818e7a307f062e08d3025f1",
+      "source_sha256": "ff163c47d4bcb14a9bf21cbb8e6fa5d73f407100e818e7a307f062e08d3025f1",
+      "bytes": 6987
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/domain_guidance/healthcare.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "df5b9dcb9df988c197fcb377e0b9798f582e9cd30d1c103fd7cd8957a215dff9",
+      "source_sha256": "df5b9dcb9df988c197fcb377e0b9798f582e9cd30d1c103fd7cd8957a215dff9",
+      "bytes": 4695
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/domain_guidance/marketing_advertising.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "bd6a715ac7d9ad2c830dff146e48321ccc4330c0024f471e85be66c5bb65b014",
+      "source_sha256": "bd6a715ac7d9ad2c830dff146e48321ccc4330c0024f471e85be66c5bb65b014",
+      "bytes": 3913
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/domain_guidance/scientific_research.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "a95381e624c4c9562efee3e4a5cdd41bd52e1d3330545ab64d2a85242b10c0af",
+      "source_sha256": "a95381e624c4c9562efee3e4a5cdd41bd52e1d3330545ab64d2a85242b10c0af",
+      "bytes": 3695
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/features/charts.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "f85e0fa9ba2505f9ee3dd9c4529d1c529b0ce7c9c5e95a919409025c0217c470",
+      "source_sha256": "f85e0fa9ba2505f9ee3dd9c4529d1c529b0ce7c9c5e95a919409025c0217c470",
+      "bytes": 5822
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/references/image-references.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "148690f09a1f33a8d61a3f28df8b9c872a6bc16f0eaa2ea561bcc4dcd07bc2cc",
+      "source_sha256": "148690f09a1f33a8d61a3f28df8b9c872a6bc16f0eaa2ea561bcc4dcd07bc2cc",
+      "bytes": 1068
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/references/read_only_qna.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "687beb1ce4c32164fd8f8f17e0a2c6a4371798ab1d47835a0a74efe7b8f980a6",
+      "source_sha256": "687beb1ce4c32164fd8f8f17e0a2c6a4371798ab1d47835a0a74efe7b8f980a6",
+      "bytes": 1095
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/references/template-elicitation.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "60b0ea3e373eef4f2a11fa419a7214f6580ac8e9b91028e7ba0968d4106e69ad",
+      "source_sha256": "60b0ea3e373eef4f2a11fa419a7214f6580ac8e9b91028e7ba0968d4106e69ad",
+      "bytes": 1492
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/routing/google_sheets.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "0acafc1a346240b9346c08e67b69ab289286c80d93528583c085444407ffc428",
+      "source_sha256": "0acafc1a346240b9346c08e67b69ab289286c80d93528583c085444407ffc428",
+      "bytes": 1456
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/style_guidelines.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "52f91ee6bc4c0a3b633b35df33924092a07e48c45cc839942288592989e33063",
+      "source_sha256": "52f91ee6bc4c0a3b633b35df33924092a07e48c45cc839942288592989e33063",
+      "bytes": 10103
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/workflows/create_workflows.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "92e3d0910bde06d210718f47f88f24a51d33bf03b4560cca3e280fbcde22a47d",
+      "source_sha256": "92e3d0910bde06d210718f47f88f24a51d33bf03b4560cca3e280fbcde22a47d",
+      "bytes": 1563
+    },
+    {
+      "path": "originals/openai-runtime/spreadsheets/workflows/edit_workflows.md",
+      "package": "openai-runtime/spreadsheets",
+      "kind": "original",
+      "sha256": "f75917488c75b5a7b9e194c57131163d54ad23405802944e1d59eece990d27d8",
+      "source_sha256": "f75917488c75b5a7b9e194c57131163d54ad23405802944e1d59eece990d27d8",
+      "bytes": 2481
+    },
+    {
+      "path": "originals/claude-market/skill-creator/LICENSE.txt",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "source_sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "bytes": 11357
+    },
+    {
+      "path": "originals/claude-market/skill-creator/SKILL.md",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+      "source_sha256": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+      "bytes": 33168
+    },
+    {
+      "path": "originals/claude-market/skill-creator/agents/analyzer.md",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "bf68f4cac5a56c673a928c2e6d619586c5b93ea364026ab37547772cb45a663a",
+      "source_sha256": "bf68f4cac5a56c673a928c2e6d619586c5b93ea364026ab37547772cb45a663a",
+      "bytes": 10376
+    },
+    {
+      "path": "originals/claude-market/skill-creator/agents/comparator.md",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e",
+      "source_sha256": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e",
+      "bytes": 7287
+    },
+    {
+      "path": "originals/claude-market/skill-creator/agents/grader.md",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a",
+      "source_sha256": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a",
+      "bytes": 9049
+    },
+    {
+      "path": "originals/claude-market/skill-creator/assets/eval_review.html",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "ce477dcc74dc1c0d1d3352646a79167b5a63634e936b1019160025065974e452",
+      "source_sha256": "ce477dcc74dc1c0d1d3352646a79167b5a63634e936b1019160025065974e452",
+      "bytes": 7058
+    },
+    {
+      "path": "originals/claude-market/skill-creator/eval-viewer/generate_review.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "fc9d1b9243fe5ab6012ebd579bd76d0035de1b79fd3b969de114defab26478fb",
+      "source_sha256": "fc9d1b9243fe5ab6012ebd579bd76d0035de1b79fd3b969de114defab26478fb",
+      "bytes": 16365
+    },
+    {
+      "path": "originals/claude-market/skill-creator/eval-viewer/viewer.html",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "a53213426ee1100441d701a3a0d49cda7a842f992d2c36463f4d3cc0258575fa",
+      "source_sha256": "a53213426ee1100441d701a3a0d49cda7a842f992d2c36463f4d3cc0258575fa",
+      "bytes": 44998
+    },
+    {
+      "path": "originals/claude-market/skill-creator/references/schemas.md",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "8e8876180a8989b406a4d3edddf875b04cdfd5805cc8616686d552b11ce4455f",
+      "source_sha256": "8e8876180a8989b406a4d3edddf875b04cdfd5805cc8616686d552b11ce4455f",
+      "bytes": 12061
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/__init__.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/aggregate_benchmark.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "123ef128ea5ccc01a4b1ac212ef5567f21e9c13d3d240609780beeb3200c49aa",
+      "source_sha256": "123ef128ea5ccc01a4b1ac212ef5567f21e9c13d3d240609780beeb3200c49aa",
+      "bytes": 14386
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/generate_report.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "13df7118a3c50c83c4c3250a606d5f2b20b25a3d44cbc392b3d669ec75281453",
+      "source_sha256": "13df7118a3c50c83c4c3250a606d5f2b20b25a3d44cbc392b3d669ec75281453",
+      "bytes": 12847
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/improve_description.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "87d864570220b699fac52da309d2d6efdb060647bfebc74f768128e646accf80",
+      "source_sha256": "87d864570220b699fac52da309d2d6efdb060647bfebc74f768128e646accf80",
+      "bytes": 11116
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/package_skill.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "1a33059b0db1ef73375d46d513e5ea81369d2e8838c970597b0d52ddef8d1c0f",
+      "source_sha256": "1a33059b0db1ef73375d46d513e5ea81369d2e8838c970597b0d52ddef8d1c0f",
+      "bytes": 4234
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/quick_validate.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "67cf5703402013936c8fb75ad6a1afecd8841d45cc5e606b634eb05825fde365",
+      "source_sha256": "67cf5703402013936c8fb75ad6a1afecd8841d45cc5e606b634eb05825fde365",
+      "bytes": 3972
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/run_eval.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "43e3b8f80dbf69c343967ba77e268fae991d9fa3ed68b32a0ff02532cd48657f",
+      "source_sha256": "43e3b8f80dbf69c343967ba77e268fae991d9fa3ed68b32a0ff02532cd48657f",
+      "bytes": 11464
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/run_loop.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21",
+      "source_sha256": "7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21",
+      "bytes": 13605
+    },
+    {
+      "path": "originals/claude-market/skill-creator/scripts/utils.py",
+      "package": "claude-market/skill-creator",
+      "kind": "original",
+      "sha256": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1",
+      "source_sha256": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1",
+      "bytes": 1661
+    },
+    {
+      "path": "originals/cursor-builtin/autopilot/SKILL.md",
+      "package": "cursor-builtin/autopilot",
+      "kind": "original",
+      "sha256": "2f0fd7aebbcacfa81afb8ead8107b44e4202e45e23ad20e3778c9123cadb9589",
+      "source_sha256": "2f0fd7aebbcacfa81afb8ead8107b44e4202e45e23ad20e3778c9123cadb9589",
+      "bytes": 3901
+    },
+    {
+      "path": "originals/cursor-builtin/split-to-prs/SKILL.md",
+      "package": "cursor-builtin/split-to-prs",
+      "kind": "original",
+      "sha256": "796eb4bf3fd9a3cdde51a39979d14aed86f81aa3fd2c77bfeb33c0cc4456dd2f",
+      "source_sha256": "796eb4bf3fd9a3cdde51a39979d14aed86f81aa3fd2c77bfeb33c0cc4456dd2f",
+      "bytes": 2228
+    },
+    {
+      "path": "originals/project/rsibench-data-factory/SKILL.md",
+      "package": "project/rsibench-data-factory",
+      "kind": "original",
+      "sha256": "49fc9c9b39fd656dfb3d38b9d0a864bffe92a9c07465f7649cc1aabca0e3e6d7",
+      "source_sha256": "49fc9c9b39fd656dfb3d38b9d0a864bffe92a9c07465f7649cc1aabca0e3e6d7",
+      "bytes": 2559
+    },
+    {
+      "path": "context/rsibench-data-factory/README.md",
+      "package": "project/rsibench-data-factory",
+      "kind": "original",
+      "sha256": "486e904bdd4f94c5d563c8338fa26e0719227dc2092e05e29d0a47a04eebb074",
+      "source_sha256": "486e904bdd4f94c5d563c8338fa26e0719227dc2092e05e29d0a47a04eebb074",
+      "bytes": 27974
+    },
+    {
+      "path": "context/rsibench-data-factory/docs/tinker_train_eval.md",
+      "package": "project/rsibench-data-factory",
+      "kind": "original",
+      "sha256": "eb7cd8d9f01f078c8251c2775c70ccd0990e503759c315ef707d3f1719d5a948",
+      "source_sha256": "eb7cd8d9f01f078c8251c2775c70ccd0990e503759c315ef707d3f1719d5a948",
+      "bytes": 6732
+    },
+    {
+      "path": "context/rsibench-data-factory/docs/tinker_cookbook.md",
+      "package": "project/rsibench-data-factory",
+      "kind": "original",
+      "sha256": "a243a4b0f3ffb55f82557c0f60fa640ee6e9cd0fc38561caa74612b9d09d19d4",
+      "source_sha256": "a243a4b0f3ffb55f82557c0f60fa640ee6e9cd0fc38561caa74612b9d09d19d4",
+      "bytes": 2923
+    },
+    {
+      "path": "context/rsibench-data-factory/backend/e2b_eval/README.md",
+      "package": "project/rsibench-data-factory",
+      "kind": "original",
+      "sha256": "6f6bb1d17464801af7b36e1a32f18cedc7b4de5c9dff0f1fa8bc7ddfbe36090d",
+      "source_sha256": "6f6bb1d17464801af7b36e1a32f18cedc7b4de5c9dff0f1fa8bc7ddfbe36090d",
+      "bytes": 6488
+    },
+    {
+      "path": "adapted/portable/skill-evolution-orchestrator/SKILL.md",
+      "package": "portable/skill-evolution-orchestrator",
+      "kind": "adapted",
+      "sha256": "8adee3b1cda72462525a790912b0b26bd1ea5392d5bb4c1402ee598dfd8a5a1b",
+      "bytes": 3483
+    },
+    {
+      "path": "adapted/portable/skill-evolution-orchestrator/references/contracts.md",
+      "package": "portable/skill-evolution-orchestrator",
+      "kind": "adapted",
+      "sha256": "54d146b3368a3d8b3aac36da17ebf966e8e33b62cdd65cab3dece0ad65b0bb8a",
+      "bytes": 3330
+    },
+    {
+      "path": "adapted/portable/skill-evolution-orchestrator/references/orchestration.md",
+      "package": "portable/skill-evolution-orchestrator",
+      "kind": "adapted",
+      "sha256": "2a68b0c65f062cb3ebc1dceb39f7f58188e458c39d6edfd98280b3c8b3d28a94",
+      "bytes": 2252
+    },
+    {
+      "path": "adapted/portable/skill-evolution-orchestrator/references/runners.md",
+      "package": "portable/skill-evolution-orchestrator",
+      "kind": "adapted",
+      "sha256": "995c5073305095b602eecf626585c2133c0d9a34e3632775c097bd2ff1c966a7",
+      "bytes": 2685
+    }
+  ],
+  "excluded_files": [
+    {
+      "package": "codex-user/research-numbers-audit",
+      "path": "scripts/__pycache__/build_registry.cpython-312.pyc",
+      "reason": "runtime cache or generated log"
+    },
+    {
+      "package": "codex-user/research-numbers-audit",
+      "path": "scripts/__pycache__/build_registry.cpython-314.pyc",
+      "reason": "runtime cache or generated log"
+    },
+    {
+      "package": "codex-user/research-numbers-audit",
+      "path": "scripts/__pycache__/extract_numbers.cpython-312.pyc",
+      "reason": "runtime cache or generated log"
+    },
+    {
+      "package": "codex-user/research-numbers-audit",
+      "path": "scripts/__pycache__/extract_numbers.cpython-314.pyc",
+      "reason": "runtime cache or generated log"
+    },
+    {
+      "package": "codex-user/research-numbers-audit",
+      "path": "scripts/__pycache__/verify.cpython-312.pyc",
+      "reason": "runtime cache or generated log"
+    },
+    {
+      "package": "codex-user/research-numbers-audit",
+      "path": "scripts/__pycache__/verify.cpython-314.pyc",
+      "reason": "runtime cache or generated log"
+    },
+    {
+      "package": "openai-runtime/presentations",
+      "path": "container_tools/__pycache__/runtime_helpers.cpython-312.pyc",
+      "reason": "runtime cache or generated log"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Reproduction Plan"
+  short_description: "Map paper claims to evidence, code, and reruns"
+  default_prompt: "Use $research-reproduction-plan to convert this paper and repository into a staged reproduction plan."

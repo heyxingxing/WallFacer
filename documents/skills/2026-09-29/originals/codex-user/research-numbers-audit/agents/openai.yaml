@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Numbers Audit"
+  short_description: "Trace draft numbers back to result artifacts"
+  default_prompt: "Use $research-numbers-audit to check the draft numbers against the result artifacts and report unresolved provenance."

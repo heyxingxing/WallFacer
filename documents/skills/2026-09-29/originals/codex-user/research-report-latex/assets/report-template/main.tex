@@ -1,0 +1,226 @@
+\documentclass[UTF8,fontset=fandol,zihao=-4]{ctexart}
+
+\usepackage[a4paper,top=22mm,bottom=22mm,left=21mm,right=21mm,headheight=24pt]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xurl}
+\usepackage[backend=biber,style=numeric,sorting=nyt,giveninits=true]{biblatex}
+\addbibresource{references.bib}
+\renewcommand*{\mkbibacro}[1]{\MakeUppercase{#1}}
+\AtBeginBibliography{\pagestyle{fancy}\thispagestyle{fancy}}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+\definecolor{navy}{HTML}{17324D}
+\definecolor{blue}{HTML}{2B6CB0}
+\definecolor{teal}{HTML}{0F766E}
+\definecolor{orange}{HTML}{C66A13}
+\definecolor{redbrown}{HTML}{9B3A34}
+\definecolor{ink}{HTML}{243447}
+\definecolor{muted}{HTML}{64748B}
+\definecolor{line}{HTML}{D8E1EA}
+\definecolor{paperblue}{HTML}{F3F7FB}
+\definecolor{paperorange}{HTML}{FFF7ED}
+
+\newcommand{\ReportTitle}{__REPORT_TITLE__}
+\newcommand{\ReportSubtitle}{__REPORT_SUBTITLE__}
+\newcommand{\ReportAuthor}{__REPORT_AUTHOR__}
+\newcommand{\ReportDate}{__REPORT_DATE__}
+\newcommand{\ReportScope}{__REPORT_SCOPE__}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=navy,
+  urlcolor=blue,
+  citecolor=teal,
+  pdftitle={\ReportTitle},
+  pdfauthor={\ReportAuthor}
+}
+
+\ctexset{
+  section={format=\Large\bfseries\sffamily\color{navy},beforeskip=1.5ex,afterskip=0.8ex},
+  subsection={format=\large\bfseries\sffamily\color{blue},beforeskip=1.2ex,afterskip=0.5ex},
+  subsubsection={format=\normalsize\bfseries\sffamily\color{teal}}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\small\color{muted}\ReportTitle}
+\fancyhead[R]{\sffamily\small\color{muted}\ReportDate}
+\fancyfoot[C]{\sffamily\small\color{muted}第 \thepage\ 页，共 \pageref{LastPage}\ 页}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[L]{\sffamily\small\color{muted}\ReportTitle}
+  \fancyhead[R]{\sffamily\small\color{muted}\ReportDate}
+  \fancyfoot[C]{\sffamily\small\color{muted}第 \thepage\ 页，共 \pageref{LastPage}\ 页}
+  \renewcommand{\headrulewidth}{0.4pt}
+}
+% ctex may finalize its class page styles at begin-document time. Re-apply the
+% report's plain style afterwards so longtable and bibliography continuation
+% pages do not fall back to the class-default footer.
+\AtBeginDocument{
+  \fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[L]{\sffamily\small\color{muted}\ReportTitle}
+    \fancyhead[R]{\sffamily\small\color{muted}\ReportDate}
+    \fancyfoot[C]{\sffamily\small\color{muted}第 \thepage\ 页，共 \pageref{LastPage}\ 页}
+    \renewcommand{\headrulewidth}{0.4pt}
+  }
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.22}
+\setlist[itemize]{leftmargin=1.6em,itemsep=0.25em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=0.25em,topsep=0.3em}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
+\newcommand{\claimref}[1]{\textsuperscript{\colorbox{blue!10}{\textcolor{blue}{\scriptsize #1}}}}
+\newcommand{\ReportPlaceholder}[1]{\textcolor{redbrown}{[请替换：#1]}}
+
+\newtcolorbox{summarybox}{
+  enhanced,breakable,colback=paperblue,colframe=blue!35,
+  boxrule=0.6pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm
+}
+
+\newtcolorbox{scopebox}{
+  enhanced,breakable,colback=paperorange,colframe=orange!45,
+  boxrule=0.6pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm
+}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{5mm}
+\begin{tcolorbox}[
+  enhanced,colback=navy,colframe=navy,boxrule=0pt,arc=1.5mm,
+  left=9mm,right=9mm,top=11mm,bottom=11mm,
+  borderline south={2.5pt}{0pt}{blue}
+]
+{\color{white}\sffamily\bfseries\fontsize{23}{31}\selectfont
+\ReportTitle\par}
+\vspace{3mm}
+{\color{white}\sffamily\fontsize{14}{21}\selectfont
+\ReportSubtitle\par}
+\end{tcolorbox}
+
+\vspace{16mm}
+\begin{summarybox}
+{\sffamily\bfseries\color{navy}一句话结论}\par
+\ReportPlaceholder{用证据边界清晰的一句话总结当前能支持的判断。}
+\end{summarybox}
+
+\vspace{8mm}
+\begin{tabularx}{\textwidth}{L{30mm}Y}
+\textcolor{muted}{研究范围} & \ReportScope\\
+\textcolor{muted}{整理者} & \ReportAuthor\\
+\textcolor{muted}{访问与整理日期} & \ReportDate\\
+\textcolor{muted}{证据覆盖} & \ReportPlaceholder{正文已读、部分读取、仅元信息与不可读来源数量。}\\
+\end{tabularx}
+
+\vfill
+{\sffamily\small\color{muted}
+本报告将来源明确说明、实际观察、综合推断、待验证假设和证据不足分开表达。}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\tableofcontents
+\clearpage
+
+\section{执行摘要}
+
+\begin{summarybox}
+\begin{enumerate}
+  \item \ReportPlaceholder{关键判断一，并在句末添加 Claim ID。}
+  \item \ReportPlaceholder{关键判断二，并保留适用范围。}
+  \item \ReportPlaceholder{最重要的证据缺口和下一项决定性检查。}
+\end{enumerate}
+\end{summarybox}
+
+\section{研究问题、来源与方法}
+
+\subsection{研究问题与边界}
+
+\ReportPlaceholder{说明问题、读者、时间或版本、明确不回答的内容。}
+
+\subsection{来源准入与覆盖}
+
+\begin{scopebox}
+\ReportPlaceholder{说明主来源、补充来源、读取深度、不可读来源和未独立复现的边界。}
+\end{scopebox}
+
+\section{证据矩阵}
+
+\begin{longtable}{L{16mm}L{30mm}L{30mm}L{25mm}L{35mm}}
+\caption{关键 Claim 与证据}\label{tab:claim-evidence}\\
+\toprule
+Claim & 判断 & 类型 & 来源 & 边界\\
+\midrule
+\endfirsthead
+\multicolumn{5}{l}{\small\color{muted}表 \thetable{}（续）}\\
+\toprule
+Claim & 判断 & 类型 & 来源 & 边界\\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\small\color{muted}下页续}\\
+\endfoot
+\bottomrule
+\endlastfoot
+C001 & \ReportPlaceholder{完整 Claim} & \ReportPlaceholder{source statement 等} & S001 & \ReportPlaceholder{适用范围}\\
+\end{longtable}
+
+\section{主要发现}
+
+\subsection{来源明确说明或实际观察}
+
+\ReportPlaceholder{先写直接证据。关键句后使用 claimref，例如：结论。claimref\{C001\}。}
+
+\subsection{综合推断}
+
+\ReportPlaceholder{说明推导链、替代解释和适用范围。}
+
+\section{冲突、不可比项与证据缺口}
+
+\ReportPlaceholder{并列冲突来源、版本和口径；列出最小补证动作。}
+
+\section{结论与下一项决定性检查}
+
+\ReportPlaceholder{区分当前结论、待验证假设、下一项检查和停止条件。}
+
+\appendix
+\section{来源台账}
+
+\begin{longtable}{L{14mm}L{38mm}L{34mm}L{23mm}L{34mm}}
+\caption{来源、读取状态与证据范围}\label{tab:source-ledger}\\
+\toprule
+ID & 标题 & 版本/定位 & 读取深度 & 可支持范围与限制\\
+\midrule
+\endfirsthead
+\multicolumn{5}{l}{\small\color{muted}表 \thetable{}（续）}\\
+\toprule
+ID & 标题 & 版本/定位 & 读取深度 & 可支持范围与限制\\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+S001 & \ReportPlaceholder{来源标题} & \ReportPlaceholder{版本与定位} & full/partial & \ReportPlaceholder{范围与限制}\\
+\end{longtable}
+
+\printbibliography[heading=bibintoc,title={参考文献}]
+
+\end{document}

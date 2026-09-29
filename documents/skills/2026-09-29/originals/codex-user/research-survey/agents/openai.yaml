@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Survey"
+  short_description: "Build an evidence-traceable literature landscape"
+  default_prompt: "Use $research-survey to map this topic, its evidence, disagreements, and research gaps."

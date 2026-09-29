@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Hypothesis"
+  short_description: "Form falsifiable hypotheses and minimum tests"
+  default_prompt: "Use $research-hypothesis to turn this problem into falsifiable hypotheses and minimum experiments."

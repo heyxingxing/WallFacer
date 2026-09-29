@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Critical Review"
+  short_description: "Perform evidence-linked adversarial research review"
+  default_prompt: "Use $research-critical-review to critically review these research artifacts and propose the smallest decisive fixes."

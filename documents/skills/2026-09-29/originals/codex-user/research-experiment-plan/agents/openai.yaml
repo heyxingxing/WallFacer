@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Experiment Plan"
+  short_description: "Design claim-driven experiments and acceptance gates"
+  default_prompt: "Use $research-experiment-plan to design a claim-driven experiment roadmap with frozen acceptance criteria."

@@ -1,0 +1,5 @@
+interface:
+  display_name: "资料调研与 LaTeX 报告"
+  short_description: "将零散资料整理为证据可追溯的 LaTeX 报告并验证 PDF"
+  default_prompt: "使用 $research-report-latex 整理这些资料，区分事实、推断与证据缺口，并交付经完整 QA 的 LaTeX 源码和 PDF。"
+

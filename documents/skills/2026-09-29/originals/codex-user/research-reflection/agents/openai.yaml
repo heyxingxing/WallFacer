@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Reflection"
+  short_description: "Update research beliefs from new evidence and runs"
+  default_prompt: "Use $research-reflection to compare prior beliefs with new evidence and update the research agenda."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Run Diagnosis"
+  short_description: "Diagnose experiment failures without overclaiming"
+  default_prompt: "Use $research-run-diagnosis to diagnose this run from implementation through the method hypothesis."
