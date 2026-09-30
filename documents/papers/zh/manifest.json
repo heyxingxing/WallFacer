@@ -1,0 +1,155 @@
+{
+  "archived_on": "2026-09-30",
+  "kind": "local Chinese translation PDFs",
+  "files": [
+    {
+      "title": "AgentGym-RL",
+      "arxiv_id": "2509.08755",
+      "original_url": "https://arxiv.org/abs/2509.08755",
+      "pdf": "2509.08755/paper.pdf",
+      "pages": 35,
+      "bytes": 12076063,
+      "sha256": "619faf85a38a71050a73e6440b016b929114a26bd78a3b4f4625f3dffcd1829d",
+      "local_source": "~/Desktop/rl-paper/2509.08755-src/paper_cn/paper.pdf",
+      "identical_copies_not_archived": [
+        "~/Desktop/rl-paper/2509.08755-src/paper_cn/paper_codex.pdf"
+      ],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "SCOPE",
+      "arxiv_id": "2604.10688",
+      "original_url": "https://arxiv.org/abs/2604.10688",
+      "pdf": "2604.10688/iclr2026_conference.pdf",
+      "pages": 17,
+      "bytes": 2456958,
+      "sha256": "e731164ce46279fe64b336bbfd71ea992e0c018e39d7cef2331e81d7e7c21ef2",
+      "local_source": "~/Desktop/rl-paper/2604.10688-src/paper_cn/iclr2026_conference.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "Skill0.5",
+      "arxiv_id": "2605.28424",
+      "original_url": "https://arxiv.org/abs/2605.28424",
+      "pdf": "2605.28424/acl_latex.pdf",
+      "pages": 14,
+      "bytes": 4936472,
+      "sha256": "a952a8c97b662d1b81eb0a8ee80ee7e2940b636f72028d255f284f615f595e97",
+      "local_source": "~/Desktop/rl-paper/2605.28424-src/paper_cn/acl_latex.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "OPID",
+      "arxiv_id": "2606.26790",
+      "original_url": "https://arxiv.org/abs/2606.26790",
+      "pdf": "2606.26790/iclr2025_conference.pdf",
+      "pages": 34,
+      "bytes": 2038362,
+      "sha256": "9da0171dccff92c9269f98e95289edd13c3d460986001310e02f0646f9e8572f",
+      "local_source": "~/Desktop/rl-paper/opid-rl-paper/arxiv_2606.26790/extracted/paper_cn/iclr2025_conference.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。 首页渲染可读，但中文文本提取异常，搜索和复制可能受影响。"
+    },
+    {
+      "title": "LazyMem",
+      "arxiv_id": "2607.22690",
+      "original_url": "https://arxiv.org/abs/2607.22690",
+      "pdf": "2607.22690/main.pdf",
+      "pages": 26,
+      "bytes": 884242,
+      "sha256": "9e3d2738328e7a3a5a52bfac8caf0f0fc5f7bd8c85958a1a3301da04e97c65d6",
+      "local_source": "~/Desktop/rl-paper/2607.22690-src/paper_cn/main.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "SAF-OPD",
+      "arxiv_id": "2607.29209",
+      "original_url": "https://arxiv.org/abs/2607.29209",
+      "pdf": "2607.29209/aaai2027_conference.pdf",
+      "pages": 20,
+      "bytes": 2014947,
+      "sha256": "1b428132a57566cbedee88b4a52b7f9b2ffd98772f23f076d44c9544797f4f56",
+      "local_source": "~/Desktop/rl-paper/2607.29209-src/paper_cn/aaai2027_conference.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "AutoSaddler",
+      "arxiv_id": "2608.23041",
+      "original_url": "https://arxiv.org/abs/2608.23041",
+      "pdf": "2608.23041/main.pdf",
+      "pages": 41,
+      "bytes": 1269261,
+      "sha256": "fbd388900d7c7dfa18e9d61688cb4034fda0dc342c00f2381f1a72137ca07932",
+      "local_source": "~/Desktop/rl-paper/2608.23041-src/paper_cn/main.pdf",
+      "identical_copies_not_archived": [
+        "~/Desktop/AutoSaddler-Codex/2608.23041-src/paper_cn/main.pdf"
+      ],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "JIT Harness",
+      "arxiv_id": "2608.25593",
+      "original_url": "https://arxiv.org/abs/2608.25593",
+      "pdf": "2608.25593/main.pdf",
+      "pages": 28,
+      "bytes": 13680547,
+      "sha256": "1fe622953070f66c4591436ef03ecbf43ad8805a3ae118377cc2e89b2f3a7dd5",
+      "local_source": "~/Desktop/rl-paper/2608.25593-src/paper_cn/main.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "WikiSkill",
+      "arxiv_id": "2608.27454",
+      "original_url": "https://arxiv.org/abs/2608.27454",
+      "pdf": "2608.27454/main.pdf",
+      "pages": 25,
+      "bytes": 1279079,
+      "sha256": "dcd7f9ab69776efdf4f844d1eae75696bc44a740ac9291da4dd28fca26690a44",
+      "local_source": "~/Desktop/rl-paper/2608.27454-src/paper_cn/main.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "MirroS / Code-as-World",
+      "arxiv_id": "2608.27549",
+      "original_url": "https://arxiv.org/abs/2608.27549",
+      "pdf": "2608.27549/main.pdf",
+      "pages": 28,
+      "bytes": 11438404,
+      "sha256": "cda95a72b651d2a18345a82dca64e76d591692985386dd8783c2d374a1990bbf",
+      "local_source": "~/Desktop/rl-paper/2608.27549-src/paper_cn/main.pdf",
+      "identical_copies_not_archived": [],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    },
+    {
+      "title": "CUA-Gym",
+      "arxiv_id": "2605.25624v2",
+      "original_url": "https://arxiv.org/abs/2605.25624v2",
+      "pdf": "2605.25624v2/CUA-Gym_中文.pdf",
+      "pages": 82,
+      "bytes": 11453898,
+      "sha256": "2ccc105155559919a7e1db6add21ab983566cb42496717c06f21da5ca3bdbf9c",
+      "local_source": "~/Desktop/CUA-gym/2605.25624v2-src/paper_cn/CUA-Gym_中文.pdf",
+      "identical_copies_not_archived": [
+        "~/Desktop/CUA-gym/2605.25624v2-src/paper_cn/arxiv.pdf"
+      ],
+      "archived_on": "2026-09-30",
+      "note": "本地中文译稿；保持原始字节，未重新排版或全文校译。"
+    }
+  ]
+}

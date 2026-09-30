@@ -11,3 +11,4 @@
 | 005 | [上下文工程(Context Engineering)调研](citadel/2783059181/README.md) | 2026-09-23 | `stepVersion=4` |
 | 006 | [knowledge-flow —— Agent知识管理方案与实践](citadel/2783426698/README.md) | 2026-09-23 | `stepVersion=6` |
 | 007 | [通用高价值 Agent Skills：24 个技能包](skills/2026-09-29/README.md) | 2026-09-29 | 23 份原文快照、1 份通用改写；附来源与 SHA-256 |
+| 008 | [论文中文译稿：11 篇 PDF](papers/zh/README.md) | 2026-09-30 | 本地译稿快照；保留原文来源、页数与 SHA-256 |

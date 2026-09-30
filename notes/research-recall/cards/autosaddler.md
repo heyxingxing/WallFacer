@@ -32,6 +32,8 @@
 
 ## 找回原始材料
 
+[已归档的中文译稿 PDF](../../../documents/papers/zh/2608.23041/main.pdf)。
+
 本地根目录：`~/Desktop/AutoSaddler-Codex/`。
 
 - 回忆入口：`README.md`、`AutoSaddler_Reproduction_Plan.md`。
@@ -39,4 +41,4 @@
 - 本地代码：`src/autosaddler_repro/`；就绪状态在 `v1_gaia2_pilot.py`、`p2_v2_launcher.py`。
 - 官方：[AutoSaddler](https://github.com/microsoft/AutoSaddler/tree/30e20ce004486c58e7ee97c66182a8d0d41ec90e)、[Meta-ARE](https://github.com/pshlego/Meta-ARE/tree/395d1dd512add1e3aeb5a6a092490768b51e3ce5)；[论文](https://arxiv.org/abs/2608.23041)。官方源码不能替代上述本地控制层。
 
-来源文件的本地位置、内容指纹与关联原项目见 [来源索引](../sources.json)。路径以用户主目录 `~` 为起点，只是定位线索；本仓库不包含对应源码或完整原稿。
+来源文件的本地位置、内容指纹与关联原项目见 [来源索引](../sources.json)。路径以用户主目录 `~` 为起点，只是定位线索；本仓库仅额外归档上述中文 PDF，源码与其他原始材料仍留在本地。

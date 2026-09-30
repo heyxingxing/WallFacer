@@ -6,20 +6,22 @@
 
 ## 当时做了什么
 
-本轮沿用了 2026-09-29 的文件核验：题名、页数、前两页和路径。译稿的具体生成过程与全文准确性没有逐项重新审计。保存论文线索及下一次要回答的问题，PDF 和整套 LaTeX 源树继续留在本地。
+本轮沿用了 2026-09-29 的文件核验：题名、页数、前两页和路径。译稿的具体生成过程与全文准确性没有逐项重新审计。在此保存论文线索及下一次要回答的问题。2026-09-30 已补充归档 [11 篇中文译稿 PDF](../../../documents/papers/zh/README.md)，LaTeX 源树和原文 PDF 仍留在本地。
 
 | 论文 | 留下的线索 | 下次精读的问题 |
 |---|---|---|
-| [AgentGym-RL](https://arxiv.org/abs/2509.08755) | 中文稿，35 页 | 多轮轨迹如何组织，训练和评测环境怎样隔离？ |
-| [JIT Harness](https://arxiv.org/abs/2608.25593) | 中文稿，28 页 | 即时生成 harness 的额外成本如何与静态基线公平比较？ |
-| [LazyMem](https://arxiv.org/abs/2607.22690) | 中文稿，26 页 | 查询时压缩避免了什么信息丢失，又增加了什么成本？ |
-| [SCOPE](https://arxiv.org/abs/2604.10688) | 中文稿，17 页 | 教师监督何时可靠，不同轨迹为什么用不同权重？ |
-| [SAF-OPD](https://arxiv.org/abs/2607.29209) | 中文稿，20 页 | 稀疏奖励与稠密教师信号的量级、时序如何协调？ |
-| [Skill0.5](https://arxiv.org/abs/2605.28424) | 中文稿，14 页 | 哪些技能适合内化，哪些保留外部资源，如何测泛化？ |
+| [AgentGym-RL](https://arxiv.org/abs/2509.08755) | [中文稿 PDF](../../../documents/papers/zh/2509.08755/paper.pdf)，35 页 | 多轮轨迹如何组织，训练和评测环境怎样隔离？ |
+| [JIT Harness](https://arxiv.org/abs/2608.25593) | [中文稿 PDF](../../../documents/papers/zh/2608.25593/main.pdf)，28 页 | 即时生成 harness 的额外成本如何与静态基线公平比较？ |
+| [LazyMem](https://arxiv.org/abs/2607.22690) | [中文稿 PDF](../../../documents/papers/zh/2607.22690/main.pdf)，26 页 | 查询时压缩避免了什么信息丢失，又增加了什么成本？ |
+| [SCOPE](https://arxiv.org/abs/2604.10688) | [中文稿 PDF](../../../documents/papers/zh/2604.10688/iclr2026_conference.pdf)，17 页 | 教师监督何时可靠，不同轨迹为什么用不同权重？ |
+| [SAF-OPD](https://arxiv.org/abs/2607.29209) | [中文稿 PDF](../../../documents/papers/zh/2607.29209/aaai2027_conference.pdf)，20 页 | 稀疏奖励与稠密教师信号的量级、时序如何协调？ |
+| [Skill0.5](https://arxiv.org/abs/2605.28424) | [中文稿 PDF](../../../documents/papers/zh/2605.28424/acl_latex.pdf)，14 页 | 哪些技能适合内化，哪些保留外部资源，如何测泛化？ |
 | [T1](https://arxiv.org/abs/2609.11042) | 下载原文，37 页 | 长程终端任务的奖励、轨迹长度和训练稳定性如何处理？ |
-| [CUA-Gym](https://arxiv.org/abs/2605.25624v2) | 下载原文，82 页 | computer-use 环境怎样生成任务并提供可验证反馈？ |
+| [CUA-Gym](https://arxiv.org/abs/2605.25624v2) | [中文稿 PDF](../../../documents/papers/zh/2605.25624v2/CUA-Gym_中文.pdf)，82 页 | computer-use 环境怎样生成任务并提供可验证反馈？ |
 
-AutoSaddler 与 WikiSkill 的中文稿分别关联 [复现框架卡](autosaddler.md) 和 [最小状态机卡](wikiskill.md)。
+另补充归档 [OPID 中文稿](../../../documents/papers/zh/2606.26790/iclr2025_conference.pdf)（34 页，首页可读，文本提取异常）和 [MirroS 中文稿](../../../documents/papers/zh/2608.27549/main.pdf)（28 页）；这次上传不等于完成精读。
+
+[AutoSaddler 中文稿](../../../documents/papers/zh/2608.23041/main.pdf)与 [WikiSkill 中文稿](../../../documents/papers/zh/2608.27454/main.pdf)分别关联 [复现框架卡](autosaddler.md) 和 [最小状态机卡](wikiskill.md)。
 
 ## 可以复用的方法
 
@@ -47,4 +49,4 @@ AutoSaddler 与 WikiSkill 的中文稿分别关联 [复现框架卡](autosaddler
 - CUA-Gym：`~/Desktop/CUA-gym/2605.25624v2-original.pdf`。
 - 通用记录方式见 [继续工作的方法](../METHOD.md) 和 [空白回顾模板](../TEMPLATE.md)。
 
-来源文件的本地位置、内容指纹与关联原项目见 [来源索引](../sources.json)。路径以用户主目录 `~` 为起点，只是定位线索；本仓库不包含对应源码或完整原稿。
+来源文件的本地位置、内容指纹与关联原项目见 [来源索引](../sources.json)。路径以用户主目录 `~` 为起点，只是定位线索；本仓库已保存上述中文 PDF；完整源码、原文与其他本地材料仍按来源索引定位。

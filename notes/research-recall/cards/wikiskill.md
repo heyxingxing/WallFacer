@@ -30,10 +30,12 @@
 
 ## 找回原始材料
 
+[已归档的中文译稿 PDF](../../../documents/papers/zh/2608.27454/main.pdf)。
+
 本地根目录：`~/Desktop/rl-paper/2608.27454-src/deployment/`。
 
 - `README.md`、`cleanroom/README.md`。
 - `cleanroom/wikiskill_cleanroom/engine.py`、`cleanroom/run_smoke.py`、`cleanroom/tests/test_cleanroom.py`。
 - 原文：[WikiSkill](https://arxiv.org/abs/2608.27454)；[社区参考代码](https://github.com/ashutoshsinghpr7/wikiskill/tree/02fac2c804fe156e43b12c691e4ae527614d63a1)。本地 cleanroom 不在该社区仓库中。
 
-来源文件的本地位置、内容指纹与关联原项目见 [来源索引](../sources.json)。路径以用户主目录 `~` 为起点，只是定位线索；本仓库不包含对应源码或完整原稿。
+来源文件的本地位置、内容指纹与关联原项目见 [来源索引](../sources.json)。路径以用户主目录 `~` 为起点，只是定位线索；本仓库仅额外归档上述中文 PDF，源码与其他原始材料仍留在本地。
