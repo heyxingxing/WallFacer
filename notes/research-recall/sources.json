@@ -1,0 +1,335 @@
+{
+  "recorded_on": "2026-09-30",
+  "purpose": "source locations and fingerprints only; source files not included",
+  "entries": [
+    {
+      "card": "harness",
+      "local_path": "~/Desktop/Long-Horizon-Agent/diagrams/harness-atlas-20260910/README.md",
+      "sha256": "3be714200c469aea488bc74dc2fb6371f4eb8c5b9a3607629b48d16f613bb875",
+      "bytes": 4371,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "harness",
+      "local_path": "~/Desktop/Long-Horizon-Agent/deepseek-harness-long-horizon-research.md",
+      "sha256": "5fb6b782032e55b358d66a8f060f30096307ffae372aeb9a546ada0756259c54",
+      "bytes": 70655,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "harness",
+      "local_path": "~/Desktop/Long-Horizon-Agent/codex-harness-source-research.md",
+      "sha256": "d8cfae8ebbb19bf6f1f0afe5d765da3b9c03d20fe0c3ca74a817a01dc43ba8d6",
+      "bytes": 57559,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "harness",
+      "local_path": "~/Desktop/Long-Horizon-Agent/pi-agent-loop-context-resume-research.md",
+      "sha256": "46263e364abea76d41cb538613253baf48374505a4ed150bd3db8b527ea3b899",
+      "bytes": 74071,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "harness",
+      "local_path": "~/Desktop/Long-Horizon-Agent/claude-code-harness-mechanism-research.md",
+      "sha256": "fd7013c6b5c77301719317048c83fd441e7460c6e81504a061c0a66ece35b4b6",
+      "bytes": 42377,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/terminal-bench-study/notes/01-design-walkthrough.md",
+      "sha256": "b2c4cb1c4fb34f1cfd96fe2663b711ce53c9e2ef16ded93050d3ad0bba661515",
+      "bytes": 19490,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/terminal-bench-study/notes/02-reading-and-exercises.md",
+      "sha256": "f3bc6255a982043c4aff8e191824c26ade41feb6d622e59808e55705b4c56f08",
+      "bytes": 4172,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/terminal-bench-study/source-lock.json",
+      "sha256": "f89c4b6770fc14b478e750e71f400a1fb904aeecc4277b066eb5df568f5196d5",
+      "bytes": 126246,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/learning-cards/rsi-exam/学习卡.md",
+      "sha256": "e5d7e83c264cc904ced93de29637ec277a4e5d2817102bdcbf947066509efa35",
+      "bytes": 25004,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/learning-cards/ai4ai-bench/学习卡.md",
+      "sha256": "6a842e54d38ace0da4620dfccedf27fe24d3d109faa6db14a1e7431a371df7c8",
+      "bytes": 24242,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/interview-prep/guitestscape-paper-card.md",
+      "sha256": "7009e319ad7697414d4450ef5276d4cc75dd44edb62e9b8b4bd643e5cfcefb04",
+      "bytes": 33152,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "evaluation",
+      "local_path": "~/Desktop/ai_data_lab/interview-prep/guitestscape-agent-harness-audit.md",
+      "sha256": "a48a03009654607fb023d818734e435be1ed0f67f0ae9c64c63f20803bc668aa",
+      "bytes": 11800,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "rsibench",
+      "local_path": "~/Desktop/ai_data_lab/RSIBench-Data/docs/RSIBench-Data_深度学习指南.md",
+      "sha256": "180642afb85404e8990350ac540e9376c8895241fd54120b3719f31bdc9ebaa2",
+      "bytes": 63822,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "rsibench",
+      "local_path": "~/Desktop/ai_data_lab/RSIBench-Data/docs/light_experiment.md",
+      "sha256": "be89656c9f4b04e4c4addefac11f787e4d13fbc24bcfdd3d32642e1682f53604",
+      "bytes": 8419,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "rsibench",
+      "local_path": "~/Desktop/ai_data_lab/RSIBench-Data/backend/message_format.py",
+      "sha256": "764f24f6dd3f7b8ce2fa7df1976f68f9151f9562bbaf7b4ce930b0c30767c349",
+      "bytes": 6280,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "rsibench",
+      "local_path": "~/Desktop/ai_data_lab/RSIBench-Data/tests/test_message_format.py",
+      "sha256": "14bbea21d0707e032facb9b9eb4bb6e2d3ff2df78c813cd03d3b39464bb37af5",
+      "bytes": 8670,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "mimo",
+      "local_path": "~/Desktop/mulit-agent/MiMo-V2.6/notes/9B_PRACTICE_PLAN.md",
+      "sha256": "1d7527eb5a02715df908819561f908e04f4e88dde4892ebaaa7438226a64c3b0",
+      "bytes": 8925,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "mimo",
+      "local_path": "~/Desktop/mulit-agent/MiMo-V2.6/training/README.md",
+      "sha256": "472f021fa7d38768b1a5c3341a34ee19132176d5d87da60436d6a92bf63559a1",
+      "bytes": 6585,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "mimo",
+      "local_path": "~/Desktop/mulit-agent/MiMo-V2.6/training/scripts/workspace.py",
+      "sha256": "09b3c2ed06b936745221ba2567307a0ef7facbd75f3c2a32a230f3768c10265d",
+      "bytes": 7837,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "mimo",
+      "local_path": "~/Desktop/mulit-agent/MiMo-V2.6/training/tests/test_workspace.py",
+      "sha256": "ab55cc43ebc12e783142b52e72b8aefd10a852532f3cafb48fb15843dd0bb327",
+      "bytes": 2725,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "mimo",
+      "local_path": "~/Desktop/mulit-agent/MiMo-V2.6/training/sources.lock.json",
+      "sha256": "abd5bd9914bc453483f533fc7a18a158a0d0e2e90f886522de940fdef8354d3a",
+      "bytes": 984,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "autosaddler",
+      "local_path": "~/Desktop/AutoSaddler-Codex/README.md",
+      "sha256": "767ee01e877b02721d84b5cbd43359710ebd9c5971bc4d6578003d5b36016a21",
+      "bytes": 4450,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "autosaddler",
+      "local_path": "~/Desktop/AutoSaddler-Codex/AutoSaddler_Reproduction_Plan.md",
+      "sha256": "797396eeacef778813668612925a89b0e23e8117509daf1a9b560c4b4a76a73c",
+      "bytes": 42287,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "autosaddler",
+      "local_path": "~/Desktop/AutoSaddler-Codex/docs/REPRODUCTION_RUNBOOK.md",
+      "sha256": "271c4d56b9b2f6c55e3477d36a710186253dff8b39a2ce18f4828caeeed9337e",
+      "bytes": 12361,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "autosaddler",
+      "local_path": "~/Desktop/AutoSaddler-Codex/src/autosaddler_repro/v1_gaia2_pilot.py",
+      "sha256": "e16409f7afcc69965c543563974c12d7fe448c84f4aaaa04a290d82b8ca32da4",
+      "bytes": 208810,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "autosaddler",
+      "local_path": "~/Desktop/AutoSaddler-Codex/src/autosaddler_repro/p2_v2_launcher.py",
+      "sha256": "a58a953357915703015d68ef53df2bfbd8b7d4131f6ccff6436d7cdc5cd1e1b1",
+      "bytes": 35780,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "wikiskill",
+      "local_path": "~/Desktop/rl-paper/2608.27454-src/deployment/README.md",
+      "sha256": "2ccea86c2ca375a13020fd19cdf443c84dc7f0af2bb7da5a0bb2fcab6ba024d0",
+      "bytes": 1806,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "wikiskill",
+      "local_path": "~/Desktop/rl-paper/2608.27454-src/deployment/cleanroom/README.md",
+      "sha256": "f4cb6905d22eca0f45675fb06d60bba996c1cb27cc84921586c58f7c1eecbc31",
+      "bytes": 2076,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "wikiskill",
+      "local_path": "~/Desktop/rl-paper/2608.27454-src/deployment/cleanroom/wikiskill_cleanroom/engine.py",
+      "sha256": "0b1de407e7ba62a98c4a1b10b0b99a2ee98e1815c6fad29b4bf4fe0850a96b42",
+      "bytes": 28927,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "wikiskill",
+      "local_path": "~/Desktop/rl-paper/2608.27454-src/deployment/cleanroom/tests/test_cleanroom.py",
+      "sha256": "c41e08b5d53db42e86ea69fa6dec17ff828f2fee47c7c848314dbdaf018e9aa4",
+      "bytes": 7331,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "slime",
+      "local_path": "~/Desktop/RL-训推框架/slime-audit/tests/test_fully_async_rollout.py",
+      "sha256": "6a1cb014388065c1f25e8a3397b35a3290affdb04128a333dd7152b5d811edb4",
+      "bytes": 13404,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "slime",
+      "local_path": "~/Desktop/RL-训推框架/slime-audit-metadata/tests/test_process_rollout_data.py",
+      "sha256": "82de5e1b0a3427bb126f49b8f3fbef9af48a549e3c6ecda850e14bb3e181aea2",
+      "bytes": 9485,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "omni",
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-源码导读.md",
+      "sha256": "440a2bd4cfb9eafd74f810d9fb0ce5c6c23c4709f5eb3d5ab23b13ca50fdf44d",
+      "bytes": 15868,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "omni",
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-control/tools/omni/CONTROL_OBSERVABILITY.md",
+      "sha256": "744a6d7c3bc358c70aefc3b993ce6d420e0b37fd661db810d5602822ea39e844",
+      "bytes": 5574,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "omni",
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-playback/tools/omni/perf/DUPLEX_PROFILING.md",
+      "sha256": "421e2729b39cb600db25fe3be79a396308728a459750f623502d39711646afdb",
+      "bytes": 6122,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "omni",
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-turns/tools/omni/test/test_t2w_queue.py",
+      "sha256": "a3734c03db4312cde9d52b03b4a07949fb4758d67883a51c9ab85467f0499321",
+      "bytes": 3943,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "omni",
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-ws/tools/server/tests/test_ws_queue.py",
+      "sha256": "ae3b1c25ab63f87f221a20adce93092c0e9e291ecc05b2170bd06dd9d395e723",
+      "bytes": 2946,
+      "inspection": "source path and fingerprint checked; source material was read selectively, not fully audited"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2509.08755-src/paper_cn/paper.pdf",
+      "sha256": "619faf85a38a71050a73e6440b016b929114a26bd78a3b4f4625f3dffcd1829d",
+      "bytes": 12076063,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2608.25593-src/paper_cn/main.pdf",
+      "sha256": "1fe622953070f66c4591436ef03ecbf43ad8805a3ae118377cc2e89b2f3a7dd5",
+      "bytes": 13680547,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2607.22690-src/paper_cn/main.pdf",
+      "sha256": "9e3d2738328e7a3a5a52bfac8caf0f0fc5f7bd8c85958a1a3301da04e97c65d6",
+      "bytes": 884242,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2604.10688-src/paper_cn/iclr2026_conference.pdf",
+      "sha256": "e731164ce46279fe64b336bbfd71ea992e0c018e39d7cef2331e81d7e7c21ef2",
+      "bytes": 2456958,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2607.29209-src/paper_cn/aaai2027_conference.pdf",
+      "sha256": "1b428132a57566cbedee88b4a52b7f9b2ffd98772f23f076d44c9544797f4f56",
+      "bytes": 2014947,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2605.28424-src/paper_cn/acl_latex.pdf",
+      "sha256": "a952a8c97b662d1b81eb0a8ee80ee7e2940b636f72028d255f284f615f595e97",
+      "bytes": 4936472,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2608.23041-src/paper_cn/main.pdf",
+      "sha256": "fbd388900d7c7dfa18e9d61688cb4034fda0dc342c00f2381f1a72137ca07932",
+      "bytes": 1269261,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/rl-paper/2608.27454-src/paper_cn/main.pdf",
+      "sha256": "dcd7f9ab69776efdf4f844d1eae75696bc44a740ac9291da4dd28fca26690a44",
+      "bytes": 1279079,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Downloads/2609.11042v1.pdf",
+      "sha256": "5633c5fa46f0ced3acc2939cb726bc624452622983c8da46f4cc76655c2ebbec",
+      "bytes": 4379245,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    },
+    {
+      "card": "papers",
+      "local_path": "~/Desktop/CUA-gym/2605.25624v2-original.pdf",
+      "sha256": "6e051a8f6d22ceddf68c3b875862f8602fa8e4d9409b96fb390c775fb7855171",
+      "bytes": 12162953,
+      "inspection": "PDF title/front-page metadata from 2026-09-29 inventory"
+    }
+  ]
+}

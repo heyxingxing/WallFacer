@@ -1,0 +1,82 @@
+{
+  "recorded_on": "2026-09-30",
+  "scope": "commit metadata only; patch contents not archived; tests not rerun",
+  "changes": [
+    {
+      "commit": "c3ae6690556f2216332fccfa5cf27f1217ec72e9",
+      "parent": "5bae5bb7928d65906e24e99f5b5d3f99a4daaf93",
+      "subject": "fix: propagate fully async worker failures to training",
+      "files": [
+        "slime/rollout/fully_async_rollout.py",
+        "tests/test_fully_async_rollout.py"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/slime-audit"
+    },
+    {
+      "commit": "b882e5367f33f3f713af48faef532d17353385b5",
+      "parent": "5bae5bb7928d65906e24e99f5b5d3f99a4daaf93",
+      "subject": "fix: preserve per-sample training metadata across DP transport",
+      "files": [
+        "slime/ray/rollout.py",
+        "tests/test_process_rollout_data.py"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/slime-audit-metadata"
+    },
+    {
+      "commit": "6e2f7d70fb9bad0271c181dbe4f7d96b82d0cb27",
+      "parent": "64d092c60db4b4ee45768476bd752f03fdcc98ea",
+      "subject": "server: preserve SSE request state and finish chunked decode responses",
+      "files": [
+        "tools/server/server-omni.cpp"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni"
+    },
+    {
+      "commit": "104d9cfeeb11e3bc9277114033d45890737537fe",
+      "parent": "64d092c60db4b4ee45768476bd752f03fdcc98ea",
+      "subject": "omni: expose optional control-decision observations",
+      "files": [
+        ".github/workflows/omni-observer-tests.yml",
+        "tools/omni/CONTROL_OBSERVABILITY.md",
+        "tools/omni/omni.cpp",
+        "tools/omni/omni.h",
+        "tools/omni/test/test_decode_observer.py"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-control"
+    },
+    {
+      "commit": "ef5bc2d548ff4a6a0b7b4e7f9aad785b73304e59",
+      "parent": "64d092c60db4b4ee45768476bd752f03fdcc98ea",
+      "subject": "omni: validate duplex coverage and estimate playback continuity",
+      "files": [
+        ".github/workflows/omni-perf-tests.yml",
+        "tools/omni/perf/DUPLEX_PROFILING.md",
+        "tools/omni/perf/analyze_perf.py",
+        "tools/omni/perf/test_analyze_perf.py"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-playback"
+    },
+    {
+      "commit": "4a1a8fe87c91a285feefe8c5bd43aabd9f263c26",
+      "parent": "64d092c60db4b4ee45768476bd752f03fdcc98ea",
+      "subject": "omni: preserve turn-final boundaries in Token2Wav queues",
+      "files": [
+        ".github/workflows/omni-queue-tests.yml",
+        "tools/omni/omni.cpp",
+        "tools/omni/test/test_t2w_queue.py"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-turns"
+    },
+    {
+      "commit": "639c5a6411ae010c1dce483acaf5f31476494058",
+      "parent": "64d092c60db4b4ee45768476bd752f03fdcc98ea",
+      "subject": "server: drain queued WebSocket fragments before completion",
+      "files": [
+        ".github/workflows/omni-ws-queue-tests.yml",
+        "tools/server/tests/test_ws_queue.py",
+        "tools/server/ws_handler.cpp"
+      ],
+      "local_path": "~/Desktop/RL-训推框架/llama.cpp-omni-ws"
+    }
+  ]
+}
