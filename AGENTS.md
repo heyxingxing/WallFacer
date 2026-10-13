@@ -8,7 +8,7 @@
 
 ## 项目目标与授权
 
-本项目用于将用户提供给本项目、用于归档的文档和信息保存到 GitHub 私有仓库 `heyxingxing/the-wallfacer-plan`，展示名称为「面壁计划（The Wallfacer Plan）」。
+本项目用于将用户提供给本项目、用于归档的文档和信息保存到 GitHub 私有仓库 `heyxingxing/WallFacer`，展示名称为「面壁计划（The Wallfacer Plan）」。
 
 用户已授权在本项目中进行常规归档、Git 提交及推送，无需每次重复询问。用户明确要求暂不上传或仅讨论时，遵循当次要求。普通问答不自动作为归档资料。
 
