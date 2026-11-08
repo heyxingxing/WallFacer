@@ -1,9 +1,4 @@
 # knowledge-flow —— Agent知识管理方案与实践
-
-> 来源：[学城原文](https://km.sankuai.com/collabpage/2783426698) · 归档日期：2026-09-23 · 原文版本：`stepVersion=6`
->
-> 本文为原文归档，未独立核实其中的技术判断与数据。内嵌 HTML 已保留原文件并提供图片预览；交互内容可下载 HTML 后打开，部分交互状态另附静态预览。Drawio 流程图同时保存原始 SVG、可编辑源文件和预览。
->
 > [原始 Markdown 导出](source.md) · [原始 CitadelXML](source.xml) · [归档元信息](metadata.json) · [文档目录](../../README.md)
 
 > **ℹ️ 信息：引言**
@@ -11,11 +6,11 @@
 > 本文面向希望在自己的 AI 工作流中引入知识管理能力的同学 —— 无论是个人使用 AI 助手时希望给它注入持续积累的领域知识，还是团队在构建 Agent 工作流时需要一个可维护的知识层，或者是 AI 产品开发者希望在产品中嵌入知识管理能力。通过本文可以了解：knowledge-flow 的**整体设计理念**、**知识全生命周期各个环节的功能设计**以及几类典型**落地场景的具体实践。**SKILL 已发布至 Friday SKILL 广场 [🔗 链接卡片](https://friday.sankuai.com/skills/skill-detail?activeTab=overview&from=/skills-market?deepseek=false%26keyword=bml-knowledge-retriever%26mainView=skill%26orderByDownloadCount=all%26orderByTotalCallCount=all%26orderByTotalCallerCount=all%26page=1%26pageSize=30%26securityScanStatus=all%26spaceKeyword=%26spaceSortOrder=default%26spaceTypeFilter=org,project%26spaceVerifiedFilter=all%26tag=%26verifiedType=all%26viewMode=card%26visibility=all&id=17472)使用手册 [https://km.sankuai.com/collabpage/2767367827](https://km.sankuai.com/collabpage/2767367827)
 
 > 应用实践
-> 9.1.1 工程 Agent 全托管需求迭代 @孙润来
-> 9.1.2 算法 Agent 需求托管开发 @常远
-> 9.2 SKILL 闭环迭代 @曹先帅
-> 9.3 群答疑助手 @张亮
-> 9.4 CASE自主排查 @纪邵华
+> 9.1.1 工程 Agent 全托管需求迭代 
+> 9.1.2 算法 Agent 需求托管开发
+> 9.2 SKILL 闭环迭代 
+> 9.3 群答疑助手
+> 9.4 CASE自主排查
 
 > 📑 **文档目录**
 
